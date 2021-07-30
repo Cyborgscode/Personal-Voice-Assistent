@@ -1,0 +1,24 @@
+#!/bin/bash
+
+if [ "$VOICE" == "" ]; then
+	VOICE="de5"
+fi
+
+FILENAME=/tmp/mbrola$RANDOM.wav
+
+if [ ! -f "$1" ]; then
+#	echo "$1" | nc --send-only  192.168.0.117 3000 
+	espeak -v mb-$VOICE -q --pho --phonout=/tmp/out.pho "$1"
+else 
+#	A=$(cat "$1")
+	cat "$1" | espeak -v mb-$VOICE -q --pho --phonout=/tmp/out.pho 
+#	cat "$1" | nc 192.168.0.117 3000
+fi
+
+#mbrola -t 1.2 -f 0.8 /usr/share/mbrola/$VOICE/$VOICE /tmp/out.pho -.au | aplay 1>/dev/null 2>/dev/null
+mbrola -t 1.2 -f 0.8 /usr/share/mbrola/$VOICE/$VOICE /tmp/out.pho $FILENAME
+aplay $FILENAME 1>/dev/null 2>/dev/null
+
+
+rm -f /tmp/mbrola*wav
+rm -f /tmp/out.pho
