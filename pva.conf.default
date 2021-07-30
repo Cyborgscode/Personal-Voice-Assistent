@@ -1,0 +1,71 @@
+#
+# Config for PVA
+#
+
+#all "conf" options are for common options
+conf:"keyword","carola"
+
+# ATTN: the term "x:x" is used to replace " " in cmds that have options. This is needed as filenames can contain " " in theire name, which makes option-splitting a nightmare
+#       you can change this, but then you need to a) find a better sequence and b) change it in every config line it's used.
+conf:"splitter","x:x"
+
+
+# we need this for the weather service
+conf:"location","Braunschweig"
+
+#vosk model to use, this is the "big" 1.2 GB german model dated 16.7.2021
+#
+# atm pva has fixed german wording in it's code, until this is changed, this option does not have a meaning.
+#
+vosk:"model","vosk-model-de-0.6"
+
+# add as many caldav objects as you like
+# syntax:
+# calender:"https://cal.domainname.com/index.php/calendars/%USERNAME/default/","%USERNAME:%PASSWORD"
+
+
+# add as many carddav objects as you like
+# addressbook:"https://cal.domainname.com/index.php/addressbooks/%USERNAME/default/","%USERNAME:%PASSWORD"
+
+# simple videoplayer config
+videoplayer:"cmd","/usr/bin/celluloid"
+videoplayer:"pname","celluloid"
+videoplayer:"enqueue","/usr/bin/celluloidx:x--enqueue
+
+audioplayer:"cmd","/usr/bin/qmmp"
+audioplayer:"enqueue","/usr/bin/qmmpx:x--enqueue"
+audioplayer:"raisevolume","/usr/bin/qmmpx:x--volume-inc"
+audioplayer:"lowervolume","/usr/bin/qmmpx:x--volume-dec"
+audioplayer:"play","/usr/bin/qmmpx:x-p"
+audioplayer:"stop","/usr/bin/qmmpx:x-s"
+audioplayer:"pause","/usr/bin/qmmpx:x-u"
+audioplayer:"nexttrack","/usr/bin/qmmpx:x--next"
+audioplayer:"lasttrack","/usr/bin/qmmpx:x--previous"
+audioplayer:"tooglemute","/usr/bin/qmmpx:x--toggle-mute"
+audioplayer:"pname","qmmp"
+audioplayer:"clear","/usr/bin/qmmpx:x--pl-clear"
+audioplayer:"playpl","/usr/bin/qmmpx:x--pl-play 1 1"
+audioplayer:"status","/usr/bin/qmmpx:x--status"
+audioplayer:"forward","/usr/bin/qmmpx:x--seek-fwdx:x"
+audioplayer:"backward","/usr/bin/qmmpx:x--seek-bwdx:x"
+
+
+# paths to search for music files, videos and documents
+# avoid ":" in pathnames, it won't work ( make a symbolic link to circumvent it, in case it's needed, which it shouldn't )
+path:"music","path1:path2:...:pathx"
+path:"video","path1:path2:...:pathx"
+path:"docs","path1:path2:...:pathx"
+
+# Easily switched to libreoffice
+app:"office","openoffice4"
+app:"txt","gedit"
+app:"pdf","evince"
+app:"mail","thunderbird"
+app:"web","firefox"
+app:"phone","/usr/bin/jitsi"
+
+# codes are used to grant access to special features
+code:"alpha","alpha default"
+code:"beta","beta default"
+
+
