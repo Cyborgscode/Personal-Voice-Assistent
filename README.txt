@@ -26,12 +26,14 @@ To run it, you need at least:
     mbrola             (found on github)
     espeak
     vosk               (found on github)
-    
+    org.json.* java classes
 
 O=== How to install:
 
-We don't need fancy frameworks or complicated makefiles, so relax, it's just done in about 5 minutes :) The author uses Fedora as OS,
+We don't need fancy frameworks* or complicated makefiles, so relax, it's just done in about 5 minutes :) The author uses Fedora as OS,
 so if you run Ubuntu or Arch, your install commands will vary a bit.
+
+*) looks like thats not entirely true, as we depend on org.json.* classes from here https://github.com/stleary/JSON-java/releases/tag/20210307
 
 O== Espeak:
 
