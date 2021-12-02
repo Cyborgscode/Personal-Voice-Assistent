@@ -12,6 +12,7 @@ public class PVA {
 	static String keyword = "carola";
 
 	static TwoKeyHash config = new TwoKeyHash();
+	static TwoKeyHash alternatives = new TwoKeyHash();
 	static Vector<Contact> contacts = new Vector<Contact>();
 
 	static String text = "";
@@ -173,6 +174,49 @@ public class PVA {
 		return x;
 	}
 
+
+	static boolean saveConfig() {
+
+		StringBuffer sb = new StringBuffer(50000); // yes, we think big ;)
+	
+		
+			Enumeration en1 = config.keys();
+			while ( en1.hasMoreElements() ) {
+				String key = (String)en1.nextElement();
+				StringHash sub = config.get( key );
+				Enumeration en2 = sub.keys();
+				while ( en2.hasMoreElements() ) {
+					
+					String k = (String)en2.nextElement();
+					String v = sub.get( k );
+				
+					sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
+
+				}
+			}
+			
+			Enumeration en2 = alternatives.keys();
+			while ( en2.hasMoreElements() ) {
+				String key = (String)en2.nextElement();
+				StringHash sub = alternatives.get( key );
+				Enumeration en3 = sub.keys();
+				while ( en3.hasMoreElements() ) {
+					
+					String k = (String)en3.nextElement();
+					String v = sub.get( k );
+				
+					sb.append( "alternatives:\""+ key +"\",\""+ k +"\",\""+ v +"\"\n" );
+
+				}
+			}
+
+//			log ( sb.toString() );
+
+//		return true;
+		return dos.writeFile("./pva.conf", sb.toString() );
+	}
+
+
 	static public void main(String[] args) {
 
 		try {
@@ -183,7 +227,7 @@ public class PVA {
 				conflines = dos.readFile("./pva.conf").split("\n");
 			} else  conflines = dos.readFile("./pva.conf.default").split("\n");
 			
-			// our config is a three diamentional array 
+			// our config is a three dimentional array 
 			// in PHP this would look like $config[$key1][$key2] = $value
 
 			for(String line : conflines) {
@@ -191,8 +235,12 @@ public class PVA {
 					try {
 						String[] level1 = line.split(":",2);
 						String[] level2 = level1[1].trim().replaceAll("^\"","").replaceAll("\"$","").trim().split("\",\"");
-						
-						config.put( level1[0].trim() , level2[0].trim() , level2[1].trim() );
+				
+						if ( level1[0].trim().equals("alternatives") ) {
+							alternatives.put(level2[0].trim() , level2[1].trim() , level2[2].trim());
+						} else { 
+							config.put( level1[0].trim() , level2[0].trim() , level2[1].trim() );
+						}
 					} catch (Exception e) {
 						log("ERROR:syntaxerror:config:"+line);
 						log(e.getMessage());
@@ -201,7 +249,6 @@ public class PVA {
 					} 
 				}
 			}
-
 
 			// for speed resons, we got often used content in variables.
 			keyword = config.get("conf","keyword");
@@ -236,7 +283,7 @@ public class PVA {
 						
 			String vcards = dos.readFile( "./vcards.cache" );
 			if ( vcards.isEmpty() ) {
-				exec( ("sayx:xIch lese die Addressbücher ein, das kann einige Minuten dauern" ).split("x:x"));
+				exec( (config.get("app","say")+"x:xIch lese die Addressbücher ein, das kann einige Minuten dauern" ).split("x:x"));
 				StringHash adb = config.get("addressbook");
 				Enumeration en = adb.keys();
 				while ( en.hasMoreElements() ) {
@@ -290,8 +337,8 @@ public class PVA {
 
 			// now some error corrections for bugs in vosk or the way you speak to your pc ;) 
 			
-			String[] bugs = "hi länder:fehler ausgabe|sprächen|hofer|a c d c|flüge|kombiniere".split(":");
-			String[] ersatz = "highlander:fehlerausgabe:sprechen|rufe|acdc|füge|kompiliere".split(":");
+			String[] bugs = "hi länder:fehler ausgabe:sprächen:hofer:a c d c:flüge:kombiniere:fehlerausgabe".split(":");
+			String[] ersatz = "highlander:fehlerausgabe:sprechen:rufe:acdc:füge:kompiliere:füge".split(":");
 			
 			for(int a=0;a<bugs.length;a++)
 				text = text.replaceAll( bugs[a], ersatz[a] );
@@ -303,12 +350,13 @@ public class PVA {
 
 			// some context less reactions
 
-			if ( text.contains("ha ha ha") ) exec( ("sayx:xWas gibt es da so zu lachen?").split("x:x"));
-			if ( text.contains("danke") ) exec( ("sayx:xich helfe gerne").split("x:x"));
-			if ( und("sehr|witzig") ) exec( ("sayx:xich kann nichts dafür, wenn Du Dich ungenau ausdrückst :)").split("x:x"));
-			if ( und("das|funktioniert") && !wort("nicht") ) exec( ("sayx:xHattest Du etwas anderes erwartet?").split("x:x"));
-			if ( und("das|funktioniert") && wort("nicht") ) exec( ("sayx:xUps... Bugreports bitte an meinen Schöpfer").split("x:x"));
-			if ( und("wie|ist|dein|name") ) exec( ("sayx:xMein name ist "+ keyword ).split("x:x"));
+			if ( text.contains("ha ha ha") ) exec( (config.get("app","say")+"x:xWas gibt es da so zu lachen?").split("x:x"));
+			if ( text.contains("danke") ) exec( (config.get("app","say")+"x:xich helfe gerne").split("x:x"));
+			if ( und("sehr|witzig") ) exec( (config.get("app","say")+"x:xich kann nichts dafür, wenn Du Dich ungenau ausdrückst :)").split("x:x"));
+			if ( und("das|funktioniert") && !wort("nicht") ) exec( (config.get("app","say")+"x:xHattest Du etwas anderes erwartet?").split("x:x"));
+			if ( und("das|funktioniert") && wort("nicht") ) exec( (config.get("app","say")+"x:xUps... Bugreports bitte an meinen Schöpfer").split("x:x"));
+			if ( und("wie|ist|dein|name") ) exec( (config.get("app","say")+"x:xMein name ist "+ keyword ).split("x:x"));
+			if ( und("ich|habe|gar|nichts|gesagt") ) exec( (config.get("app","say")+"x:xDas glaubst auch nur Du!").split("x:x"));
 			
 			// now the part that interessts you most .. the context depending parser
 			
@@ -340,7 +388,7 @@ public class PVA {
 						if ( wort( config.get("code","alpha")) ) {
 							String cmd = dos.readFile("cmd.last");
 							if ( cmd.equals("exit") ) {
-								exec( ("sayx:xIch beende mich").split("x:x"));	
+								exec( (config.get("app","say")+"x:xIch beende mich").split("x:x"));	
 								String[] e = dos.readPipe("pgrep -i -l -a python").split("\n");
 								for(String a : e ) {
 									if ( a.contains("pva.py") ) {
@@ -350,15 +398,15 @@ public class PVA {
 								}
 							}
 							if ( cmd.equals("compile") ) {
-								exec( ("sayx:xIch kompiliere mich neu").split("x:x"));	
+								exec( (config.get("app","say")+"x:xIch kompiliere mich neu").split("x:x"));	
 								System.out.println( dos.readPipe("javac --release 8 PVA.java") );
 							}
 							return;
-						} else 	exec( ("sayx:xDer Sicherheitscode ist falsch!").split("x:x"));	
+						} else 	exec( (config.get("app","say")+"x:xDer Sicherheitscode ist falsch!").split("x:x"));	
 					}
 					if ( oder("neu|neuer") && oder("scout|code|kurt|kot") ) {
 						text = text.replaceAll("(autorisierung|neuer|neu|scout|code|kurt|kot)","").trim();
-						exec( ("sayx:x"+ text).split("x:x"));	
+						exec( (config.get("app","say")+"x:x"+ text).split("x:x"));	
 					}
 				}
 				
@@ -371,11 +419,31 @@ public class PVA {
 				} else {
 					dos.writeFile("cmd.last", text);
 				}
+
+				if ( wort("benutze") ) {
+					String subtext = text.replaceAll("benutze","").trim();
+					
+					StringHash sub = alternatives.get(subtext);
+					if ( sub != null ) {
+						Enumeration en1 = sub.keys(); // This Enumeration has only one Entry 
+						String changeapp = (String)en1.nextElement();
+						String changevalue = sub.get(changeapp);
+						
+						config.put("app",changeapp,changevalue);
+						exec(( config.get("app","say")+"x:xIch ersetze "+ changeapp.replace("say","Sprachausgabe") + " mit "+ subtext).split("x:x"));										
+
+						saveConfig();
+						
+					} else {
+						exec(( config.get("app","say")+"x:xIch kenne die Alternative "+ subtext + " nicht").split("x:x"));
+					}
+				}
+
 							
 				// selfcompiling is aware of errors  and this reads them out loud.
 								
 				if ( und("was|wie|war|der|letzte|fehler") || und("was|war|die|fehlermeldung") ) {
-					exec( ("sayx:x"+ dos.readFile("lasterror.txt").replaceAll("PVA.java:","Zeile ")).split("x:x"));							
+					exec( (config.get("app","say")+"x:x"+ dos.readFile("lasterror.txt").replaceAll("PVA.java:","Zeile ")).split("x:x"));							
 				}
 
 				// sometime we address carola itself i.e. shut yourself down:
@@ -383,23 +451,23 @@ public class PVA {
 				if ( wort("dich") ) {			
 					if ( und("schalte|ab") ) {
 						dos.writeFile("cmd.last","exit");
-						exec( ("sayx:xAuthorisierungscode Alpha erforderlich!").split("x:x"));							
+						exec( (config.get("app","say")+"x:xAuthorisierungscode Alpha erforderlich!").split("x:x"));							
 					}
 
 					// or compile yourself new
 	
 					if ( oder("neu|selbst") && wort("kompiliere") ) {
 //						dos.writeFile("cmd.last","compile");
-//						exec( ("sayx:xAuthorisierungscode Alpha erforderlich!").split("x:x"));				
+//						exec( (config.get("app","say")+"x:xAuthorisierungscode Alpha erforderlich!").split("x:x"));				
 						
 						String result = dos.readPipe("javac --release 8 PVA.java");
 						if ( result.contains("error") ) {
-							exec( ("sayx:xEs ist ein Fehler beim Kompilieren aufgetreten!").split("x:x"));	
+							exec( (config.get("app","say")+"x:xEs ist ein Fehler beim Kompilieren aufgetreten!").split("x:x"));	
 							dos.writeFile("lasterror.txt",result);
 							if ( wort("fehlerausgabe") )
-								exec( ("sayx:x"+result.replaceAll("PVA.java:","Zeile ")).split("x:x"));	
+								exec( (config.get("app","say")+"x:x"+result.replaceAll("PVA.java:","Zeile ")).split("x:x"));	
 						} else {
-							exec( ("sayx:xIch habe ich selbst erfolgreich kompiliert!").split("x:x"));			
+							exec( (config.get("app","say")+"x:xIch habe mich selbst erfolgreich kompiliert!").split("x:x"));			
 						}
 						System.out.println( result.trim() );		
 					}
@@ -417,7 +485,7 @@ public class PVA {
 					// if you see this somewhere
 					reaction = true;
 					// if reactions is false, carola code thinks it did not understand what to do
-					// if exec() is used, reaction is set to true autmatically, but not all functions use exec() so, here we need to set it manually.
+					// if exec() is used, reaction is set to true automatically, but not all functions use exec() so, here we need to set it manually.
 				} 
 				
 				// "call someone"
@@ -428,6 +496,8 @@ public class PVA {
 				
 				if ( und("rufe|an") || wort("anrufen") || und("ich|möchte|sprechen") ||und("ich|möchte|reden") ) {
 				
+					log("Telefonbuchsuche");
+					
 					// bindewörter wie mit an usw. entfernen + alle keywords
 				
 					String subtext = text.replaceAll("(anrufen|sprechen|möchte|reden|rufe|mit|ich|an|mobil|arbeit|festnetz)","").trim();
@@ -447,14 +517,15 @@ public class PVA {
 								if ( lines.length > 1 ) {
 									if ( ( oder("mobil|handy") && numbers.contains("cell") ) ||
 									     ( wort("arbeit") && numbers.contains("work") ) ||
-									     ( wort("festnetz") && numbers.contains("home") )
+									     ( wort("festnetz") && numbers.contains("home") ) ||
+									     ( !wort("festnetz") && !wort("arbeit") && !oder("mobil|handy") ) 
 									   ) {
 										if ( !stop ) {
 											exec( (config.get("app","phone")+"x:xtel:"+ parts[1]).split("x:x"));
 											stop = true;
 										}
 										
-									}
+									} else exec( (config.get("app","say")+"x:xich weiß nicht, welche Nummer ich anrufen soll.").split("x:x"));
 								} else {
 									exec( (config.get("app","phone")+"x:xtel:"+ parts[1] ).split("x:x"));
 								}
@@ -463,7 +534,7 @@ public class PVA {
 			
 
 					} else {
-						exec( ("sayx:xIch habe die Telefonnumer von "+ subtext + " nicht gefunden").split("x:x"));							
+						exec( (config.get("app","say")+"x:xIch habe die Telefonnumer von "+ subtext + " nicht gefunden").split("x:x"));							
 					}
 					reaction = true; // make sure, any case is handled.					
 				}
@@ -471,17 +542,17 @@ public class PVA {
 				// make screenshot
 			
 				if ( und("mach|einen|screenshot") ) {
-					exec( ("sayx:xIch mache ein Bildschirmfoto").split("x:x"));	
-					exec( ("gnome-screenshot").split("x:x"));	
+					exec( (config.get("app","say")+"x:xIch mache ein Bildschirmfoto").split("x:x"));	
+					exec( config.get("app","screenshot").split("x:x"));	
 				}		
 				
 				// "what time is it?"				
 				if ( und("wie|spät|ist|es") || und("sag|mir|die|uhrzeit") ) {
-					exec( ("sayx:xEs ist "+ dos.readPipe("date +%H:%M").replace(":"," Uhr ")).split("x:x"));	
+					exec( (config.get("app","say")+"x:xEs ist "+ dos.readPipe("date +%H:%M").replace(":"," Uhr ")).split("x:x"));	
 				}			
 				// "whats the systemload"			
 				if ( und("wie|hoch") && oder("last|load") ) {
-					exec( ("sayx:xDie Last liegt bei "+ dos.readPipe("cat /proc/loadavg").split(" ")[0]).split("x:x"));	
+					exec( (config.get("app","say")+"x:xDie Last liegt bei "+ dos.readPipe("cat /proc/loadavg").split(" ")[0]).split("x:x"));	
 				}						
 			
 				// "hows the weather" + options like now + today + tomorrow
@@ -505,7 +576,7 @@ public class PVA {
 							if ( i == 4) text += "Der Wind beträgt "+ line.replaceAll("km/h","Kilometer pro Stunde").replaceAll("m/s","meter pro Sekunde") +" . ";
 							if ( i == 6) text += "Niederschlag: "+ line.replace("mm","Millimeter Niederschlag") +" . ";
 						}
-						exec( ("sayx:x"+text).split("x:x"));
+						exec( (config.get("app","say")+"x:x"+text).split("x:x"));
 						reaction = true;
 					} 
 					if ( wort("wird") && !wort("morgen") ) {
@@ -519,10 +590,11 @@ public class PVA {
 						String datum = (new Date()).toString();
 						int h = Integer.parseInt( datum.split(" ")[3].split(":")[0] )/6;
 						String[] phase = "Morgens:Mittags:Abends:in der Nacht:später:sehr viel später".split(":");
-
-						for(int j=h;j<=h+1;j++) {						
+						
+						for(int j=h;j<=h+1 && j<4;j++) {						
 							for(int i=0;i< bericht.length;i++) {
 								String line = bericht[i];
+//								log(h+":"+i+":"+j+":"+line);
 								if ( j == h && i == 0) {
 									 text += "Das Wetter für "+ line +" :  "+phase[j]+" wird es ";
 								} else if ( i == 0 ) text += ". "+phase[j]+" wird es ";
@@ -531,12 +603,12 @@ public class PVA {
 								if ( i == 12 ) text += line.split("│")[j+1].substring(15).replace("+","").replace("("," bis ").replace(")","").replaceAll("°C","Grad Celsius");
 								if ( i == 15 ) {
 									String me = line.split("│")[j+1].substring(15);
-									if ( !me.startsWith("0.0 mm | 0%") ) text += " mit "+ me.replace("mm","millimeter Niederschlag mit ").replace("%"," Prozent Wahrscheinlichkeit");
+									if ( !me.startsWith("0.0 mm | 0%") ) text += " mit "+ me.replace("mm","millimeter Niederschlag mit ").replace("%"," Prozent Luftfeuchtigkeit");
 								}
 							}
 						}
 						text = text.replaceAll("     ","").replace(" | ","");
-						exec( ("sayx:x"+text).split("x:x"));
+						exec( (config.get("app","say")+"x:x"+text).split("x:x"));
 						reaction = true;
 					} 
 					if ( wort("wird") && wort("morgen") ) {
@@ -569,7 +641,7 @@ public class PVA {
 						}
 						text = text.replaceAll("     ","").replace(" | ","");
 						// log(text);
-						exec( ("sayx:x"+text).split("x:x"));
+						exec( (config.get("app","say")+"x:x"+text).split("x:x"));
 						reaction = true;
 					} 
 		
@@ -578,18 +650,25 @@ public class PVA {
 				// kill process ... appname
 			
 				if ( oder("beende|stoppe") ) {
-					exec( ("sayx:xIch beende "+ text.replaceAll("(beende|stoppe)","").trim()).split("x:x"));
+					exec( (config.get("app","say")+"x:xIch beende "+ text.replaceAll("(beende|stoppe)","").trim()).split("x:x"));
 					if ( wort("firefox") )	exec("killall firefox");
+					if ( wort("chrome") )	exec("killall google-chrome");
+					if ( wort("chromium") )	exec("killall chromium-freeworld chromium-privacy-browser");
 					if ( wort("wetter") )	exec("killall gnome-weather");
 					if ( oder("karte|karten|kartenapp") )	exec("killall gnome-maps");
 					if ( oder("film|video") ) 	exec("killall "+ config.get("videoplayer_short","pname"));
 					if ( oder("musik|audio") ) 	exec("killall "+ config.get("audioplayer_short","pname") );
+					if ( und("runs|auf|magic") )	exec("killall gfclient.exe");
+
+
 				}
 
 				// start apps by name
 			
 				if ( oder("starte|öffne") ) {
-					exec( ("sayx:xIch starte "+text.replaceAll("(starte|öffne)","").replaceAll("app","äpp").trim()).split("x:x"));
+					if ( wort("öffne") ) {
+						exec( (config.get("app","say")+"x:xIch öffne "+text.replaceAll("(starte|öffne)","").replaceAll("app","äpp").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()).split("x:x"));
+					} else  exec( (config.get("app","say")+"x:xIch starte "+text.replaceAll("(starte|öffne)","").replaceAll("app","äpp").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()).split("x:x"));
 					if ( wort("blender") ) 
 						exec("blender");
 					if ( wort("wetter") ) 
@@ -606,15 +685,19 @@ public class PVA {
 						exec( config.get("app","office") );
 					if ( und("deinen|sourcecode") ) 
 						exec( (config.get("app","txt") + " ./PVA.java").split(" ") );
+					if ( und("deine|config") )
+						exec( (config.get("app","txt") + " ./pva.conf").split(" ") );
 					if ( wort("emailprogramm") ) 
 						exec( config.get("app","mail") );
 						// thunderbird -compose "to=support@evolution-hosting.eu,subject=Mal sehen,body=TESTMAIL"
+					if ( und("runs|auf|magic") )	exec("env WINEPREFIX=\"/home/marius/.wine\" /opt/wine-staging/bin/wine  C:\\\\windows\\\\command\\\\start.exe /d \"/home/marius/Programme/GameforgeLive/Games/DEU_deu/Runes Of Magic/\" /Unix \"/home/marius/Programme/GameforgeLive/Games/DEU_deu/Runes Of Magic/launcher.exe\" NoCheckVersion".split(" "));
 
 				}
 
 				if ( und("ich|möchte|hören") ) {
 					String subtext = text.replaceAll("("+keyword+"|ich|möchte|hören|noch|dazu)","").trim();
 					log("Ich suche nach Musik : "+ subtext);
+					
 					String suchergebnis = suche( config.get("path","music"), subtext,".mp3|.aac" );
 					// System.out.println("suche: "+ suchergebnis );
 					if (!suchergebnis.isEmpty() ) {	
@@ -647,12 +730,12 @@ public class PVA {
 
 						if ( c > 1 ) {
 							log("Ich habe "+c+" Titel gefunden");
-							exec( ("sayx:xIch habe "+ c +" Titel gefunden").split("x:x"));
+							exec( (config.get("app","say")+"x:xIch habe "+ c +" Titel gefunden").split("x:x"));
 						}
 						
 						if ( c > 500 ) {
 							log("Ich habe "+c+" Titel gefunden");
-							exec( ("sayx:xIch habe "+ c +" Titel gefunden, dies kann nicht stimmen.").split("x:x"));
+							exec( (config.get("app","say")+"x:xIch habe "+ c +" Titel gefunden, dies kann nicht stimmen.").split("x:x"));
 							return	;				
 						}
 						
@@ -666,17 +749,17 @@ public class PVA {
 						exec( config.get("audioplayer","playpl").split("x:x"));
 						exec( config.get("audioplayer","play").split("x:x"));
 					} else {
-						exec( ("sayx:xIch habe leider nichts gefunden, was zu "+ subtext +" paßt!").split("x:x"));
+						exec( (config.get("app","say")+"x:xIch habe leider nichts gefunden, was zu "+ subtext +" paßt!").split("x:x"));
 						log("keine treffer");
 					}
 					
 				}
-				if ( und("was|ist|da|zu|hören") || und("was|ist|gerade|zu|hören") || und("was|du|spielst|gerade") || und("was|du|spielt|da") || und("was|höre|ich")) {
+				if ( und("was|ist|da|zu|hören") || und("was|ist|gerade|zu|hören") || und("was|du|spielst|gerade") || und("was|du|spielst|da") || und("was|höre|ich")) {
 					String[] result = dos.readPipe( config.get("audioplayer","status").replaceAll("x:x"," "),true).split("\n");
 					for(String x : result ) 
 						if ( x.contains("TITLE") ) {
 							log("Ich spiele gerade: "+ x);
-							exec( ("sayx:x"+ x ).split("x:x"));
+							exec( (config.get("app","say")+"x:x"+ x ).split("x:x"));
 						}
 					
 					reaction = true;
@@ -761,7 +844,7 @@ public class PVA {
 							reaction = true;
 						} 
 					} else {
-						exec( ("sayx:xDie Emailadresse von "+ subtext + " ist unbekannt").split("x:x"));							
+						exec( (config.get("app","say")+"x:xDie Emailadresse von "+ subtext + " ist unbekannt").split("x:x"));							
 					}
 
 				}
@@ -777,10 +860,10 @@ public class PVA {
 								String[] parts = numbers.replaceAll("\"","").split("=");
 								parts[1] = parts[1].trim();
 								log("Die Emailadresse von "+ subtext + " ist " + parts[1]);
-								exec( ("sayx:xDie Emailadresse von "+ subtext + " ist " + parts[1]).split("x:x"));							
+								exec( (config.get("app","say")+"x:xDie Emailadresse von "+ subtext + " ist " + parts[1]).split("x:x"));							
 							} 
 						} else {
-							exec( ("sayx:xDie Emailadresse von "+ subtext + " ist unbekannt").split("x:x"));							
+							exec( (config.get("app","say")+"x:xDie Emailadresse von "+ subtext + " ist unbekannt").split("x:x"));							
 						}
 					} else {
 						String ergebnis = sucheNachTelefonnummer( subtext );
@@ -791,22 +874,37 @@ public class PVA {
 								String[] parts = numbers.replaceAll("\"","").split("=");
 								parts[1] = parts[1].trim();
 								if ( numbers.contains("cell") ) 
-									exec( ("sayx:xDie Mobilfunknummer von "+ subtext + " ist " + einzelziffern(parts[1])).split("x:x"));							
+									exec( (config.get("app","say")+"x:xDie Mobilfunknummer von "+ subtext + " ist " + einzelziffern(parts[1])).split("x:x"));							
 								if ( numbers.contains("home") ) 
-									exec( ("sayx:xDie festnetznummer von "+ subtext + " ist " + einzelziffern(parts[1])).split("x:x"));							
+									exec( (config.get("app","say")+"x:xDie festnetznummer von "+ subtext + " ist " + einzelziffern(parts[1])).split("x:x"));							
 								if ( numbers.contains("work") ) 
-									exec( ("sayx:xDie Nummer von "+ subtext + " auf der Arbeit ist " + einzelziffern(parts[1])).split("x:x"));							
+									exec( (config.get("app","say")+"x:xDie Nummer von "+ subtext + " auf der Arbeit ist " + einzelziffern(parts[1])).split("x:x"));							
 							} 
 						} else {
-							exec( ("sayx:xDie Telefonnummer von "+ subtext + " ist unbekannt").split("x:x"));							
+							exec( (config.get("app","say")+"x:xDie Telefonnummer von "+ subtext + " ist unbekannt").split("x:x"));							
 						}
 					}
 				}
+				
+				if ( oder("web suche|websuche") ) {
+				
+					String subtext = text.replaceAll("("+keyword+"|websuche|web suche|nach)","").trim();
+					text = ""; // damit nichts mit suche anschlägt.
+					//exec(( config.get("app","say")+"x:xIch suche nach "+ subtext ).split("x:x"));
+					System.out.println("Ich suche nach "+ subtext);
 
+					String sm  = config.get("searchengines", config.get("app","searchengine") );
+					
+					System.out.println("Ich suche mit "+ sm );
+					
+					exec( ( config.get("app","web")+" "+sm.replaceAll("<query>", subtext.replaceAll(" ","+") )  ).split(" "));
+
+				}
+				
 				if ( wort("suche") && oder("dokument|pdf|text") ) {
 
 					String subtext = text.replaceAll("("+keyword+"|suche|dokument|pdf|text|nach|öffnen|öffne)","").trim();
-					//exec(( "sayx:xIch suche nach "+ subtext ).split("x:x"));
+					//exec(( config.get("app","say")+"x:xIch suche nach "+ subtext ).split("x:x"));
 					System.out.println("Ich suche nach "+ subtext);
 					
 					String suchergebnis = "";					
@@ -845,18 +943,18 @@ public class PVA {
 						String anzahl = ""+files.length;
 						if ( files.length == 1 ) anzahl = "einen";
 						if ( !oder("öffnen|öffne") && files.length > 1 ) {
-							exec(( "sayx:xIch habe "+ anzahl +" Treffer, was soll ich damit machen?").split("x:x"));
-						} else  exec(( "sayx:xIch öffne "+ anzahl +" Treffer").split("x:x"));
+							exec(( config.get("app","say")+"x:xIch habe "+ anzahl +" Treffer, was soll ich damit machen?").split("x:x"));
+						} else  exec(( config.get("app","say")+"x:xIch öffne "+ anzahl +" Treffer").split("x:x"));
 						
 						System.out.println("Fertig mit Suchen ");
 					}
 					
 				}
-
+			
 				if ( und("lies") && oder("pdf|text") ) {
 
 					String subtext = text.replaceAll("(lies|pdf|text|vor|laut|einen|ersten|zweiten|dritten|von)","").trim();
-					//exec(( "sayx:xIch suche nach "+ subtext ).split("x:x"));
+					//exec(( config.get("app","say")+"x:xIch suche nach "+ subtext ).split("x:x"));
 					System.out.println("Ich suche nach "+ subtext);
 					
 					String suchergebnis = "";					
@@ -886,27 +984,27 @@ public class PVA {
 							 
 							 	System.out.println("Lese "+ filename);
 								if ( filename.endsWith(".txt") ) {
-									exec( ("sayx:x"+ filename).split("x:x") );
+									exec( (config.get("app","say")+"x:x"+ filename).split("x:x") );
 								}
 								if ( filename.endsWith(".pdf") ) {
 									String txt =  dos.readPipe("pdftotext -nopgbrk "+ filename+ " /tmp/."+keyword+".say");
 									System.out.println( txt );
 //									dos.writeFile("/tmp/."+keyword+".say", txt);
-									exec( ("sayx:x/tmp/."+keyword+".say").split("x:x") );
+									exec( (config.get("app","say")+"x:x/tmp/."+keyword+".say").split("x:x") );
 								}
 							}
 							c++;
 						}
 
 						if ( files.length > 1 ) {
-							exec(( "sayx:xIch habe "+ files.length +" Texte gefunden, das sind leider zu viele!").split("x:x"));
+							exec(( config.get("app","say")+"x:xIch habe "+ files.length +" Texte gefunden, das sind leider zu viele!").split("x:x"));
 						} 
 						System.out.println("Fertig mit suchen nach Text");
 					}
 					
 				}
 
-				if ( und("spiele|musik") ) {
+				if ( und("spiel|musik") || wort("spielmusik") ) {
 					if ( !wort("zufällig") ) {
 						exec(config.get("audioplayer","play").split( config.get("conf","splitter") ));
 					} else {	
@@ -937,7 +1035,8 @@ public class PVA {
 						} 
 					}
 				}
-				if ( und("füge|lieder|hinzu") ) {
+				
+				if ( und("füge|lieder|hinzu") || und("füge|titel|hinzu") ) {
 					log("Ich katalogisiere Musik ...");
 					String suchergebnis = "";
 					if ( dos.fileExists("cache.musik") ) {
@@ -967,8 +1066,10 @@ public class PVA {
 						exec( config.get("audioplayer","play").split( config.get("conf","splitter") ));
 					} 
 				}
-				if ( oder("stoppen|stoppe|halte|an|aus|anhalten|stop") && wort("musik") ) {
-					exec(config.get("audioplayer","stop").split("x:x"));
+				if ( oder("stoppen|stoppe|halte|an|aus|anhalten|stop") ) {
+				
+					if ( wort("musik") ) 
+						exec(config.get("audioplayer","stop").split("x:x"));
 				}
 				
 				if ( wort("leiser") && oder("mache|mach") ) {
@@ -1058,30 +1159,24 @@ public class PVA {
 				if ( !reaction ) {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
 						System.out.println("Ich glaube, Du hast nichts gesagt!");
-						exec(( "sayx:xIch glaube, Du hast nichts gesagt!").split("x:x"));
+						if ( (int)Math.random()*1 == 1 ) {
+							exec(( config.get("app","say")+"x:xIch glaube, Du hast nichts gesagt!").split("x:x"));
+						} else  exec(( config.get("app","say")+"x:xJa, bitte?").split("x:x"));
 					} else {
 						text = text.replace(keyword,"").trim();
 						if ( text.length()>40 ) text = text.substring(0,40)+" usw. usw. ";
 						System.out.println("Ich habe "+ text +" nicht verstanden");
-						exec(( "sayx:xIch habe "+ text +" nicht verstanden").split("x:x"));
+						exec(( config.get("app","say")+"x:xIch habe "+ text +" nicht verstanden").split("x:x"));
 					}
 				}
-
-			
 			} else {
 				System.out.println("Nicht für mich gedacht:" + text);
 			}
-			
-			
-			
-			
 		} catch (Exception e) {
 				
 			e.printStackTrace();
 			System.out.println(e);
 		
 		}
-	
-	
 	}
 }
