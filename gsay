@@ -1,0 +1,3 @@
+#!/bin/bash
+
+GTTS=1 say "$1"
