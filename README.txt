@@ -274,3 +274,4 @@ Keywords in Bot Reaction: " Keyword " + content
 "ton aus" 				->   mute audioplayer
 
 "benutze {TERM}"                        -> switches to named alternative for a command
+"websuche {TERM}"                       -> starts a websearch based on configured searchengine and prefered browser.
