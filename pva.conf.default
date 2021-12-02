@@ -63,9 +63,26 @@ app:"pdf","evince"
 app:"mail","thunderbird"
 app:"web","firefox"
 app:"phone","/usr/bin/jitsi"
+app:"say","/usr/local/sbin/say"
+app:"searchengine","duckduckgo"
+app:"screenshot","gnome-screenshot"
+
+# search
+searchengines:"duckduckgo","https://html.duckduckgo.com/html?q=<query>"
+searchengines:"google","https://www.google.com/search?q=<query>"
 
 # codes are used to grant access to special features
 code:"alpha","alpha default"
 code:"beta","beta default"
 
+# alternatives are prefered apps to use in case we offer alternatives . PVA command to change "%NAME benutze %KEYWORD"
+# alternatives:"%KEYWORD","%FOR-APP","%CMD-TO-USE"
 
+alternatives:"normale sprachausgabe","say","/usr/local/sbin/say"
+alternatives:"google sprachausgabe","say","/usr/local/sbin/gsay"
+alternatives:"firefox","web","firefox"
+alternatives:"google chrome","web","google-chrome"
+alternatives:"chromium free","web"," chromium-freeworld"
+alternatives:"chromium privacy","web"," chromium-privacy-browser"
+alternatives:"duckduckgo","searchengine","duckduckgo"
+alternatives:"googlesuche","searchengine","google"
