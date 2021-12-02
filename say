@@ -1,5 +1,12 @@
 #!/bin/bash
 
+
+if [ "$GTTS" == "1" ]; then
+	FILENAME=/tmp/gtts$RANDOM.mp3
+        gtts-cli "$1" --tld de --lang de --output $FILENAME; play $FILENAME tempo 1.5 2>/dev/null;rm -f $FILENAME
+	exit;
+fi
+
 if [ "$VOICE" == "" ]; then
 	VOICE="de5"
 fi
