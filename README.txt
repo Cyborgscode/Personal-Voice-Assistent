@@ -272,3 +272,5 @@ Keywords in Bot Reaction: " Keyword " + content
 
 "ton an"				-> unmute audioplayer
 "ton aus" 				->   mute audioplayer
+
+"benutze {TERM}"                        -> switches to named alternative for a command
