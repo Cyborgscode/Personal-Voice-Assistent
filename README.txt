@@ -35,6 +35,16 @@ so if you run Ubuntu or Arch, your install commands will vary a bit.
 
 *) looks like thats not entirely true, as we depend on org.json.* classes from here https://github.com/stleary/JSON-java/releases/tag/20210307
 
+O== if you want to use GTTS instead of espeak/mbrola
+
+your need to checkout gsay, change your config to use gsay as "say" app and install gtts for your distro:
+
+i.E. Fedora: dnf install gtts
+
+## WARNING: 
+## your personal privacy is at risk, if you use gtts, as the text of the what PVA answeres ( which includes repeats you what you said ) 
+## is tranfsered to a Google server, for which you need an active internet connection too. 
+
 O== Espeak:
 
 sudo dnf  -y install espeak
