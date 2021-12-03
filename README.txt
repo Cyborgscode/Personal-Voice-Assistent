@@ -217,9 +217,10 @@ Keywords in Bot Reaction: " Keyword " + content
 "stoppe {TERM}"				   "film" "video" "musik" "audio" refer to teh configured players
 
 "starte {TERM}				-> starts apps  {TERM} => "blender" "wetter" "karte" "karten" "kartenapp" "firefox" "netflix" "windy" "openoffice" "emailprogramm"
-"öffne  {TERM}
+"öffne  {TERM}				# ALIAS of starte 
+"öffne {TYPE} mit {APP}"		-> takes the last search result for {TYPE} and opens it with {TERM} . This implies, that you did a search before.
 	
-"ich möchte {TERM} hören"		-> search for musik files matching TERM, where TERM kann have more than one word. on Success the audioplayer gets informed
+"ich möchte {TERM} hören"		-> search for musik files matching TERM, where TERM can have more than one word. on Success the audioplayer gets informed
 
 "was ist da zu hören"			-> ask audioplay about trackinfos
 "was ist gerazu zu hören"
@@ -235,6 +236,8 @@ Keywords in Bot Reaction: " Keyword " + content
 
 "suche dokument {TERM}"			-> search on ~/Dokuments aka. ~/Documents  for TERM as PDF or TXT or ODT/S/P
 "suche dokument {TERM} pdf"		-> search on ~/Dokuments aka. ~/Documents  for TERM as PDF
+
+"suche bild {TERM}"			-> searches in configures pics paths for: JPEG,JPG,GIF,PNG,SVG
 
 "lies pdf {TERM}" 			-> **EXPERIMENTAL** .. find and read out pdf file
 "lies text {TERM}" 			-> find and read out txt files
