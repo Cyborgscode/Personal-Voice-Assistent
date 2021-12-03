@@ -1,4 +1,5 @@
 
+
 import java.util.*;
 import java.io.*;
 import org.json.*;
@@ -71,6 +72,38 @@ public class PVA {
 
                 return null;
         }
+
+
+	static String cacheSuche(String start,String suchwort,String type) {
+		suchwort = suchwort.trim().toLowerCase();
+		String[] files = start.split("x:x");
+		String filename ="";
+//	log(suchwort);
+                if ( files != null ) {     
+                        for(int i =0; i < files.length; i++ ) {
+                        	// System.out.println("processing file "+ entries[i].toString() +" matches ("+type+")$ ??? "+  entries[i].toString().matches(".*("+type+")$") );
+                        	if ( files[i].toString().toLowerCase().endsWith(type) || files[i].toString().toLowerCase().matches(".*("+type+")$") ) {
+	                        		if ( suchwort.contains(" ") ) {
+	                        			String[] args = suchwort.split(" ");
+	                        			boolean found = true;
+	                        			for( String arg : args ) {
+								arg = arg.trim();
+								//System.out.println("subsuchwort="+ arg);
+								if ( !arg.isEmpty() && !files[i].toString().toLowerCase().contains( arg ) ) {
+									found = false;
+								}
+							}
+							if ( found ) filename += files[i]+"x:x";
+	                        			
+	                        		} else if ( suchwort.equals("*") || files[i].toString().toLowerCase().contains(suchwort) ) {
+							filename += files[i]+"x:x";
+						}
+				}
+			}
+		}
+		
+		return filename;
+	}
 
 
 	static String _suche(String start,String suchwort,String type) {
@@ -337,8 +370,8 @@ public class PVA {
 
 			// now some error corrections for bugs in vosk or the way you speak to your pc ;) 
 			
-			String[] bugs = "hi länder:fehler ausgabe:sprächen:hofer:a c d c:flüge:kombiniere:fehlerausgabe".split(":");
-			String[] ersatz = "highlander:fehlerausgabe:sprechen:rufe:acdc:füge:kompiliere:füge".split(":");
+			String[] bugs = "hi länder:fehler ausgabe:sprächen:hofer:a c d c:flüge:kombiniere:fehlerausgabe:cash".split(":");
+			String[] ersatz = "highlander:fehlerausgabe:sprechen:rufe:acdc:füge:kompiliere:füge:cache".split(":");
 			
 			for(int a=0;a<bugs.length;a++)
 				text = text.replaceAll( bugs[a], ersatz[a] );
@@ -418,6 +451,15 @@ public class PVA {
 					if ( !read.isEmpty() && !read.equals("nochmal") && !read.equals("nochmals") ) text = read;
 				} else {
 					dos.writeFile("cmd.last", text);
+				}
+				
+				// create caches
+				
+				if ( und("erstelle|cache") ) {
+		
+					dos.writeFile("cache.musik", suche( config.get("path","music"), "*",".mp3|.aac" ) );
+					exec( (config.get("app","say")+"x:xMusik Cache wurde erzeugt").split("x:x"));	
+
 				}
 
 				if ( wort("benutze") ) {
@@ -651,14 +693,15 @@ public class PVA {
 			
 				if ( oder("beende|stoppe") ) {
 					exec( (config.get("app","say")+"x:xIch beende "+ text.replaceAll("(beende|stoppe)","").trim()).split("x:x"));
-					if ( wort("firefox") )	exec("killall firefox");
+					
+					if ( wort("firefox") )	exec("killall GeckMain");
 					if ( wort("chrome") )	exec("killall google-chrome");
 					if ( wort("chromium") )	exec("killall chromium-freeworld chromium-privacy-browser");
 					if ( wort("wetter") )	exec("killall gnome-weather");
 					if ( oder("karte|karten|kartenapp") )	exec("killall gnome-maps");
 					if ( oder("film|video") ) 	exec("killall "+ config.get("videoplayer_short","pname"));
 					if ( oder("musik|audio") ) 	exec("killall "+ config.get("audioplayer_short","pname") );
-					if ( und("runs|auf|magic") )	exec("killall gfclient.exe");
+					if ( und("runes|of|magic") )	exec("killall gfclient.exe");
 
 
 				}
@@ -669,37 +712,48 @@ public class PVA {
 					if ( wort("öffne") ) {
 						exec( (config.get("app","say")+"x:xIch öffne "+text.replaceAll("(starte|öffne)","").replaceAll("app","äpp").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()).split("x:x"));
 					} else  exec( (config.get("app","say")+"x:xIch starte "+text.replaceAll("(starte|öffne)","").replaceAll("app","äpp").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()).split("x:x"));
-					if ( wort("blender") ) 
-						exec("blender");
-					if ( wort("wetter") ) 
-						exec("gnome-weather");
-					if ( oder("karte|karten|kartenapp") ) 
+
+/*					if ( oder("karte|karten|kartenapp") ) 
 						exec("gnome-maps");
-					if ( wort("firefox") ) 
-						exec("firefox");
-					if ( wort("netflix") ) 
-						exec("firefox https://www.netflix.com/browse/my-list");
-					if ( wort("windy") ) 
-						exec("firefox https://www.windy.com/?52.261,10.588,9".split(" "));
-					if ( wort("openoffice") ) 
-						exec( config.get("app","office") );
+*/
 					if ( und("deinen|sourcecode") ) 
 						exec( (config.get("app","txt") + " ./PVA.java").split(" ") );
 					if ( und("deine|config") )
 						exec( (config.get("app","txt") + " ./pva.conf").split(" ") );
-					if ( wort("emailprogramm") ) 
-						exec( config.get("app","mail") );
-						// thunderbird -compose "to=support@evolution-hosting.eu,subject=Mal sehen,body=TESTMAIL"
-					if ( und("runs|auf|magic") )	exec("env WINEPREFIX=\"/home/marius/.wine\" /opt/wine-staging/bin/wine  C:\\\\windows\\\\command\\\\start.exe /d \"/home/marius/Programme/GameforgeLive/Games/DEU_deu/Runes Of Magic/\" /Unix \"/home/marius/Programme/GameforgeLive/Games/DEU_deu/Runes Of Magic/launcher.exe\" NoCheckVersion".split(" "));
+
+					// thunderbird -compose "to=support@evolution-hosting.eu,subject=Mal sehen,body=TESTMAIL"
+
+					StringHash apps = config.get("app");
+					Enumeration<String> keys = apps.keys();
+					while ( keys.hasMoreElements() ) {
+						String key = keys.nextElement();
+						if ( wort(key) ) {
+							String app = config.get("app", key);
+							while ( app.startsWith("%") && app.endsWith("%") ) {
+								app = app.substring(1,app.length()-1);
+								app = config.get("app", app);
+							}
+							exec( app.split(" ") );
+						}
+					}
 
 				}
 
 				if ( und("ich|möchte|hören") ) {
 					String subtext = text.replaceAll("("+keyword+"|ich|möchte|hören|noch|dazu)","").trim();
 					log("Ich suche nach Musik : "+ subtext);
-					
-					String suchergebnis = suche( config.get("path","music"), subtext,".mp3|.aac" );
-					// System.out.println("suche: "+ suchergebnis );
+
+					String suchergebnis = "";
+					if ( dos.fileExists("cache.musik") ) {
+						log("Suche im Cache");
+						suchergebnis = cacheSuche( dos.readFile("cache.musik"), subtext,".mp3|.aac" );												
+					} else {
+						log("Suche im Filesystem");
+						suchergebnis = suche( config.get("path","music"), subtext,".mp3|.aac" );
+					}
+
+					// String suchergebnis = suche( config.get("path","music"), subtext,".mp3|.aac" );
+					System.out.println("suche: "+ suchergebnis );
 					if (!suchergebnis.isEmpty() ) {	
 
 						int c = 0;
@@ -728,16 +782,17 @@ public class PVA {
 				                	}
 				                }
 
-						if ( c > 1 ) {
-							log("Ich habe "+c+" Titel gefunden");
-							exec( (config.get("app","say")+"x:xIch habe "+ c +" Titel gefunden").split("x:x"));
-						}
-						
 						if ( c > 500 ) {
 							log("Ich habe "+c+" Titel gefunden");
 							exec( (config.get("app","say")+"x:xIch habe "+ c +" Titel gefunden, dies kann nicht stimmen.").split("x:x"));
 							return	;				
 						}
+
+						if ( c > 1 ) {
+							log("Ich habe "+c+" Titel gefunden");
+							exec( (config.get("app","say")+"x:xIch habe "+ c +" Titel gefunden").split("x:x"));
+						}
+						
 						
 						args = suchergebnis.split("x:x");
 						for( String filename : args) {
@@ -1176,7 +1231,7 @@ public class PVA {
 				
 			e.printStackTrace();
 			System.out.println(e);
-		
+
 		}
 	}
 }
