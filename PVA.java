@@ -72,6 +72,97 @@ public class PVA {
                 return null;
         }
 
+	static String[] buildFileArray(String str,String rpl) {
+
+		String[] x = str.split(" ");
+		String[] y = String.join("\\\\ ",rpl.split(" ")).split("x:x");
+		String[] z = new String[x.length-1+y.length];
+	
+		int idx = 0;								
+		for(int i=0;i<x.length;i++) {
+			if ( x[i].matches(".*(%U|%F).*")) {
+				for ( int j = 0;j< y.length;j++) {
+					z[idx++] = y[j];
+				}
+			} else {
+				z[idx++] = x[i];
+			}
+		} 
+		return z;
+	}
+
+	static String _searchExternalApps(String path,String suchwort) {
+
+		File file = new File(path);
+                File[] entries = file.listFiles();
+		String filename ="";
+		suchwort = suchwort.trim().toLowerCase();
+
+                if ( entries != null ) {     
+                        for(int i =0; i < entries.length; i++ ) {
+//                        	System.out.println("processing file "+ entries[i].toString() );
+                        	try {
+	                        	if ( entries[i].isDirectory() && !entries[i].getName().startsWith(".") ) {
+
+						// directoryname contains searchword(s) so we add it entirely
+						// log("add "+ entries[i].getCanonicalPath() +" mit *");
+						filename += _searchExternalApps( entries[i].getCanonicalPath() , suchwort);
+	                        	
+	                        	} else if ( entries[i].toString().toLowerCase().endsWith(".desktop") ) {
+
+						String[] content = dos.readFile( entries[i].getCanonicalPath() ).split("\n");
+						boolean hit = false;
+						String app_exe = "";
+						for(String line: content) {
+							line=line.trim();
+							if ( line.startsWith("Exec=") ) {
+								app_exe = line.substring( line.indexOf("=")+1 );
+								
+							}
+							if ( line.startsWith("Name=") || line.startsWith("Name["+config.get("conf","lang")+"]=") || line.startsWith("Name["+config.get("conf","lang_short")+"]=") ) {
+								String name = line.substring( line.indexOf("=")+1 );
+								if ( name.toLowerCase().contains(suchwort) ) {
+									hit = true; // we can't know, if "Exec=" stands before or after Name*= in the desktopfile!
+								}
+							}
+							if ( line.startsWith("Keywords=") || line.startsWith("Keywords["+config.get("conf","lang")+"]=") || line.startsWith("Keywords["+config.get("conf","lang_short")+"]=") ) {
+								String name = line.substring( line.indexOf("=")+1 ).toLowerCase();
+								String[] keys = name.split(";");
+								for(String key: keys) {
+								
+									if ( key.contains(suchwort) || key.equals( suchwort ) ) {
+										hit = true; // we can't know, if "Exec=" stands before or after Name*= in the desktopfile!
+									}
+								}
+							}
+						
+						}
+				
+						if ( hit ) filename = app_exe; // This way, we garantee, that it's found, it's it really present. it's possible that someone made a mistake and did not write Exec= into the file. 
+			
+					}
+				} catch(IOException e) {
+					System.out.println(e.getMessage());
+				}
+			}
+		}
+
+		return filename;
+	
+	
+	}
+
+	static String searchExternalApps(String suchwort) {
+	
+		String filename ="";
+		filename += _searchExternalApps("/usr/share/applications/", suchwort );
+		if ( config.get("conf","lang").equals("de_DE") ) {
+			filename += _searchExternalApps("/home/"+ dos.readPipe("whoami").trim()+"/Schreibtisch", suchwort );
+		} else  filename += _searchExternalApps("/home/"+ dos.readPipe("whoami").trim()+"/Desktop", suchwort );
+	
+		return filename;
+	}
+
 
 	static String cacheSuche(String start,String suchwort,String type) {
 		suchwort = suchwort.trim().toLowerCase();
@@ -462,7 +553,7 @@ public class PVA {
 				}
 
 				if ( wort("benutze") ) {
-					String subtext = text.replaceAll("benutze","").trim();
+					String subtext = text.replaceAll("benutzer","").replaceAll("benutze","").trim();
 					
 					StringHash sub = alternatives.get(subtext);
 					if ( sub != null ) {
@@ -667,7 +758,7 @@ public class PVA {
 						for(int j=0;j<=3;j++) {						
 							for(int i=0;i< bericht.length;i++) {
 								String line = bericht[i];
-//								log(line);
+
 								if ( j == 0 && i == 0) {
 									 text += "Die Wetteraussichten für Morgen in "+ line +" ::: "+phase[j]+" wird es ";
 								} else if ( i == 0 ) text += ". "+phase[j]+" wird es ";
@@ -681,7 +772,7 @@ public class PVA {
 							}
 						}
 						text = text.replaceAll("     ","").replace(" | ","");
-						// log(text);
+
 						exec( (config.get("app","say")+"x:x"+text).split("x:x"));
 						reaction = true;
 					} 
@@ -708,34 +799,94 @@ public class PVA {
 				// start apps by name
 			
 				if ( oder("starte|öffne") ) {
-					if ( wort("öffne") ) {
-						exec( (config.get("app","say")+"x:xIch öffne "+text.replaceAll("(starte|öffne)","").replaceAll("app","äpp").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()).split("x:x"));
-					} else  exec( (config.get("app","say")+"x:xIch starte "+text.replaceAll("(starte|öffne)","").replaceAll("app","äpp").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()).split("x:x"));
 
-/*					if ( oder("karte|karten|kartenapp") ) 
-						exec("gnome-maps");
-*/
+					text = text.replace("starter","starte").replace("öffner","öffne").replace("kreta","krita"); // known bugs ;)
+
 					if ( und("deinen|sourcecode") ) 
 						exec( (config.get("app","txt") + " ./PVA.java").split(" ") );
 					if ( und("deine|config") )
 						exec( (config.get("app","txt") + " ./pva.conf").split(" ") );
 
-					// thunderbird -compose "to=support@evolution-hosting.eu,subject=Mal sehen,body=TESTMAIL"
+					String mit = "";
+
+					text = text.replaceAll("(starter|öffner)","").replaceAll("(starte|öffne)","").replaceAll("app","").toLowerCase().trim();
+					if ( text.contains(" mit ") ) {
+						mit = text.substring( text.indexOf(" mit ")+5 ).trim();
+						text = text.substring( 0, text.indexOf( " mit ") );
+					}
+						
+					// in case our keyword are the first argument, we need to swap text+mit : "öffne bilder mit gimp" which more human like
+						
+					if ( text.matches(".*(texte|bilder|video|dokumente|musik).*") ) {
+						System.out.println(" tausche Suchbegriff(e) "+ text + " mit " + mit );
+
+						String a = mit;	mit = text;text = a;
+					}
+
 
 					StringHash apps = config.get("app");
 					Enumeration<String> keys = apps.keys();
 					while ( keys.hasMoreElements() ) {
 						String key = keys.nextElement();
 						if ( wort(key) ) {
-							String app = config.get("app", key);
-							while ( app.startsWith("%") && app.endsWith("%") ) {
-								app = app.substring(1,app.length()-1);
-								app = config.get("app", app);
+							String exe = config.get("app", key);
+							while ( exe.startsWith("%") && exe.endsWith("%") ) {
+								exe = exe.substring(1,exe.length()-1);
+								exe = config.get("app", exe);
 							}
-							exec( app.split(" ") );
+							if ( mit.isEmpty() ) {
+								exec( exe.replaceAll("(%U|%F)","").split(" ") );
+							} else {
+								if ( mit.equals("bildern") || mit.equals("bilder") ) {
+									exec( buildFileArray(exe,dos.readFile("search.pics.cache")));
+								}
+								if ( mit.equals("musik") || mit.equals("musikstücke") ) {
+									exec( buildFileArray(exe,dos.readFile("search.music.cache")));
+								}
+								if ( mit.equals("videos") || mit.equals("filme") ) {
+									exec( buildFileArray(exe,dos.readFile("search.videos.cache")));
+								}
+								if ( mit.equals("dokumente") || mit.equals("texte") ) {
+									exec( buildFileArray(exe,dos.readFile("search.docs.cache")));
+								}
+							}
 						}
 					}
 
+					// we don't wanne execute internal + external apps, if we found one internally. The FLAG REACTION is set, if something got executed via exec().
+
+					if ( !reaction ) {
+					
+					
+						String exe = searchExternalApps( text );
+						if ( ! exe.trim().isEmpty() ) {
+							if ( mit.isEmpty() ) {
+								exec( exe.replaceAll("(%U|%F)","").split(" ") );
+							} else {
+								if ( mit.equals("bildern") || mit.equals("bilder") ) {
+									exec( buildFileArray(exe,dos.readFile("search.pics.cache")));
+								}
+								if ( mit.equals("musik") || mit.equals("musikstücke") ) {
+									exec( buildFileArray(exe,dos.readFile("search.music.cache")));
+								}
+								if ( mit.equals("videos") || mit.equals("filme") ) {
+									exec( buildFileArray(exe,dos.readFile("search.videos.cache")));
+								}
+								if ( mit.equals("dokumente") || mit.equals("texte") ) {
+									exec( buildFileArray(exe,dos.readFile("search.docs.cache")));
+								}
+							}
+						}
+					}
+
+					if ( reaction ) {
+					
+						if ( wort("öffne") ) {
+							exec( (config.get("app","say")+"x:xIch öffne "+text.replaceAll("(starte|öffne)","").replaceAll("app","").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()).split("x:x"));
+						} else  exec( (config.get("app","say")+"x:xIch starte "+text.replaceAll("(starte|öffne)","").replaceAll("app","").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()).split("x:x"));
+
+					} else exec( (config.get("app","say")+"x:xIch habe leider keine Anwendung zu "+text.replaceAll("(starte|öffne)","").replaceAll("app","").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()+" gefunden").split("x:x"));
+										
 				}
 
 				if ( und("ich|möchte|hören") ) {
@@ -752,8 +903,10 @@ public class PVA {
 					}
 
 					// String suchergebnis = suche( config.get("path","music"), subtext,".mp3|.aac" );
-					System.out.println("suche: "+ suchergebnis );
+					// System.out.println("suche: "+ suchergebnis );
 					if (!suchergebnis.isEmpty() ) {	
+
+						dos.writeFile("search.music.cache",suchergebnis);
 
 						int c = 0;
 
@@ -833,7 +986,9 @@ public class PVA {
 					String suchergebnis = suche( config.get("path","video"), subtext, ".mp4|.mpg|.mkv|.avi|.flv" );
 //					System.out.println("suche: "+ suchergebnis );
 					if (!suchergebnis.isEmpty() ) {	
-					
+
+						dos.writeFile("search.video.cache",suchergebnis);					
+
 						TreeSort ts = new TreeSort();
 
 						String[] files = suchergebnis.split("x:x");
@@ -954,7 +1109,39 @@ public class PVA {
 					exec( ( config.get("app","web")+" "+sm.replaceAll("<query>", subtext.replaceAll(" ","+") )  ).split(" "));
 
 				}
-				
+				if (  oder("suche|such") && oder("bild|bilder") ) {
+
+					String subtext = text.replaceAll("("+keyword+"|nach|sucher|suche|such|bilder|bild|jpg|png|gif|jpeg)","").trim();
+					//exec(( config.get("app","say")+"x:xIch suche nach "+ subtext ).split("x:x"));
+					System.out.println("Ich suche nach "+ subtext);
+					
+					String suchergebnis = "";					
+					
+					suchergebnis = suche( config.get("path","pics"), subtext, ".jpg|.png|.gif|.jpeg|.svg" );
+
+					if (!suchergebnis.isEmpty() ) {
+
+						dos.writeFile("search.pics.cache",suchergebnis );
+						
+						String[] files = suchergebnis.split("x:x");
+						for(String filename : files ) {
+
+							System.out.println(" gefunden : "+ filename);
+							if ( oder("öffnen|öffne") || files.length == 1 ) { 
+								exec( (config.get("app","gfx")+"x:x"+ filename).split("x:x") );
+							}
+						}
+						String anzahl = ""+files.length;
+						if ( files.length == 1 ) anzahl = "einen";
+						if ( !oder("öffnen|öffne") && files.length > 1 ) {
+							exec(( config.get("app","say")+"x:xIch habe "+ anzahl +" Treffer, was soll ich damit machen?").split("x:x"));
+						} else  exec(( config.get("app","say")+"x:xIch öffne "+ anzahl +" Treffer").split("x:x"));
+						
+						System.out.println("Fertig mit Suchen ");
+
+					} else exec(( config.get("app","say")+"x:xIch habe nichts gefunden, was zu "+ subtext +" paßt.").split("x:x"));
+				}						
+						
 				if ( wort("suche") && oder("dokument|pdf|text") ) {
 
 					String subtext = text.replaceAll("("+keyword+"|suche|dokument|pdf|text|nach|öffnen|öffne)","").trim();
@@ -970,6 +1157,8 @@ public class PVA {
 					} 
 					// System.out.println("suchergebnis: "+ suchergebnis );
 					if (!suchergebnis.isEmpty() ) {	
+					
+						dos.writeFile("search.docs.cache",suchergebnis);
 					
 						String[] files = suchergebnis.split("x:x");
 						for(String filename : files ) {
@@ -1022,6 +1211,8 @@ public class PVA {
 					} 
 					// System.out.println("suchergebnis: "+ suchergebnis );
 					if (!suchergebnis.isEmpty() ) {	
+					
+						dos.writeFile("search.docs.cache",suchergebnis);
 					
 						String[] files = suchergebnis.split("x:x");
 						int c = 1;
@@ -1230,7 +1421,7 @@ public class PVA {
 				
 			e.printStackTrace();
 			System.out.println(e);
-
+		
 		}
 	}
 }
