@@ -90,7 +90,7 @@ Download them here:
 
 https://alphacephei.com/vosk/models
 
-There are small models, with a smaller stock of words, but it may already be enough for your tasks, or you can use the big ones ( ~1.2 GB ), which have a lot more words, but tend to have false positives for exactly this reason :) i.e. in german "füge" and "flüge" sound very similar and this gives us a relativly high error rate. You should use the small model on the Pinephone, due to it's size advantage.
+There are small models, with a smaller stock of words, but it may already be enough for your tasks, or you can use the big ones ( ~1.9 GB ), which have a lot more words, but tend to have false positives for exactly this reason :) i.e. in german "füge" and "flüge" sound very similar and this gives us a relativly high error rate. You should use the small model on the Pinephone, due to it's size advantage.
 
 Installation: (replace the modelfile with your filename! )
 
