@@ -13,11 +13,11 @@ conf:"splitter","x:x"
 # we need this for the weather service
 conf:"location","Braunschweig"
 
-#vosk model to use, this is the "big" 1.2 GB german model dated 16.7.2021
+#vosk model to use, this is the "big" 1.9 GB german model dated 03.12.2021
 #
 # atm pva has fixed german wording in it's code, until this is changed, this option does not have a meaning.
 #
-vosk:"model","vosk-model-de-0.6"
+vosk:"model","vosk-model-de-0.21"
 
 # add as many caldav objects as you like
 # syntax:
@@ -67,6 +67,23 @@ app:"say","/usr/local/sbin/say"
 app:"searchengine","duckduckgo"
 app:"screenshot","gnome-screenshot"
 
+# CUSTOM
+
+app:"runes of magic","runesofmagic"
+app:"blender","blender"
+app:"wetter","gnome-weather"
+app:"karte","gnome-maps"
+app:"firefox","firefox"
+app:"netflix","firefox https://www.netflix.com/browse/my-list"
+app:"windy","firefox https://www.windy.com/52.263/10.528?52.263,10.529,18"
+app:"openoffice","openoffice4"
+
+# Aliases
+
+app:"emailprogramm","%mail%"
+app:"webbrowser","%web%"
+
+
 # search
 searchengines:"duckduckgo","https://html.duckduckgo.com/html?q=<query>"
 searchengines:"google","https://www.google.com/search?q=<query>"
@@ -86,3 +103,6 @@ alternatives:"chromium free","web"," chromium-freeworld"
 alternatives:"chromium privacy","web"," chromium-privacy-browser"
 alternatives:"duckduckgo","searchengine","duckduckgo"
 alternatives:"googlesuche","searchengine","google"
+alternatives:"openoffice","office","openoffice4"
+alternatives:"libreoffice","office","libreoffice"
+
