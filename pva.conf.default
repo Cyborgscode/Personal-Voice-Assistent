@@ -9,15 +9,16 @@ conf:"keyword","carola"
 #       you can change this, but then you need to a) find a better sequence and b) change it in every config line it's used.
 conf:"splitter","x:x"
 conf:"lang","de_DE"
+conf:"lang_short","de"
 
 # we need this for the weather service
 conf:"location","Braunschweig"
 
-#vosk model to use, this is the "big" 1.9 GB german model dated 03.12.2021
+#vosk model to use, this is the "big" 1.2 GB german model dated 16.7.2021
 #
 # atm pva has fixed german wording in it's code, until this is changed, this option does not have a meaning.
 #
-vosk:"model","vosk-model-de-0.21"
+vosk:"model","vosk-model-de-0.6"
 
 # add as many caldav objects as you like
 # syntax:
@@ -55,17 +56,20 @@ audioplayer:"backward","/usr/bin/qmmpx:x--seek-bwdx:x"
 path:"music","path1:path2:...:pathx"
 path:"video","path1:path2:...:pathx"
 path:"docs","path1:path2:...:pathx"
+path:"pics","path1:path2:...:pathx"
 
 # Easily switched to libreoffice
 app:"office","openoffice4"
 app:"txt","gedit"
 app:"pdf","evince"
+app:"gfx","gnome-open"
 app:"mail","thunderbird"
 app:"web","firefox"
 app:"phone","/usr/bin/jitsi"
 app:"say","/usr/local/sbin/say"
 app:"searchengine","duckduckgo"
 app:"screenshot","gnome-screenshot"
+app:"bildbetrachter","eog -n -s %F"
 
 # CUSTOM
 
