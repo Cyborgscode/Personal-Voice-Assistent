@@ -8,7 +8,7 @@ conf:"keyword","carola"
 # ATTN: the term "x:x" is used to replace " " in cmds that have options. This is needed as filenames can contain " " in theire name, which makes option-splitting a nightmare
 #       you can change this, but then you need to a) find a better sequence and b) change it in every config line it's used.
 conf:"splitter","x:x"
-
+conf:"lang","de_DE"
 
 # we need this for the weather service
 conf:"location","Braunschweig"
