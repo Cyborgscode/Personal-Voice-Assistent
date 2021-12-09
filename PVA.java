@@ -6,14 +6,18 @@ import io.*;
 import hash.*;
 import data.*;
 import java.nio.file.*;
+import java.util.regex.*;
 
 public class PVA {
 
 	static String keyword = "carola";
 
-	static TwoKeyHash config = new TwoKeyHash();
-	static TwoKeyHash alternatives = new TwoKeyHash();
-	static Vector<Contact> contacts = new Vector<Contact>();
+	static TwoKeyHash config          = new TwoKeyHash();
+	static TwoKeyHash alternatives    = new TwoKeyHash();
+	static TwoKeyHash texte           = new TwoKeyHash();
+	static Vector<Reaction> reactions = new Vector<Reaction>();
+	static Vector<Command> commands   = new Vector<Command>();
+	static Vector<Contact> contacts   = new Vector<Contact>();
 
 	static String text = "";
 	static boolean reaction = false;
@@ -59,9 +63,11 @@ public class PVA {
 
 	static boolean und(String gesucht) {
 		String[] args = gesucht.toLowerCase().split("\\|");
-		for(String arg: args) 
-			if ( ! text.contains( arg ) ) 
+		for(String arg: args) {
+			if ( ! text.contains( arg ) ) {
 				return false;	
+			}
+		}
 		return true;
 	}
 
@@ -310,7 +316,6 @@ public class PVA {
 
 		StringBuffer sb = new StringBuffer(50000); // yes, we think big ;)
 	
-		
 			Enumeration en1 = config.keys();
 			while ( en1.hasMoreElements() ) {
 				String key = (String)en1.nextElement();
@@ -341,6 +346,40 @@ public class PVA {
 				}
 			}
 
+			en2 = texte.keys();
+			while ( en2.hasMoreElements() ) {
+				String key = (String)en2.nextElement();
+				StringHash sub = texte.get( key );
+				Enumeration en3 = sub.keys();
+				while ( en3.hasMoreElements() ) {
+					
+					String k = (String)en3.nextElement();
+					String v = sub.get( k );
+				
+					sb.append( "text:\""+ key +"\",\""+ k +"\",\""+ v +"\"\n" );
+
+				}
+			}
+
+			for(int i=0; i < reactions.size(); i++)	{
+
+				Reaction r = (Reaction)reactions.get(i);
+
+				sb.append( "reaction:\""+ r.positives +"\",\""+ r.negatives +"\",\""+ r.answere +"\"\n" );
+
+
+			}
+
+			for(int i=0; i < commands.size(); i++)	{
+
+				Command c = commands.get(i);
+
+				sb.append( "command:\""+ c.words +"\",\""+ c.command +"\",\""+ c.filter +"\"\n" );
+
+
+			}
+
+
 //			log ( sb.toString() );
 
 //		return true;
@@ -366,11 +405,37 @@ public class PVA {
 					try {
 						String[] level1 = line.split(":",2);
 						String[] level2 = level1[1].trim().replaceAll("^\"","").replaceAll("\"$","").trim().split("\",\"");
+
+						// UPS! the above construct replaces |"key",""| into => |key","| which splits into just "key" with no value left, that's why we need to check for shorter Level2-Stringarrays
 				
 						if ( level1[0].trim().equals("alternatives") ) {
+
 							alternatives.put(level2[0].trim() , level2[1].trim() , level2[2].trim());
+
+						} else if ( level1[0].trim().equals("text") ) {
+
+							texte.put(level2[0].trim() , level2[1].trim() , level2[2].trim());
+
+						} else if ( level1[0].trim().equals("reaction") ) {
+
+							if ( level2.length == 3 ) {
+								reactions.add( new Reaction( level2[0].trim() , level2[1].trim() , level2[2].trim() ) );
+							} else  reactions.add( new Reaction( level2[0].trim() , "" , level2[1].trim() ) );
+							
+						} else if ( level1[0].trim().equals("command") ) {
+
+							if ( level2.length == 3 ) {
+								commands.add( new Command( level2[0].trim() , level2[1].trim() , level2[2].trim() ) );
+							} else  commands.add( new Command( level2[0].trim() , level2[1].trim() , "" ) );
+
 						} else { 
-							config.put( level1[0].trim() , level2[0].trim() , level2[1].trim() );
+								
+							if ( level2.length == 2 ) {
+
+								config.put( level1[0].trim() , level2[0].trim() , level2[1].trim() );
+
+							} else  config.put( level1[0].trim() , level2[0].trim() , "" );
+
 						}
 					} catch (Exception e) {
 						log("ERROR:syntaxerror:config:"+line);
@@ -464,31 +529,42 @@ public class PVA {
 								
 			}
 
-//			log("TEXT:" + text);
+			log("TEXT:" + text);
 
 			// now some error corrections for bugs in vosk or the way you speak to your pc ;) 
-			
-			String[] bugs = "hi länder:fehler ausgabe:sprächen:hofer:a c d c:flüge:kombiniere:fehlerausgabe:cash".split(":");
-			String[] ersatz = "highlander:fehlerausgabe:sprechen:rufe:acdc:füge:kompiliere:füge:cache".split(":");
-			
-			for(int a=0;a<bugs.length;a++)
-				text = text.replaceAll( bugs[a], ersatz[a] );
-			
-			
-			// bug correction for vosk, hearing stuff noone said. 
-			
-			if ( text.startsWith("einen") ) text = text.replaceAll("^einen ","");
 
+			StringHash rep = config.get("replacements");
+			if ( rep != null && rep.size() > 0  ) {
+			
+				Enumeration en = rep.keys();
+				while(en.hasMoreElements() ) {
+					String key = (String)en.nextElement();
+					String value = rep.get(key);
+					
+					Matcher m = Pattern.compile("(?m)^"+key ).matcher(text);
+					
+					if ( m.find() ) {
+						text = text.replaceAll( "^einen", value );
+					}
+				}
+
+				text=text.trim();
+
+			}
+			
 			// some context less reactions
-
-			if ( text.contains("ha ha ha") ) exec( (config.get("app","say")+"x:xWas gibt es da so zu lachen?").split("x:x"));
-			if ( text.contains("danke") ) exec( (config.get("app","say")+"x:xich helfe gerne").split("x:x"));
-			if ( und("sehr|witzig") ) exec( (config.get("app","say")+"x:xich kann nichts dafür, wenn Du Dich ungenau ausdrückst :)").split("x:x"));
-			if ( und("das|funktioniert") && !wort("nicht") ) exec( (config.get("app","say")+"x:xHattest Du etwas anderes erwartet?").split("x:x"));
-			if ( und("das|funktioniert") && wort("nicht") ) exec( (config.get("app","say")+"x:xUps... Bugreports bitte an meinen Schöpfer").split("x:x"));
-			if ( und("wie|ist|dein|name") ) exec( (config.get("app","say")+"x:xMein name ist "+ keyword ).split("x:x"));
-			if ( und("ich|habe|gar|nichts|gesagt") ) exec( (config.get("app","say")+"x:xDas glaubst auch nur Du!").split("x:x"));
 			
+			for(int i=0; i < reactions.size(); i++)	{
+
+				Reaction r = (Reaction)reactions.get(i);
+
+				if ( und( r.positives ) && ( r.negatives.isEmpty() || !und( r.negatives ) ) ) {
+					
+					exec( (config.get("app","say")+"x:x" + r.answere.replaceAll("%KEYWORD", keyword )).split("x:x"));
+					
+				}
+			}
+
 			// now the part that interessts you most .. the context depending parser
 			
 			// before we start the static methods:
@@ -508,10 +584,38 @@ public class PVA {
 			
 				text = text.substring( text.indexOf(keyword) ).replaceAll( keyword , "");
 
+				String text_raw = text; // RAW Copy of what has been spoken. This is needed in case a filter is applied, but we need some of the filtered words to make decisions.
+
 				// It can be very helpfull to output the sentence vosk heared to see, whats going wrong.
 
 				log(text);
+
+				// parse commands from config
 				
+				Command cf = new Command("DUMMY","",""); // cf = commandFound
+				
+				for(int i=0; i < commands.size(); i++)	{
+
+					Command cc = commands.get(i);
+	
+//					log("matching "+ cc.words +" against "+ text);
+	
+					if ( und( cc.words ) ) {
+					
+						cf = cc;
+
+						// if filter words are defined, lets remove them now. this simplyfies processing in the actula function.
+
+						if ( ! cf.filter.isEmpty() ) 
+							text = text.replaceAll("("+ cf.filter +")" , "");
+						break;
+					
+					}
+				}
+				
+				log ( "found "+ cf.command );
+
+			
 				// The so called Star Trek part :) 
 				
 				if ( wort("autorisierung") ) {
@@ -544,22 +648,24 @@ public class PVA {
 				
 				// repeat last cmd.. 
 
-				if ( wort("nochmal") ) {
+				if ( cf.command.equals("REPEATLASTCOMMAND") ) {
 					String read = dos.readFile("cmd.last").trim();
-					if ( !read.isEmpty() && !read.equals("nochmal") && !read.equals("nochmals") ) text = read;
-				} 
+					if ( !read.isEmpty() && !read.equals( cf.words ) ) text = read;
+				}
 				
 				// create caches
 				
-				if ( und("erstelle|cache") ) {
+				if ( cf.command.equals("RECREATECACHE") ) {
 		
 					dos.writeFile("cache.musik", suche( config.get("path","music"), "*",".mp3|.aac" ) );
-					exec( (config.get("app","say")+"x:xMusik Cache wurde erzeugt").split("x:x"));	
+					
+					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), cf.command) ).split("x:x"));	
 
 				}
 
-				if ( wort("benutze") ) {
-					String subtext = text.replaceAll("benutzer","").replaceAll("benutze","").trim();
+				if ( cf.command.equals("SWAPALTERNATIVES") ) {
+
+					String subtext = text.replaceAll(cf.filter,"").replaceAll(cf.words,"").trim();
 					
 					StringHash sub = alternatives.get(subtext);
 					if ( sub != null ) {
@@ -568,52 +674,47 @@ public class PVA {
 						String changevalue = sub.get(changeapp);
 						
 						config.put("app",changeapp,changevalue);
-						exec(( config.get("app","say")+"x:xIch ersetze "+ changeapp.replace("say","Sprachausgabe") + " mit "+ subtext).split("x:x"));										
+						exec(( config.get("app","say")+"x:x"+  texte.get( config.get("conf","lang_short"), cf.command+"1").replaceAll("<TERM1>", changeapp.replace("say","Sprachausgabe")).replaceAll("<TERM2>",subtext)).split("x:x"));										
 
 						saveConfig();
 						
 					} else {
-						exec(( config.get("app","say")+"x:xIch kenne die Alternative "+ subtext + " nicht").split("x:x"));
+						exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), cf.command+"2").replaceAll("<TERM1>", subtext ) ).split("x:x"));
 					}
 				}
 
 							
 				// selfcompiling is aware of errors  and this reads them out loud.
 								
-				if ( und("was|wie|war|der|letzte|fehler") || und("was|war|die|fehlermeldung") ) {
+				if ( cf.command.equals("LASTERROR") ) {
 					exec( (config.get("app","say")+"x:x"+ dos.readFile("lasterror.txt").replaceAll("PVA.java:","Zeile ")).split("x:x"));							
 				}
 
 				// sometime we address carola itself i.e. shut yourself down:
 
-				if ( wort("dich") ) {			
-					if ( und("schalte|ab") ) {
-						dos.writeFile("cmd.last","exit");
-						exec( (config.get("app","say")+"x:xAuthorisierungscode Alpha erforderlich!").split("x:x"));							
-					}
+				if ( cf.command.equals("RECOMPILE") || cf.command.equals("RECOMPILEWITHERRORREPORT") ) {
 
-					// or compile yourself new
-	
-					if ( oder("neu|selbst") && wort("kompiliere") ) {
-//						dos.writeFile("cmd.last","compile");
-//						exec( (config.get("app","say")+"x:xAuthorisierungscode Alpha erforderlich!").split("x:x"));				
-						
-						String result = dos.readPipe("javac --release 8 PVA.java");
-						if ( result.contains("error") ) {
-							exec( (config.get("app","say")+"x:xEs ist ein Fehler beim Kompilieren aufgetreten!").split("x:x"));	
-							dos.writeFile("lasterror.txt",result);
-							if ( wort("fehlerausgabe") )
-								exec( (config.get("app","say")+"x:x"+result.replaceAll("PVA.java:","Zeile ")).split("x:x"));	
-						} else {
-							exec( (config.get("app","say")+"x:xIch habe mich selbst erfolgreich kompiliert!").split("x:x"));			
-						}
-						System.out.println( result.trim() );		
+					String result = dos.readPipe("javac --release 8 PVA.java");
+					if ( result.contains("error") ) {
+						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "RECOMPILE1") ).split("x:x"));	
+						dos.writeFile("lasterror.txt",result);
+						if (  cf.command.equals("RECOMPILEWITHERRORREPORT") )
+							exec( (config.get("app","say")+"x:x"+result.replaceAll("PVA.java:","Zeile ")).split("x:x"));	
+					} else {
+						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "RECOMPILE2") ).split("x:x"));			
 					}
+					System.out.println( result.trim() );		
+				}				
+				
+
+				if ( cf.command.equals("EXIT") ) {
+					dos.writeFile("cmd.last","exit");
+					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "EXIT") ).split("x:x"));							
 				}
 			
 				// this is more a convinient way to debug addressbooks
 			
-				if ( wort("liste telefonbuch auf") ) {
+				if ( cf.command.equals("LISTPHONEBOOK") ) {
 					Enumeration<Contact> en = contacts.elements();
 					while ( en.hasMoreElements() ) {
 						Contact c = en.nextElement();
@@ -632,7 +733,7 @@ public class PVA {
 				// "rufe klaus festnetz an" "klaus mobil anrufen" ... festnetz + mobil + arbeit sind im Addressbuch gespeicherte Telefonnummern
 				// ist nichts spezielle angegeben, nimmt er einfach die erste die er findet .. 
 				
-				if ( und("rufe|an") || wort("anrufen") || und("ich|möchte|sprechen") ||und("ich|möchte|reden") ) {
+				if ( cf.command.equals("MAKEPHONECALL") ) {
 				
 					log("Telefonbuchsuche");
 					
@@ -787,8 +888,9 @@ public class PVA {
 			
 				// kill process ... appname
 			
-				if ( oder("beende|stoppe") ) {
-					exec( (config.get("app","say")+"x:xIch beende "+ text.replaceAll("(beende|stoppe)","").trim()).split("x:x"));
+				if ( cf.command.equals("STOPAPP") ) {
+
+					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "STOPAPP").replaceAll("<TERM1>", text.replaceAll("("+ cf.words +")","") ).trim()).split("x:x"));
 					
 					if ( wort("firefox") )	exec("killall GeckMain");
 					if ( wort("chrome") )	exec("killall google-chrome");
@@ -896,8 +998,10 @@ public class PVA {
 										
 				}
 
-				if ( und("ich|möchte|hören") ) {
-					String subtext = text.replaceAll("("+keyword+"|ich|möchte|hören|noch|dazu)","").trim();
+				if ( cf.command.equals("<PLAYAUDIO>") ) {
+					if ( !cf.filter.isEmpty() ) cf.filter = "|"+ cf.filter;
+					
+					String subtext = text.replaceAll("("+keyword+"|"+ cf.words + cf.filter +")","").trim();
 					log("Ich suche nach Musik : "+ subtext);
 
 					String suchergebnis = "";
@@ -1434,5 +1538,31 @@ public class PVA {
 			System.out.println(e);
 		
 		}
+	}
+}
+
+class Command {
+
+	public String words = "";
+	public String command = "";
+	public String filter = "";
+	
+	public Command (String w,String c,String f) {
+		this.words = w;
+		this.command = c;
+		this.filter = f;
+	}
+}
+
+class Reaction {
+
+	public String positives = "";
+	public String negatives = "";
+	public String answere = "";
+	
+	public Reaction (String p,String n,String a) {
+		this.positives = p;
+		this.negatives = n;
+		this.answere = a;
 	}
 }
