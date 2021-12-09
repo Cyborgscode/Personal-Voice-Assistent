@@ -111,3 +111,57 @@ alternatives:"googlesuche","searchengine","google"
 alternatives:"openoffice","office","openoffice4"
 alternatives:"libreoffice","office","libreoffice"
 
+# correct language depended mistakes in vosk
+
+replacements:"^einen",""
+replacements:"hi länder","highlander"
+replacements:"fehler ausgabe","fehlerausgabe"
+replacements:"sprächen","sprechen"
+replacements:"hofer","rufe"
+replacements:"a c d c","acdc"
+replacements:"flüge","füge"
+replacements:"kombiniere","kompiliere"
+replacements:"cash","cache"
+
+# Stateless reactions to key phrases
+# the "make it react more human" part
+
+reaction:"ha ha ha","","Was gibt es da so zu lachen?"
+reaction:"danke","","ich helfe gerne"
+reaction:"sehr witzig","","ich kann nichts dafür, wenn Du Dich ungenau ausdrückst :)"
+reaction:"das funktioniert","nicht","Hattest Du etwas anderes erwartet?"
+reaction:"das funktioniert nicht","","Ups... Bugreports bitte an meinen Schöpfer"
+reaction:"wie ist dein name","","Mein name ist %KEYWORD"
+reaction:"ich habe gar nichts gesagt","","Das glaubst auch nur Du!"
+
+text:"de","SWAPALTERNATIVES1","Ich ersetze <TERM1> mit <TERM2>"
+text:"de","SWAPALTERNATIVES2","Ich kenne die Alternative <TERM1> nicht"
+text:"de","RECREATECACHE","Musik Cache wurde erzeugt"
+text:"de","RECOMPILE1","Es ist ein Fehler beim Kompilieren aufgetreten!"
+text:"de","RECOMPILE2","Ich habe mich selbst erfolgreich kompiliert!"
+text:"de","EXIT","Authorisierungscode Alpha erforderlich!"
+text:"de","STOPAPP","Ich beende <TERM1>"
+
+command:"liste telefonbuch auf","LISTPHONEBOOK",""
+command:"beende","STOPAPP","jetzt"
+command:"stoppe","STOPAPP","jetzt"
+command:"ich|möchte|hören","PLAYAUDIO","noch|dazu"
+command:"nochmal","REPEATLASTCOMMAND",""
+command:"erstelle|cache","RECREATECACHE",""
+command:"benutze","SWAPALTERNATIVES","benutzer"
+command:"was|wie|war|der|letzte|fehler","LASTERROR",""
+command:"was|war|die|fehlermeldung","LASTERROR",""
+command:"kompiliere|dich|neu|fehlermeldung","RECOMPILEWITHERRORREPORT","mit|fehlermeldungen"
+command:"kompiliere|dich|selbst|fehlermeldung","RECOMPILEWITHERRORREPORT","mit|fehlermeldungen"
+command:"kompiliere|dich|neu","RECOMPILE",""
+command:"kompiliere|dich|selbst","RECOMPILE",""
+command:"schalte|dich|ab","EXIT","jetzt"
+command:"schalte|dich|aus","EXIT","jetzt"
+command:"beende|dich","EXIT","jetzt"
+
+
+command:"rufe|an","MAKEPHONECALL",""
+command:"anrufen","MAKEPHONECALL",""
+command:"ich|möchte|sprechen","MAKEPHONECALL",""
+command:"ich|möchte|reden","MAKEPHONECALL",""
+
