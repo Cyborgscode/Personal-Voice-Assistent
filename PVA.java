@@ -997,7 +997,7 @@ public class PVA {
 										
 				}
 
-				if ( cf.command.equals("<PLAYAUDIO>") ) {
+				if ( cf.command.equals("PLAYAUDIO") ) {
 					if ( !cf.filter.isEmpty() ) cf.filter = "|"+ cf.filter;
 					
 					String subtext = text.replaceAll("("+keyword+"|"+ cf.words + cf.filter +")","").trim();
