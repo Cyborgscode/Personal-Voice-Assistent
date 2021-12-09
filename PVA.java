@@ -529,27 +529,26 @@ public class PVA {
 								
 			}
 
-			log("TEXT:" + text);
+//			log("TEXT:" + text);			
 
 			// now some error corrections for bugs in vosk or the way you speak to your pc ;) 
 
 			StringHash rep = config.get("replacements");
 			if ( rep != null && rep.size() > 0  ) {
-			
+
+				text=text.trim();			
 				Enumeration en = rep.keys();
 				while(en.hasMoreElements() ) {
 					String key = (String)en.nextElement();
 					String value = rep.get(key);
 					
-					Matcher m = Pattern.compile("(?m)^"+key ).matcher(text);
+					Matcher m = Pattern.compile("(?m)"+key ).matcher(text);
 					
 					if ( m.find() ) {
-						text = text.replaceAll( "^einen", value );
+						text = text.replaceAll( key, value );
 					}
 				}
-
 				text=text.trim();
-
 			}
 			
 			// some context less reactions
