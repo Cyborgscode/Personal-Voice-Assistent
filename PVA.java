@@ -29,7 +29,14 @@ public class PVA {
 	}
 
 	static void exec(String[] cmds) throws IOException {
-//	 for(String cmd : cmds) log( "argument:"+cmd );
+		for(String cmd : cmds) {
+//			log( "argument:"+cmd );
+			if ( cmd == null ) {
+				log("exec():Illegal Argument NULL detected");
+				reaction = false;
+				return;
+			}
+		}
 		Runtime.getRuntime().exec( cmds );
 		reaction = true;
 	}
@@ -138,7 +145,7 @@ public class PVA {
 						
 						}
 				
-						if ( hit ) filename = app_exe; // This way, we garantee, that it's found, it's it really present. it's possible that someone made a mistake and did not write Exec= into the file. 
+						if ( hit ) filename = app_exe.trim(); // This way, we garantee, that it's found, it's it really present. it's possible that someone made a mistake and did not write Exec= into the file. 
 			
 					}
 				} catch(IOException e) {
@@ -156,9 +163,10 @@ public class PVA {
 	
 		String filename ="";
 		filename += _searchExternalApps("/usr/share/applications/", suchwort );
-		if ( config.get("conf","lang").equals("de_DE") ) {
-			filename += _searchExternalApps("/home/"+ dos.readPipe("whoami").trim()+"/Schreibtisch", suchwort );
-		} else  filename += _searchExternalApps("/home/"+ dos.readPipe("whoami").trim()+"/Desktop", suchwort );
+		if ( filename.isEmpty() ) 
+			if ( config.get("conf","lang").equals("de_DE") ) {
+				filename += _searchExternalApps("/home/"+ dos.readPipe("whoami").trim()+"/Schreibtisch", suchwort );
+			} else  filename += _searchExternalApps("/home/"+ dos.readPipe("whoami").trim()+"/Desktop", suchwort );
 	
 		return filename;
 	}
@@ -539,9 +547,7 @@ public class PVA {
 				if ( wort("nochmal") ) {
 					String read = dos.readFile("cmd.last").trim();
 					if ( !read.isEmpty() && !read.equals("nochmal") && !read.equals("nochmals") ) text = read;
-				} else {
-					dos.writeFile("cmd.last", text);
-				}
+				} 
 				
 				// create caches
 				
@@ -861,6 +867,7 @@ public class PVA {
 						String exe = searchExternalApps( text );
 						if ( ! exe.trim().isEmpty() ) {
 							if ( mit.isEmpty() ) {
+								System.out.println( exe );
 								exec( exe.replaceAll("(%U|%F)","").split(" ") );
 							} else {
 								if ( mit.equals("bildern") || mit.equals("bilder") ) {
@@ -1413,6 +1420,10 @@ public class PVA {
 						System.out.println("Ich habe "+ text +" nicht verstanden");
 						exec(( config.get("app","say")+"x:xIch habe "+ text +" nicht verstanden").split("x:x"));
 					}
+				} else {
+					// If we had a reaction, it was a valid cmd.
+					
+					dos.writeFile("cmd.last", text);
 				}
 			} else {
 				System.out.println("Nicht für mich gedacht:" + text);
