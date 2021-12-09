@@ -101,6 +101,7 @@ code:"beta","beta default"
 
 alternatives:"normale sprachausgabe","say","/usr/local/sbin/say"
 alternatives:"google sprachausgabe","say","/usr/local/sbin/gsay"
+alternatives:"samsung sprachausgabe","say","/usr/local/sbin/samsungtts"
 alternatives:"firefox","web","firefox"
 alternatives:"google chrome","web","google-chrome"
 alternatives:"chromium free","web"," chromium-freeworld"
