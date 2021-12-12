@@ -2,6 +2,12 @@
 # Config for PVA
 #
 
+# TRANSLATOR-ADVICE: 
+# 
+# if you see multiply words i.e. ".*(musik|musikstück).*" it does not mean, that you need the same amount of words, you can have everything from 0 to ... depending on the needs if your language
+#
+
+
 #all "conf" options are for common options
 conf:"keyword","carola"
 
@@ -134,6 +140,8 @@ reaction:"das funktioniert nicht","","Ups... Bugreports bitte an meinen Schöpfe
 reaction:"wie ist dein name","","Mein name ist %KEYWORD"
 reaction:"ich habe gar nichts gesagt","","Das glaubst auch nur Du!"
 
+# Translation for GERMAN (de) . You can have multiply languages in your config at the same time, which is used depends on "config","lang_short"
+
 text:"de","SWAPALTERNATIVES1","Ich ersetze <TERM1> mit <TERM2>"
 text:"de","SWAPALTERNATIVES2","Ich kenne die Alternative <TERM1> nicht"
 text:"de","RECREATECACHE","Musik Cache wurde erzeugt"
@@ -141,6 +149,40 @@ text:"de","RECOMPILE1","Es ist ein Fehler beim Kompilieren aufgetreten!"
 text:"de","RECOMPILE2","Ich habe mich selbst erfolgreich kompiliert!"
 text:"de","EXIT","Authorisierungscode Alpha erforderlich!"
 text:"de","STOPAPP","Ich beende <TERM1>"
+text:"de","MAKESCREENSHOT","Ich mache ein Bildschirmfoto."
+text:"de","REPORTTIME","Es ist <TERM1> Uhr <TERM2>"
+text:"de","REPORTLOAD","Die Last liegt bei <TERM1>"
+text:"de","WEATHERLINE0","Das Wetter für <TERM1> :"
+text:"de","WEATHERLINE2","es ist <TERM1> ."
+text:"de","WEATHERLINE3","Temperatur: <TERM1> . "
+text:"de","upto"," bis " 
+text:"de","°C","Grad Celsius"
+text:"de","WEATHERLINE4","Der Wind beträgt <TERM1> ."
+text:"de","km/h","Kilometer pro Stunde"
+text:"de","m/s","meter pro Sekunde"
+text:"de","WEATHERLINE6","Niederschlag: <TERM1> ."
+text:"de","mm","Millimeter Niederschlag"
+text:"de","mmwith","Millimeter Niederschlag mit"
+text:"de","%HUMIDITY","Prozent Luftfeuchtigkeit"
+text:"de","TIMEOFDAYARRAY","Morgens:Mittags:Abends:in der Nacht:später:sehr viel später"
+text:"de","WEATHERNEXT","Das Wetter für <TERM1> : <TERM2> wird es "
+text:"de","WEATHERNEXT2",". <TERM1> wird es"
+text:"de","WEATHERTOMORROW","Die Wetteraussichten für Morgen in <TERM1> ::: <TERM2> wird es "
+text:"de","OPENSOURCECODE","Ich öffne meinen Quellkod"
+text:"de","OPENCONFIG","Ich öffne meine Konfiguration"
+text:"de","OPENAPP-KEYWORD"," mit "
+text:"de","OPENAPP-FILTER",".*(texte|bilder|video|dokumente|musik).*"
+text:"de","OPENAPP-FILTER-PICS",".*(bilder|bildern).*"
+text:"de","OPENAPP-FILTER-MUSIC",".*(musik|musikstück).*"
+text:"de","OPENAPP-FILTER-VIDEO",".*(videos|filme).*"
+text:"de","OPENAPP-FILTER-DOCS",".*(dokumente|texte).*"
+text:"de","OPENAPP-RESPONSE","Ich öffne <TERM1>."
+text:"de","STARTAPP-RESPONSE","Ich starte <TERM1>."
+text:"de","OPENAPP-RESPONSE-FAIL","Ich habe leider keine Anwendung zu <TERM1> gefunden."
+
+
+# command:"list of words","ACTIONCODE","WORDS-FILTERED-OUT","BLOCKER-WORDS"
+# to understand this better, check the weather cmds.
 
 command:"liste telefonbuch auf","LISTPHONEBOOK",""
 command:"beende","STOPAPP","jetzt"
@@ -158,10 +200,20 @@ command:"kompiliere|dich|selbst","RECOMPILE",""
 command:"schalte|dich|ab","EXIT","jetzt"
 command:"schalte|dich|aus","EXIT","jetzt"
 command:"beende|dich","EXIT","jetzt"
-
-
 command:"rufe|an","MAKEPHONECALL",""
 command:"anrufen","MAKEPHONECALL",""
-command:"ich|möchte|sprechen","MAKEPHONECALL",""
-command:"ich|möchte|reden","MAKEPHONECALL",""
-
+command:"ich|möchte|sprechen","MAKEPHONECALL","mit"
+command:"ich|möchte|reden","MAKEPHONECALL","mit"
+command:"mach|einen|screenshot","MAKESCREENSHOT",""
+command:"mache|einen|screenshot","MAKESCREENSHOT",""
+command:"wie|spät|ist|es","REPORTTIME",""
+command:"sag|mir|die|uhrzeit","REPORTTIME",""
+command:"wie|hoch|last","REPORTLOAD","die"
+command:"wie|hoch|load","REPORTLOAD","die"
+command:"wie|ist|das|wetter","CURRENTWEATHERNOW","","morgen"
+command:"wie|wird|das|wetter","CURRENTWEATHERNEXT","","morgen"
+command:"wie|wird|das|wetter|morgen","CURRENTWEATHERTOMORROW","",""
+command:"öffne deinen sourcecode","OPENSOURCECODE","",""
+command:"öffne deine config","OPENCONFIG","",""
+command:"start","STARTAPP","starte|starter",""
+command:"öffne","OPENAPP","öffner",""
