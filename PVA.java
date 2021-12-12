@@ -374,7 +374,7 @@ public class PVA {
 
 				Command c = commands.get(i);
 
-				sb.append( "command:\""+ c.words +"\",\""+ c.command +"\",\""+ c.filter +"\"\n" );
+				sb.append( "command:\""+ c.words +"\",\""+ c.command +"\",\""+ c.filter +"\",\""+ c.negative +"\"\n" );
 
 
 			}
@@ -424,9 +424,11 @@ public class PVA {
 							
 						} else if ( level1[0].trim().equals("command") ) {
 
-							if ( level2.length == 3 ) {
-								commands.add( new Command( level2[0].trim() , level2[1].trim() , level2[2].trim() ) );
-							} else  commands.add( new Command( level2[0].trim() , level2[1].trim() , "" ) );
+							if ( level2.length == 4 ) {
+								commands.add( new Command( level2[0].trim() , level2[1].trim() , level2[2].trim(), level2[3].trim() ) );
+							} else if ( level2.length == 3 ) { 
+								commands.add( new Command( level2[0].trim() , level2[1].trim() , level2[2].trim(), "" ) );
+							} else  commands.add( new Command( level2[0].trim() , level2[1].trim() , "" , "") );
 
 						} else { 
 								
@@ -591,7 +593,7 @@ public class PVA {
 
 				// parse commands from config
 				
-				Command cf = new Command("DUMMY","",""); // cf = commandFound
+				Command cf = new Command("DUMMY","","",""); // cf = commandFound
 				
 				for(int i=0; i < commands.size(); i++)	{
 
@@ -599,7 +601,7 @@ public class PVA {
 	
 //					log("matching "+ cc.words +" against "+ text);
 	
-					if ( und( cc.words ) ) {
+					if ( und( cc.words ) && ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
 					
 						cf = cc;
 
@@ -779,28 +781,32 @@ public class PVA {
 				
 				// make screenshot
 			
-				if ( und("mach|einen|screenshot") ) {
-					exec( (config.get("app","say")+"x:xIch mache ein Bildschirmfoto").split("x:x"));	
+				if ( cf.command.equals("MAKESCREENSHOT") ) {
+					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "MAKESCREENSHOT") ).split("x:x"));	
 					exec( config.get("app","screenshot").split("x:x"));	
 				}		
 				
 				// "what time is it?"				
-				if ( und("wie|spät|ist|es") || und("sag|mir|die|uhrzeit") ) {
-					exec( (config.get("app","say")+"x:xEs ist "+ dos.readPipe("date +%H:%M").replace(":"," Uhr ")).split("x:x"));	
+				if ( cf.command.equals("REPORTTIME") ) {
+					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "REPORTTIME").replaceAll("<TERM1>", dos.readPipe("date +%H")).replaceAll("<TERM2>", dos.readPipe("date +%M")) ).split("x:x"));	
 				}			
 				// "whats the systemload"			
-				if ( und("wie|hoch") && oder("last|load") ) {
-					exec( (config.get("app","say")+"x:xDie Last liegt bei "+ dos.readPipe("cat /proc/loadavg").split(" ")[0]).split("x:x"));	
+				if ( cf.command.equals("REPORTLOAD") ) {
+					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "REPORTLOAD").replaceAll("<TERM1>", dos.readPipe("cat /proc/loadavg").split(" ")[0] ) ).split("x:x"));	
 				}						
 			
 				// "hows the weather" + options like now + today + tomorrow
-				if ( und("wie|das|wetter") ) {
-				
-					if ( wort("ist") ) {
+				if ( cf.command.equals("CURRENTWEATHERNOW") ) {
 				
 						// NOW
 						
-						String wetter = dos.readPipe("curl wttr.in/"+config.get("conf","location")+"?0TAqM -H \"Accept-Language: de-DE\" ");
+						String line0 = texte.get( config.get("conf","lang_short"), "WEATHERLINE0");
+						String line2 = texte.get( config.get("conf","lang_short"), "WEATHERLINE2");
+						String line3 = texte.get( config.get("conf","lang_short"), "WEATHERLINE3");
+						String line4 = texte.get( config.get("conf","lang_short"), "WEATHERLINE4");
+						String line6 = texte.get( config.get("conf","lang_short"), "WEATHERLINE6");
+						
+						String wetter = dos.readPipe("curl wttr.in/"+config.get("conf","location")+"?0TAqM -H \"Accept-Language: "+ config.get("conf","lang").replace("_","-")+"\" ");
 						String[] bericht = wetter.split("\n");
 						String text = "";
 						for(int i=0;i<7;i++) {
@@ -808,72 +814,76 @@ public class PVA {
 	
 							if ( line.startsWith(" ") ) line = line.substring(15);
 							
-							if ( i == 0) text += "Das Wetter für "+ line +" :\n";
-							if ( i == 2) text += "es ist "+ line +" . ";
-							if ( i == 3) text += "Temperatur: "+ line.replace("+","").replace("("," bis ").replace(")","").replaceAll("°C","Grad Celsius") +" . ";
-							if ( i == 4) text += "Der Wind beträgt "+ line.replaceAll("km/h","Kilometer pro Stunde").replaceAll("m/s","meter pro Sekunde") +" . ";
-							if ( i == 6) text += "Niederschlag: "+ line.replace("mm","Millimeter Niederschlag") +" . ";
+							if ( i == 0) text += line0.replaceAll("<TERM1>", line );
+							if ( i == 2) text += line2.replaceAll("<TERM1>", line );
+							if ( i == 3) text += line3.replaceAll("<TERM1>", line.replace("+","").replace("(",  texte.get( config.get("conf","lang_short"), "upto") ).replace(")","")
+										                             .replaceAll("°C", texte.get( config.get("conf","lang_short"), "°C")  ) ) ;
+							if ( i == 4) text += line4.replaceAll("<TERM1>", line.replaceAll("km/h", texte.get( config.get("conf","lang_short"), "km/h") ).replaceAll("m/s", texte.get( config.get("conf","lang_short"), "m/s") ) );
+							if ( i == 6) text += line6.replaceAll("<TERM1>", line.replace("mm", texte.get( config.get("conf","lang_short"), "mm") ) );
 						}
+						
 						exec( (config.get("app","say")+"x:x"+text).split("x:x"));
 						reaction = true;
-					} 
-					if ( wort("wird") && !wort("morgen") ) {
-				
+				} 
+				if ( cf.command.equals("CURRENTWEATHERNEXT") ) {
+							
 						// TODAY
 				
-						String wetter = dos.readPipe("curl wttr.in/"+config.get("conf","location")+"?1TAqM -H \"Accept-Language: de-DE\" ");
+						String wetter = dos.readPipe("curl wttr.in/"+config.get("conf","location")+"?1TAqM -H \"Accept-Language: "+ config.get("conf","lang").replace("_","-")+"\" ");
 						String[] bericht = wetter.split("\n");
 						String text = "";
 						
 						String datum = (new Date()).toString();
 						int h = Integer.parseInt( datum.split(" ")[3].split(":")[0] )/6;
-						String[] phase = "Morgens:Mittags:Abends:in der Nacht:später:sehr viel später".split(":");
+						String[] phase = texte.get( config.get("conf","lang_short"), "TIMEOFDAYARRAY").split(":");
 						
 						for(int j=h;j<=h+1 && j<4;j++) {						
 							for(int i=0;i< bericht.length;i++) {
 								String line = bericht[i];
 //								log(h+":"+i+":"+j+":"+line);
 								if ( j == h && i == 0) {
-									 text += "Das Wetter für "+ line +" :  "+phase[j]+" wird es ";
-								} else if ( i == 0 ) text += ". "+phase[j]+" wird es ";
+									 text +=  texte.get( config.get("conf","lang_short"), "WEATHERNEXT").replaceAll("<TERM1>",line).replaceAll("<TERM2>", phase[j] );
+								} else if ( i == 0 ) text += texte.get( config.get("conf","lang_short"), "WEATHERNEXT2").replaceAll("<TERM1>",phase[j] )+" ";
 									 
 								if ( i == 11 ) text += line.split("│")[j+1].substring(15);
-								if ( i == 12 ) text += line.split("│")[j+1].substring(15).replace("+","").replace("("," bis ").replace(")","").replaceAll("°C","Grad Celsius");
+								if ( i == 12 ) text += line.split("│")[j+1].substring(15).replace("+","").replace("(", texte.get( config.get("conf","lang_short"), "upto") ).replace(")","")
+											   				 .replaceAll("°C",texte.get( config.get("conf","lang_short"), "°C"));
 								if ( i == 15 ) {
 									String me = line.split("│")[j+1].substring(15);
-									if ( !me.startsWith("0.0 mm | 0%") ) text += " mit "+ me.replace("mm","millimeter Niederschlag mit ").replace("%"," Prozent Luftfeuchtigkeit");
+									if ( !me.startsWith("0.0 mm | 0%") ) text += " mit "+ me.replace("mm", texte.get( config.get("conf","lang_short"), "mmwith") ).replace("%", texte.get( config.get("conf","lang_short"), "%HUMIDITY")  );
 								}
 							}
 						}
 						text = text.replaceAll("     ","").replace(" | ","");
 						exec( (config.get("app","say")+"x:x"+text).split("x:x"));
 						reaction = true;
-					} 
-					if ( wort("wird") && wort("morgen") ) {
+				
+				}
+				if ( cf.command.equals("CURRENTWEATHERTOMORROW") ) {
 				
 						// TOMORROW
 				
-						String wetter = dos.readPipe("curl wttr.in/"+config.get("conf","location")+"?2TAqM -H \"Accept-Language: de-DE\" ");
+						String wetter = dos.readPipe("curl wttr.in/"+config.get("conf","location")+"?2TAqM -H \"Accept-Language: "+ config.get("conf","lang").replace("_","-")+"\" ");
 						String[] bericht = wetter.split("\n");
 						String text = "";
 						
 						String datum = (new Date()).toString();
 
-						String[] phase = "Morgens:Mittags:Abends:in der Nacht:später".split(":");
+						String[] phase = texte.get( config.get("conf","lang_short"), "TIMEOFDAYARRAY").split(":");
 
 						for(int j=0;j<=3;j++) {						
 							for(int i=0;i< bericht.length;i++) {
 								String line = bericht[i];
 
 								if ( j == 0 && i == 0) {
-									 text += "Die Wetteraussichten für Morgen in "+ line +" ::: "+phase[j]+" wird es ";
-								} else if ( i == 0 ) text += ". "+phase[j]+" wird es ";
+ 									 text +=  texte.get( config.get("conf","lang_short"), "WEATHERTOMORROW").replaceAll("<TERM1>",line).replaceAll("<TERM2>", phase[j] );
+								} else if ( i == 0 ) text += texte.get( config.get("conf","lang_short"), "WEATHERNEXT2").replaceAll("<TERM1>",phase[j] ) +" ";
 									 
 								if ( i == 21 ) text += line.split("│")[j+1].substring(15);
-								if ( i == 22 ) text += line.split("│")[j+1].substring(15).replace("+","").replace("("," bis ").replace(")","").replaceAll("°C","Grad Celsius");
+								if ( i == 22 ) text += line.split("│")[j+1].substring(15).replace("+","").replace("(",texte.get( config.get("conf","lang_short"), "upto")).replace(")","").replaceAll("°C", texte.get( config.get("conf","lang_short"), "°C") );
 								if ( i == 25 ) {
 									String me = line.split("│")[j+1].substring(15);
-									if ( !me.startsWith("0.0 mm | 0%") ) text += " mit "+ me.replace("mm","millimeter Niederschlag mit ").replace("%"," Prozent Wahrscheinlichkeit");
+									if ( !me.startsWith("0.0 mm | 0%") ) text += " mit "+ me.replace("mm", texte.get( config.get("conf","lang_short"), "mmwith") ).replace("%", texte.get( config.get("conf","lang_short"), "%HUMIDITY") );
 								}
 							}
 						}
@@ -881,8 +891,6 @@ public class PVA {
 
 						exec( (config.get("app","say")+"x:x"+text).split("x:x"));
 						reaction = true;
-					} 
-		
 				}
 			
 				// kill process ... appname
@@ -900,100 +908,88 @@ public class PVA {
 					if ( oder("musik|audio") ) 	exec("killall "+ config.get("audioplayer_short","pname") );
 					if ( und("runes|of|magic") )	exec("killall gfclient.exe");
 
-
 				}
 
 				// start apps by name
+
+				if ( cf.command.equals("OPENSOURCECODE") ) {
+					exec( (config.get("app","txt") + " ./PVA.java").split(" ") );
+					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENSOURCECODE") ).split("x:x"));
+				}
+				if ( cf.command.equals("OPENCONFIG") ) {
+					exec( (config.get("app","txt") + " ./pva.conf").split(" ") );
+					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENCONFIG") ).split("x:x"));
+				}
 			
-				if ( oder("starte|öffne") ) {
+				if ( cf.command.equals("OPENAPP") || cf.command.equals("STARTAPP") ) {
 
-					text = text.replace("starter","starte").replace("öffner","öffne").replace("kreta","krita"); // known bugs ;)
+					text = text.replace("kreta","krita"); // known bugs // TODO: Add support for Context-dependend-Replacements
 
-					if ( und("deinen|sourcecode") ) 
-						exec( (config.get("app","txt") + " ./PVA.java").split(" ") );
-					if ( und("deine|config") )
-						exec( (config.get("app","txt") + " ./pva.conf").split(" ") );
+					String with_key = texte.get( config.get("conf","lang_short"), "OPENAPP-KEYWORD");
 
-					String mit = "";
+					String with = "";
 
-					text = text.replaceAll("(starter|öffner)","").replaceAll("(starte|öffne)","").replaceAll("app","").toLowerCase().trim();
-					if ( text.contains(" mit ") ) {
-						mit = text.substring( text.indexOf(" mit ")+5 ).trim();
-						text = text.substring( 0, text.indexOf( " mit ") );
+					text = text.toLowerCase().trim();
+					if ( text.contains(  with_key ) ) {
+						with = text.substring( text.indexOf( with_key )+ with_key.length() ).trim();
+						text = text.substring( 0, text.indexOf( with_key ) );
 					}
 						
-					// in case our keyword are the first argument, we need to swap text+mit : "öffne bilder mit gimp" which more human like
+					// in case our keywords are the first argument, we need to swap text+with : "öffne bilder mit gimp" which is more human like
 						
-					if ( text.matches(".*(texte|bilder|video|dokumente|musik).*") ) {
-						System.out.println(" tausche Suchbegriff(e) "+ text + " mit " + mit );
+					if ( text.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER")  ) ) {
+						log(" tausche Suchbegriff(e) "+ text + " mit " + with ); // not important logline
 
-						String a = mit;	mit = text;text = a;
+						String a = with; with = text;text = a;
 					}
 
-
+					String exe = ""; // LEAVE BLANC IF NO APP WAS FOUND
 					StringHash apps = config.get("app");
 					Enumeration<String> keys = apps.keys();
 					while ( keys.hasMoreElements() ) {
 						String key = keys.nextElement();
 						if ( wort(key) ) {
-							String exe = config.get("app", key);
+							exe = config.get("app", key);
 							while ( exe.startsWith("%") && exe.endsWith("%") ) {
 								exe = exe.substring(1,exe.length()-1);
 								exe = config.get("app", exe);
-							}
-							if ( mit.isEmpty() ) {
-								exec( exe.replaceAll("(%U|%F)","").split(" ") );
-							} else {
-								if ( mit.equals("bildern") || mit.equals("bilder") ) {
-									exec( buildFileArray(exe,dos.readFile("search.pics.cache")));
-								}
-								if ( mit.equals("musik") || mit.equals("musikstücke") ) {
-									exec( buildFileArray(exe,dos.readFile("search.music.cache")));
-								}
-								if ( mit.equals("videos") || mit.equals("filme") ) {
-									exec( buildFileArray(exe,dos.readFile("search.videos.cache")));
-								}
-								if ( mit.equals("dokumente") || mit.equals("texte") ) {
-									exec( buildFileArray(exe,dos.readFile("search.docs.cache")));
-								}
 							}
 						}
 					}
 
 					// we don't wanne execute internal + external apps, if we found one internally. The FLAG REACTION is set, if something got executed via exec().
 
-					if ( !reaction ) {
-					
-					
-						String exe = searchExternalApps( text );
-						if ( ! exe.trim().isEmpty() ) {
-							if ( mit.isEmpty() ) {
-								System.out.println( exe );
+					if ( exe.isEmpty() ) 
+						exe = searchExternalApps( text );
+
+					if ( !exe.isEmpty() ) {
+							if ( with.isEmpty() ) {
 								exec( exe.replaceAll("(%U|%F)","").split(" ") );
 							} else {
-								if ( mit.equals("bildern") || mit.equals("bilder") ) {
+								if ( with.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER-PICS") ) ) {
 									exec( buildFileArray(exe,dos.readFile("search.pics.cache")));
 								}
-								if ( mit.equals("musik") || mit.equals("musikstücke") ) {
+								if ( with.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER-MUSIC") ) ) {
 									exec( buildFileArray(exe,dos.readFile("search.music.cache")));
 								}
-								if ( mit.equals("videos") || mit.equals("filme") ) {
+								if ( with.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER-VIDEOS") ) ) {
 									exec( buildFileArray(exe,dos.readFile("search.videos.cache")));
 								}
-								if ( mit.equals("dokumente") || mit.equals("texte") ) {
+								if ( with.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER-DOCS") ) ) {
 									exec( buildFileArray(exe,dos.readFile("search.docs.cache")));
 								}
 							}
-						}
 					}
 
 					if ( reaction ) {
 					
-						if ( wort("öffne") ) {
-							exec( (config.get("app","say")+"x:xIch öffne "+text.replaceAll("(starte|öffne)","").replaceAll("app","").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()).split("x:x"));
-						} else  exec( (config.get("app","say")+"x:xIch starte "+text.replaceAll("(starte|öffne)","").replaceAll("app","").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()).split("x:x"));
-
-					} else exec( (config.get("app","say")+"x:xIch habe leider keine Anwendung zu "+text.replaceAll("(starte|öffne)","").replaceAll("app","").replaceAll("deine","meine").replaceAll("sourcecode","quellkot").replaceAll("config","konfick").trim()+" gefunden").split("x:x"));
+						if ( cf.command.equals("OPENAPP") ) {
+							exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENAPP-RESPONSE").replaceAll("<TERM1>", text) ).split("x:x"));
+						} else  exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "STARTAPP-RESPONSE").replaceAll("<TERM1>", text) ).split("x:x"));
+						
+					} else 	exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENAPP-RESPONSE-FAIL").replaceAll("<TERM1>", text) ).split("x:x"));
+			
+							
 										
 				}
 
@@ -1545,11 +1541,13 @@ class Command {
 	public String words = "";
 	public String command = "";
 	public String filter = "";
+	public String negative = "";
 	
-	public Command (String w,String c,String f) {
+	public Command (String w,String c,String f,String n) {
 		this.words = w;
 		this.command = c;
 		this.filter = f;
+		this.negative = n;
 	}
 }
 
