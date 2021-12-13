@@ -129,6 +129,13 @@ replacements:"flüge","füge"
 replacements:"kombiniere","kompiliere"
 replacements:"cash","cache"
 
+# context related replacements
+
+contextreplacements:"STARTAPP","öffner","öffne"
+contextreplacements:"STARTAPP","starter","start"
+contextreplacements:"STARTAPP","starte","start"
+contextreplacements:"STARTAPP","kreta","krita"
+
 # Stateless reactions to key phrases
 # the "make it react more human" part
 
@@ -214,6 +221,8 @@ command:"wie|ist|das|wetter","CURRENTWEATHERNOW","","morgen"
 command:"wie|wird|das|wetter","CURRENTWEATHERNEXT","","morgen"
 command:"wie|wird|das|wetter|morgen","CURRENTWEATHERTOMORROW","",""
 command:"öffne deinen sourcecode","OPENSOURCECODE","",""
+command:"öffne deinen quellcode","OPENSOURCECODE","",""
 command:"öffne deine config","OPENCONFIG","",""
-command:"start","STARTAPP","starte|starter",""
-command:"öffne","OPENAPP","öffner",""
+command:"start","STARTAPP","app",""
+command:"öffne","OPENAPP","app",""
+
