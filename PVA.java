@@ -15,6 +15,7 @@ public class PVA {
 	static TwoKeyHash config          = new TwoKeyHash();
 	static TwoKeyHash alternatives    = new TwoKeyHash();
 	static TwoKeyHash texte           = new TwoKeyHash();
+	static TwoKeyHash context         = new TwoKeyHash();
 	static Vector<Reaction> reactions = new Vector<Reaction>();
 	static Vector<Command> commands   = new Vector<Command>();
 	static Vector<Contact> contacts   = new Vector<Contact>();
@@ -361,6 +362,21 @@ public class PVA {
 				}
 			}
 
+			en2 = context.keys();
+			while ( en2.hasMoreElements() ) {
+				String key = (String)en2.nextElement();
+				StringHash sub = context.get( key );
+				Enumeration en3 = sub.keys();
+				while ( en3.hasMoreElements() ) {
+					
+					String k = (String)en3.nextElement();
+					String v = sub.get( k );
+				
+					sb.append( "contextreplacements:\""+ key +"\",\""+ k +"\",\""+ v +"\"\n" );
+
+				}
+			}
+
 			for(int i=0; i < reactions.size(); i++)	{
 
 				Reaction r = (Reaction)reactions.get(i);
@@ -416,6 +432,12 @@ public class PVA {
 
 							texte.put(level2[0].trim() , level2[1].trim() , level2[2].trim());
 
+						} else if ( level1[0].trim().equals("contextreplacements") ) {
+
+							if ( level2.length == 3 ) {
+								context.put( level2[0].trim() , level2[1].trim() , level2[2].trim() );
+							} else  context.put( level2[0].trim() , level2[1].trim() , "" );
+							
 						} else if ( level1[0].trim().equals("reaction") ) {
 
 							if ( level2.length == 3 ) {
@@ -602,19 +624,45 @@ public class PVA {
 //					log("matching "+ cc.words +" against "+ text);
 	
 					if ( und( cc.words ) && ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
-					
+						
 						cf = cc;
 
-						// if filter words are defined, lets remove them now. this simplyfies processing in the actula function.
+						// Replace context related words i.e. the APP krita is often misunderstood in german for Kreta ( the greek island )
+						// it's ok replace it for STARTAPPS, but i may not ok to replace it i.e. in a MAP Context!
+						
+						StringHash r = context.get( cc.command );
+						if ( r != null ) {
+							Enumeration en = r.keys();
+							while ( en.hasMoreElements() ) {
+								String a = (String)en.nextElement();
+								String b = r.get( a );
+								
+//								log( "replace:"+a+" => "+b);
+								
+								text = text.replaceAll(a,b);
+							}
+						}
 
-						if ( ! cf.filter.isEmpty() ) 
+						// Apply special filter i.e. for binding words like "with"/"mit" 
+						// if filter words are defined, lets remove them now. this simplyfies processing in the actual function.
+
+						if ( ! cf.filter.isEmpty() ) {
+							log( "replace: ("+ cf.filter +") => ");
 							text = text.replaceAll("("+ cf.filter +")" , "");
+						}
+							
+//						log( "replace: ("+ cf.words +") => ");
+
+						// delete the command from the phrase
+							
+						text = text.replaceAll( "("+cf.words+")", "" );
+							
 						break;
 					
 					}
 				}
 				
-				log ( "found "+ cf.command );
+				log ( "found "+ cf.command +": "+text );
 
 			
 				// The so called Star Trek part :) 
@@ -922,8 +970,6 @@ public class PVA {
 				}
 			
 				if ( cf.command.equals("OPENAPP") || cf.command.equals("STARTAPP") ) {
-
-					text = text.replace("kreta","krita"); // known bugs // TODO: Add support for Context-dependend-Replacements
 
 					String with_key = texte.get( config.get("conf","lang_short"), "OPENAPP-KEYWORD");
 
