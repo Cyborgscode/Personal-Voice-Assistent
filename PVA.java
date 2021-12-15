@@ -21,6 +21,7 @@ public class PVA {
 	static Vector<Contact> contacts   = new Vector<Contact>();
 
 	static String text = "";
+	static String text_raw = "";
 	static boolean reaction = false;
 	static Dos dos = new Dos();
 	static String[] za = null;
@@ -503,7 +504,7 @@ public class PVA {
 						
 			String vcards = dos.readFile( "./vcards.cache" );
 			if ( vcards.isEmpty() ) {
-				exec( (config.get("app","say")+"x:xIch lese die Addressbücher ein, das kann einige Minuten dauern" ).split("x:x"));
+				exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "READPHONEBOOK") ).split("x:x"));
 				StringHash adb = config.get("addressbook");
 				Enumeration en = adb.keys();
 				while ( en.hasMoreElements() ) {
@@ -605,7 +606,7 @@ public class PVA {
 				// ADVISE: remove any keyword that led to your reaction
 				// in the sentence "carola i want listen to queen"  anything thats not part of the searchterm "queen" needs to go or your search is pointless :)
 			
-				text = text.substring( text.indexOf(keyword) ).replaceAll( keyword , "");
+				text = text.substring( text.indexOf(keyword) + keyword.length() );
 
 				String text_raw = text; // RAW Copy of what has been spoken. This is needed in case a filter is applied, but we need some of the filtered words to make decisions.
 
@@ -626,7 +627,7 @@ public class PVA {
 					if ( und( cc.words ) && ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
 						
 						cf = cc;
-
+						
 						// Replace context related words i.e. the APP krita is often misunderstood in german for Kreta ( the greek island )
 						// it's ok replace it for STARTAPPS, but i may not ok to replace it i.e. in a MAP Context!
 						
@@ -643,11 +644,15 @@ public class PVA {
 							}
 						}
 
+						// make a raw copy .. it's needed for filterwords to be removed from the "search term" but still recognized as optional arguments 
+
+						text_raw = text;
+
 						// Apply special filter i.e. for binding words like "with"/"mit" 
 						// if filter words are defined, lets remove them now. this simplyfies processing in the actual function.
 
 						if ( ! cf.filter.isEmpty() ) {
-							log( "replace: ("+ cf.filter +") => ");
+//							log( "replace: ("+ cf.filter +") => ");
 							text = text.replaceAll("("+ cf.filter +")" , "");
 						}
 							
@@ -672,7 +677,7 @@ public class PVA {
 						if ( wort( config.get("code","alpha")) ) {
 							String cmd = dos.readFile("cmd.last");
 							if ( cmd.equals("exit") ) {
-								exec( (config.get("app","say")+"x:xIch beende mich").split("x:x"));	
+								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "QUIT") ).split("x:x"));	
 								String[] e = dos.readPipe("pgrep -i -l -a python").split("\n");
 								for(String a : e ) {
 									if ( a.contains("pva.py") ) {
@@ -682,11 +687,11 @@ public class PVA {
 								}
 							}
 							if ( cmd.equals("compile") ) {
-								exec( (config.get("app","say")+"x:xIch kompiliere mich neu").split("x:x"));	
+								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "RECOMPILING") ).split("x:x"));	
 								System.out.println( dos.readPipe("javac --release 8 PVA.java") );
 							}
 							return;
-						} else 	exec( (config.get("app","say")+"x:xDer Sicherheitscode ist falsch!").split("x:x"));	
+						} else 	exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "FALSEAUTHCODE") ).split("x:x"));	
 					}
 					if ( oder("neu|neuer") && oder("scout|code|kurt|kot") ) {
 						text = text.replaceAll("(autorisierung|neuer|neu|scout|code|kurt|kot)","").trim();
@@ -786,9 +791,9 @@ public class PVA {
 				
 					log("Telefonbuchsuche");
 					
-					// bindewörter wie mit an usw. entfernen + alle keywords
+					// bindewörter wie mit an usw. entfernen + alle keywords / OUTSOURCED TO CONFIG
 				
-					String subtext = text.replaceAll("(anrufen|sprechen|möchte|reden|rufe|mit|ich|an|mobil|arbeit|festnetz)","").trim();
+					String subtext = text.trim();
 					
 					// subtext contains our searchterm
 					
@@ -803,17 +808,20 @@ public class PVA {
 				
 							if ( config.get("app","phone")!=null ){
 								if ( lines.length > 1 ) {
-									if ( ( oder("mobil|handy") && numbers.contains("cell") ) ||
-									     ( wort("arbeit") && numbers.contains("work") ) ||
-									     ( wort("festnetz") && numbers.contains("home") ) ||
-									     ( !wort("festnetz") && !wort("arbeit") && !oder("mobil|handy") ) 
+									if ( ( text_raw.matches( texte.get( config.get("conf","lang_short"), "PHONEMOBILE" ) ) && numbers.contains("cell") ) ||
+									     ( text_raw.matches( texte.get( config.get("conf","lang_short"), "PHONEWORK" ) ) && numbers.contains("work") ) ||
+									     ( text_raw.matches( texte.get( config.get("conf","lang_short"), "PHONELANDLINE" ) ) && numbers.contains("home") ) ||
+									     (   !text_raw.matches(texte.get( config.get("conf","lang_short"), "PHONEMOBILE" ) ) 
+									      && !text_raw.matches(texte.get( config.get("conf","lang_short"), "PHONEWORK" ) ) 
+									      && !text_raw.matches(texte.get( config.get("conf","lang_short"), "PHONELANDLINE" ) )
+									     ) 
 									   ) {
 										if ( !stop ) {
 											exec( (config.get("app","phone")+"x:xtel:"+ parts[1]).split("x:x"));
 											stop = true;
 										}
 										
-									} else exec( (config.get("app","say")+"x:xich weiß nicht, welche Nummer ich anrufen soll.").split("x:x"));
+									} else exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "CANTDECIDEWHOMTOCALL") ).split("x:x"));
 								} else {
 									exec( (config.get("app","phone")+"x:xtel:"+ parts[1] ).split("x:x"));
 								}
@@ -822,7 +830,7 @@ public class PVA {
 			
 
 					} else {
-						exec( (config.get("app","say")+"x:xIch habe die Telefonnumer von "+ subtext + " nicht gefunden").split("x:x"));							
+						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "NUMBERNOTFOUND").replaceAll("<TERM1>", subtext ) ).split("x:x"));							
 					}
 					reaction = true; // make sure, any case is handled.					
 				}
@@ -1042,7 +1050,10 @@ public class PVA {
 				if ( cf.command.equals("PLAYAUDIO") ) {
 					if ( !cf.filter.isEmpty() ) cf.filter = "|"+ cf.filter;
 					
-					String subtext = text.replaceAll("("+keyword+"|"+ cf.words + cf.filter +")","").trim();
+//					String subtext = text.replaceAll("("+keyword+"|"+ cf.words + cf.filter +")","").trim();
+
+					String subtext = text.trim(); // make a raw copy 
+					
 					log("Ich suche nach Musik : "+ subtext);
 
 					String suchergebnis = "";
@@ -1054,8 +1065,6 @@ public class PVA {
 						suchergebnis = suche( config.get("path","music"), subtext,".mp3|.aac" );
 					}
 
-					// String suchergebnis = suche( config.get("path","music"), subtext,".mp3|.aac" );
-					// System.out.println("suche: "+ suchergebnis );
 					if (!suchergebnis.isEmpty() ) {	
 
 						dos.writeFile("search.music.cache",suchergebnis);
@@ -1065,7 +1074,7 @@ public class PVA {
 						TreeSort ts = new TreeSort();
 						StringHash d = new StringHash();
 
-						if ( !oder("noch|dazu") ) exec(config.get("audioplayer","clear").split("x:x"));
+						if ( ! text_raw.matches( texte.get( config.get("conf","lang_short"), "PLAYAUDIOADD") ) ) exec(config.get("audioplayer","clear").split("x:x"));
 						exec(config.get("audioplayer","stop").split("x:x"));
 
 						String[] files = suchergebnis.split("x:x");
@@ -1088,15 +1097,14 @@ public class PVA {
 
 						if ( c > 500 ) {
 							log("Ich habe "+c+" Titel gefunden");
-							exec( (config.get("app","say")+"x:xIch habe "+ c +" Titel gefunden, dies kann nicht stimmen.").split("x:x"));
+							exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUNDN").replaceAll("<TERM1>", ""+c ) ).split("x:x"));
 							return	;				
 						}
 
 						if ( c > 1 ) {
 							log("Ich habe "+c+" Titel gefunden");
-							exec( (config.get("app","say")+"x:xIch habe "+ c +" Titel gefunden").split("x:x"));
+							exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUND").replaceAll("<TERM1>", ""+c )).split("x:x"));
 						}
-						
 						
 						args = suchergebnis.split("x:x");
 						for( String filename : args) {
@@ -1108,12 +1116,12 @@ public class PVA {
 						exec( config.get("audioplayer","playpl").split("x:x"));
 						exec( config.get("audioplayer","play").split("x:x"));
 					} else {
-						exec( (config.get("app","say")+"x:xIch habe leider nichts gefunden, was zu "+ subtext +" paßt!").split("x:x"));
+						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUNDNOTHING").replaceAll("<TERM1>", subtext ) ).split("x:x"));
 						log("keine treffer");
 					}
 					
 				}
-				if ( und("was|ist|da|zu|hören") || und("was|ist|gerade|zu|hören") || und("was|du|spielst|gerade") || und("was|du|spielst|da") || und("was|höre|ich")) {
+				if ( cf.command.equals("LISTENTO") ) {
 					String[] result = dos.readPipe( config.get("audioplayer","status").replaceAll("x:x"," "),true).split("\n");
 					for(String x : result ) 
 						if ( x.contains("TITLE") ) {
@@ -1123,7 +1131,10 @@ public class PVA {
 					
 					reaction = true;
 				}
-				if ( und("hilfe|zu") ) {
+				
+				// TODO: check if this section is really necessary
+				
+				if ( cf.command.equals("HELP") ) {
 					String subtext = text.replaceAll("(hilfe|zu)","").trim();
 					if ( wort("q m m p") ) {
 						log(dos.readPipe("qmmp --help"));
@@ -1131,13 +1142,15 @@ public class PVA {
 					}
 					
 				}
-				if ( und("ich|möchte|sehen") ) {
+				if ( cf.command.equals("PLAYVIDEO") ) {
 
-					String subtext = text.replaceAll("("+keyword+"|ich|möchte|sehen)","").trim();
+					String subtext = text.trim();
 					System.out.println("Ich suche nach Videos : "+ subtext);
 					String suchergebnis = suche( config.get("path","video"), subtext, ".mp4|.mpg|.mkv|.avi|.flv" );
+
 //					System.out.println("suche: "+ suchergebnis );
-					if (!suchergebnis.isEmpty() ) {	
+
+ 					if (!suchergebnis.isEmpty() ) {	
 
 						dos.writeFile("search.video.cache",suchergebnis);					
 
@@ -1160,30 +1173,33 @@ public class PVA {
 					
 				}
 
-				if ( wort("schreibe") && oder("email") ){
-					String subtext = text.replaceAll("(schreibe|email)","").trim();
+				if ( cf.command.equals("COMPOSEEMAIL") ){
+
+					String subtext = text.trim();
 					String[] worte = subtext.split(" ");
 					String to = "";
 					String subject = "";
 					String body = "";
 					
 					for ( int i=0;i<worte.length;i++ ) {
-						if ( worte[i].trim().equals("an") ) {
+						if ( worte[i].trim().equals( texte.get( config.get("conf","lang_short"), "COMPOSETO") ) ) {
 							to = worte[i+1];
 							i=i+1;
 						}
-						if ( worte[i].trim().equals("betreff") ) {
+						if ( worte[i].trim().equals( texte.get( config.get("conf","lang_short"), "COMPOSESUBJECT") ) ) {
 							for(int j=i+1;j<worte.length;j++) {
-								if ( worte[j].trim().equals("inhalt") ) {
+								if ( worte[j].trim().equals( texte.get( config.get("conf","lang_short"), "COMPOSEBODY")) ) {
 									i=j; break;
 								} 
 
 								subject += worte[j]+" ";
 							}
 						}
-						if ( worte[i].trim().equals("inhalt") ) {
+						if ( worte[i].trim().equals( texte.get( config.get("conf","lang_short"), "COMPOSEBODY") ) ) {
 							for(int j=i+1;j<worte.length;j++) {
-								body += worte[j]+" ";
+								body += worte[j].replaceAll( texte.get( config.get("conf","lang_short"), "COMPOSEBLOCK") ,"\n\n" )
+										.replaceAll( texte.get( config.get("conf","lang_short"), "COMPOSEPOINT") ,". " )
+										 +" ";
 							}
 							i = worte.length; break;
 						}
@@ -1205,53 +1221,57 @@ public class PVA {
 							reaction = true;
 						} 
 					} else {
-						exec( (config.get("app","say")+"x:xDie Emailadresse von "+ subtext + " ist unbekannt").split("x:x"));							
+						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "COMPOSEERROR").replaceAll("<TERM1>", subtext) ).split("x:x"));							
 					}
 
 				}
 				
-				if ( wort("suche") && oder("email|telefon|telefonnummer") ){
-					String subtext = text.replaceAll("(telefonnummer|emailadresse|suche|email|telefon|von)","").trim();
-					if ( wort("email") ) {
-						String ergebnis = sucheNachEmail( subtext );
-						if ( !ergebnis.trim().isEmpty() ) {
-							String[] lines = ergebnis.split("\n");
-							for(String numbers: lines ) {
-								log(numbers);
-								String[] parts = numbers.replaceAll("\"","").split("=");
-								parts[1] = parts[1].trim();
-								log("Die Emailadresse von "+ subtext + " ist " + parts[1]);
-								exec( (config.get("app","say")+"x:xDie Emailadresse von "+ subtext + " ist " + parts[1]).split("x:x"));							
-							} 
-						} else {
-							exec( (config.get("app","say")+"x:xDie Emailadresse von "+ subtext + " ist unbekannt").split("x:x"));							
-						}
+				if ( cf.command.equals("SEARCH4EMAIL") ){
+					String subtext = text.trim();
+					String ergebnis = sucheNachEmail( subtext );
+					if ( !ergebnis.trim().isEmpty() ) {
+						String[] lines = ergebnis.split("\n");
+						for(String numbers: lines ) {
+							log(numbers);
+							String[] parts = numbers.replaceAll("\"","").split("=");
+							parts[1] = parts[1].trim();
+							log("Die Emailadresse von "+ subtext + " ist " + parts[1]);
+							exec( (config.get("app","say")+"x:x"+texte.get( config.get("conf","lang_short"), "EMAILFOUNDR1")
+												  .replaceAll("<TERM1>", subtext ).replaceAll("<TERM2>", parts[1]) ).split("x:x"));							
+						} 
 					} else {
-						String ergebnis = sucheNachTelefonnummer( subtext );
-						if ( !ergebnis.trim().isEmpty() ) {
-							String[] lines = ergebnis.split("\n");
-							for(String numbers: lines ) {
-								log(numbers);
-								String[] parts = numbers.replaceAll("\"","").split("=");
-								parts[1] = parts[1].trim();
-								if ( numbers.contains("cell") ) 
-									exec( (config.get("app","say")+"x:xDie Mobilfunknummer von "+ subtext + " ist " + einzelziffern(parts[1])).split("x:x"));							
-								if ( numbers.contains("home") ) 
-									exec( (config.get("app","say")+"x:xDie festnetznummer von "+ subtext + " ist " + einzelziffern(parts[1])).split("x:x"));							
-								if ( numbers.contains("work") ) 
-									exec( (config.get("app","say")+"x:xDie Nummer von "+ subtext + " auf der Arbeit ist " + einzelziffern(parts[1])).split("x:x"));							
-							} 
-						} else {
-							exec( (config.get("app","say")+"x:xDie Telefonnummer von "+ subtext + " ist unbekannt").split("x:x"));							
-						}
+						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "EMAILFOUNDR2").replaceAll("<TERM1>", subtext ) ).split("x:x"));							
 					}
 				}
 				
-				if ( oder("web suche|websuche") ) {
+				if ( cf.command.equals("SEARCH4PHONENUMBER") ){
+					String subtext = text.trim();
+					String ergebnis = sucheNachTelefonnummer( subtext );
+					if ( !ergebnis.trim().isEmpty() ) {
+						String[] lines = ergebnis.split("\n");
+						for(String numbers: lines ) {
+							log(numbers);
+							String[] parts = numbers.replaceAll("\"","").split("=");
+							parts[1] = parts[1].trim();
+							if ( numbers.contains("cell") ) 
+								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR1")
+												          .replaceAll("<TERM1>", subtext ).replaceAll("<TERM2>", einzelziffern(parts[1]) )).split("x:x"));
+							if ( numbers.contains("home") ) 
+								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR2")
+												          .replaceAll("<TERM1>", subtext ).replaceAll("<TERM2>", einzelziffern(parts[1]) )).split("x:x"));							
+							if ( numbers.contains("work") ) 
+								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR3")
+												          .replaceAll("<TERM1>", subtext ).replaceAll("<TERM2>", einzelziffern(parts[1]) )).split("x:x"));							
+						} 
+					} else {
+						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR0").replaceAll("<TERM1>", subtext ) ).split("x:x"));							
+					}
+				}
 				
-					String subtext = text.replaceAll("("+keyword+"|websuche|web suche|nach)","").trim();
-					text = ""; // damit nichts mit suche anschlägt.
-					//exec(( config.get("app","say")+"x:xIch suche nach "+ subtext ).split("x:x"));
+				if ( cf.command.equals("WEBSEARCH") ) {
+				
+					String subtext = text.trim();
+
 					System.out.println("Ich suche nach "+ subtext);
 
 					String sm  = config.get("searchengines", config.get("app","searchengine") );
@@ -1550,9 +1570,11 @@ public class PVA {
 					} else exec( (config.get("audioplayer","backward")+"20").split("x:x") );
 				}
 
-				if ( wort("ton") && oder("aus|an") ) {
+				if ( cf.command.equals("AUDIOTOGGLE") ) {
 					exec(config.get("audioplayer","togglemute").split("x:x"));
 				}
+				
+				
 				if ( !reaction ) {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
 						System.out.println("Ich glaube, Du hast nichts gesagt!");
