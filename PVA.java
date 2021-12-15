@@ -624,7 +624,12 @@ public class PVA {
 	
 //					log("matching "+ cc.words +" against "+ text);
 	
-					if ( und( cc.words ) && ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
+					if ( 
+						( 
+							( !cc.words.startsWith(".*") && und( cc.words ) ) ||  
+							( cc.words.startsWith(".*") && text.matches( cc.words ) ) 
+						) 
+						&& ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
 						
 						cf = cc;
 						
@@ -660,7 +665,11 @@ public class PVA {
 
 						// delete the command from the phrase
 							
-						text = text.replaceAll( "("+cf.words+")", "" );
+						if ( !cc.words.startsWith(".*") ) {
+							text = text.replaceAll( "("+cf.words+")", "" );
+						} else {
+							text = text.replaceAll( cf.words ,"");
+						}
 							
 						break;
 					
@@ -1198,6 +1207,7 @@ public class PVA {
 						if ( worte[i].trim().equals( texte.get( config.get("conf","lang_short"), "COMPOSEBODY") ) ) {
 							for(int j=i+1;j<worte.length;j++) {
 								body += worte[j].replaceAll( texte.get( config.get("conf","lang_short"), "COMPOSEBLOCK") ,"\n\n" )
+										.replaceAll( texte.get( config.get("conf","lang_short"), "COMPOSECOMMA") ,", " )
 										.replaceAll( texte.get( config.get("conf","lang_short"), "COMPOSEPOINT") ,". " )
 										 +" ";
 							}
@@ -1217,7 +1227,7 @@ public class PVA {
 							String[] parts = numbers.replaceAll("\"","").split("=");
 							parts[1] = parts[1].trim();
 							log("Die Emailadresse von "+ subtext + " ist " + parts[1]);
-							log( dos.readPipe( ( config.get("app","mail") +" -compose \"to="+ parts[1] +",subject="+subject+",body="+body+"\"") ) );
+							log( dos.readPipe( ( config.get("app","mail") +" -compose \"to='"+ parts[1] +"',subject='"+subject+"',body='"+body+"'\"") ) );
 							reaction = true;
 						} 
 					} else {
@@ -1281,9 +1291,9 @@ public class PVA {
 					exec( ( config.get("app","web")+" "+sm.replaceAll("<query>", subtext.replaceAll(" ","+") )  ).split(" "));
 
 				}
-				if (  oder("suche|such") && oder("bild|bilder") ) {
+				if (  cf.command.equals("PICSEARCH") ) {
 
-					String subtext = text.replaceAll("("+keyword+"|nach|sucher|suche|such|bilder|bild|jpg|png|gif|jpeg)","").trim();
+					String subtext = text.replaceAll("(jpg|png|gif|jpeg)","").trim();
 					//exec(( config.get("app","say")+"x:xIch suche nach "+ subtext ).split("x:x"));
 					System.out.println("Ich suche nach "+ subtext);
 					
@@ -1299,32 +1309,35 @@ public class PVA {
 						for(String filename : files ) {
 
 							System.out.println(" gefunden : "+ filename);
-							if ( oder("öffnen|öffne") || files.length == 1 ) { 
+							// if the user gave the option to open the found files OR there is only one result, we open the default app with this file. 
+							// This is the OLD way to open files from a searchresult. The NEW way is to say i.E. "open pics with gimp"
+							
+							if ( text_raw.matches( texte.get( config.get("conf","lang_short"), "OPENRESULTWITHAPP" )  ) || files.length == 1 ) { 
 								exec( (config.get("app","gfx")+"x:x"+ filename).split("x:x") );
 							}
 						}
 						String anzahl = ""+files.length;
 						if ( files.length == 1 ) anzahl = "einen";
-						if ( !oder("öffnen|öffne") && files.length > 1 ) {
-							exec(( config.get("app","say")+"x:xIch habe "+ anzahl +" Treffer, was soll ich damit machen?").split("x:x"));
-						} else  exec(( config.get("app","say")+"x:xIch öffne "+ anzahl +" Treffer").split("x:x"));
+						if ( !text_raw.matches( texte.get( config.get("conf","lang_short"), "OPENRESULTWITHAPP" ) ) && files.length > 1 ) {
+							exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT1" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
+						} else  exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT2" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
 						
 						System.out.println("Fertig mit Suchen ");
 
-					} else exec(( config.get("app","say")+"x:xIch habe nichts gefunden, was zu "+ subtext +" paßt.").split("x:x"));
+					} else exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT3" ).replaceAll("<TERM1>", ""+ subtext ) ).split("x:x"));
 				}						
 						
-				if ( wort("suche") && oder("dokument|pdf|text") ) {
+				if ( cf.command.equals("DOCSEARCH") ) {
 
-					String subtext = text.replaceAll("("+keyword+"|suche|dokument|pdf|text|nach|öffnen|öffne)","").trim();
-					//exec(( config.get("app","say")+"x:xIch suche nach "+ subtext ).split("x:x"));
+					String subtext = text.trim();
+
 					System.out.println("Ich suche nach "+ subtext);
 					
 					String suchergebnis = "";					
 					
-					if ( wort("pdf") ) {
-						suchergebnis = suche( config.get("path","docs") , subtext, ".pdf" );
-					} else if ( !wort("pdf") ) {
+					if ( text_raw.contains("pdf") ) {
+						suchergebnis = suche( config.get("path","docs"), subtext, ".pdf" );
+					} else if ( !text_raw.contains("pdf") ) {
 						suchergebnis = suche( config.get("path","docs"), subtext, ".txt|.pdf|.odp|.ods|.odt" );
 					} 
 					// System.out.println("suchergebnis: "+ suchergebnis );
@@ -1336,7 +1349,7 @@ public class PVA {
 						for(String filename : files ) {
 
 							System.out.println(" gefunden : "+ filename);
-							if ( oder("öffnen|öffne") || files.length == 1 ) { 
+							if ( text_raw.matches( texte.get( config.get("conf","lang_short"), "OPENRESULTWITHAPP" )  ) || files.length == 1 ) { 
 								if ( filename.endsWith(".txt") ) {
 									exec( (config.get("app","txt")+"x:x"+ filename).split("x:x") );
 								}
@@ -1357,18 +1370,19 @@ public class PVA {
 						}
 						String anzahl = ""+files.length;
 						if ( files.length == 1 ) anzahl = "einen";
-						if ( !oder("öffnen|öffne") && files.length > 1 ) {
-							exec(( config.get("app","say")+"x:xIch habe "+ anzahl +" Treffer, was soll ich damit machen?").split("x:x"));
-						} else  exec(( config.get("app","say")+"x:xIch öffne "+ anzahl +" Treffer").split("x:x"));
+						if ( !text_raw.matches( texte.get( config.get("conf","lang_short"), "OPENRESULTWITHAPP" ) ) && files.length > 1 ) {
+							exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT1" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
+						} else  exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT2" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
 						
 						System.out.println("Fertig mit Suchen ");
-					}
+						
+					} else exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT3" ).replaceAll("<TERM1>", ""+ subtext ) ).split("x:x"));
 					
 				}
 			
-				if ( und("lies") && oder("pdf|text") ) {
+				if ( cf.command.equals("DOCREAD") ) {
 
-					String subtext = text.replaceAll("(lies|pdf|text|vor|laut|einen|ersten|zweiten|dritten|von)","").trim();
+					String subtext = text.trim();
 					//exec(( config.get("app","say")+"x:xIch suche nach "+ subtext ).split("x:x"));
 					System.out.println("Ich suche nach "+ subtext);
 					
@@ -1391,6 +1405,9 @@ public class PVA {
 						for(String filename : files ) {
 
 							System.out.println(" gefunden : "+ filename);
+							
+							// TODO: rebuild with number array
+							
 							if ( files.length == 1 ||
 							
 								( wort("ersten") && c==1 ) ||
@@ -1414,15 +1431,15 @@ public class PVA {
 						}
 
 						if ( files.length > 1 ) {
-							exec(( config.get("app","say")+"x:xIch habe "+ files.length +" Texte gefunden, das sind leider zu viele!").split("x:x"));
+							exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "DOCREADRESPONSE" ).replaceAll("<TERM1>", ""+ files.length )).split("x:x"));
 						} 
 						System.out.println("Fertig mit suchen nach Text");
 					}
 					
 				}
 
-				if ( und("spiel|musik") || wort("spielmusik") ) {
-					if ( !wort("zufällig") ) {
+				if ( cf.command.equals( "PLAYMUSIC") ) {
+					if ( ! text_raw.matches( texte.get( config.get("conf","lang_short"), "PLAYMUSICRANDOM" ) ) ) {
 						exec(config.get("audioplayer","play").split( config.get("conf","splitter") ));
 					} else {	
 						log("Ich katalogisiere Musik ...");
@@ -1436,7 +1453,9 @@ public class PVA {
 						// System.out.println("suche: "+ suchergebnis );
 						if (!suchergebnis.isEmpty() ) {	
 
-							if ( !oder("noch|dazu") ) exec(config.get("audioplayer","clear").split( config.get("conf","splitter") ));
+							if ( !text_raw.matches( texte.get( config.get("conf","lang_short"), "PLAYMUSICADD" ) ) ) 
+								exec(config.get("audioplayer","clear").split( config.get("conf","splitter") ));
+
 							exec(config.get("audioplayer","stop").split( config.get("conf","splitter") ));
 	
 							String[] files = suchergebnis.split( config.get("conf","splitter") );
@@ -1447,13 +1466,13 @@ public class PVA {
 	
 							exec( config.get("audioplayer","playpl").split( config.get("conf","splitter") ));
 							Thread.sleep(1000);
-							log(  "starte Musik" );
+							log( "starte Musik" );
 							exec( config.get("audioplayer","play").split( config.get("conf","splitter") ));
 						} 
 					}
 				}
 				
-				if ( und("füge|lieder|hinzu") || und("füge|titel|hinzu") ) {
+				if ( cf.command.equals("ADDTITLE") ) {
 					log("Ich katalogisiere Musik ...");
 					String suchergebnis = "";
 					if ( dos.fileExists("cache.musik") ) {
@@ -1483,20 +1502,21 @@ public class PVA {
 						exec( config.get("audioplayer","play").split( config.get("conf","splitter") ));
 					} 
 				}
-				if ( oder("stoppen|stoppe|halte|an|aus|anhalten|stop") ) {
+
+				if ( cf.command.equals("STOPAPP") ) {
 				
-					if ( wort("musik") ) 
+					if ( text_raw.contains(  texte.get( config.get("conf","lang_short"), "KEYWORDMUSIC" )  )  ) 
 						exec(config.get("audioplayer","stop").split("x:x"));
 				}
 				
-				if ( wort("leiser") && oder("mache|mach") ) {
+				if ( cf.command.equals("DECVOLUME") ) {
 					exec(config.get("audioplayer","lowervolume").split("x:x"));
 					exec(config.get("audioplayer","lowervolume").split("x:x"));
 					exec(config.get("audioplayer","lowervolume").split("x:x"));
 					exec(config.get("audioplayer","lowervolume").split("x:x"));
 					exec(config.get("audioplayer","lowervolume").split("x:x"));
 				}
-				if ( wort("lauter") && oder("mache|mach") ) {
+				if ( cf.command.equals("INCVOLUME") ) {
 					exec(config.get("audioplayer","raisevolume").split("x:x"));
 					exec(config.get("audioplayer","raisevolume").split("x:x"));
 					exec(config.get("audioplayer","raisevolume").split("x:x"));
@@ -1504,70 +1524,67 @@ public class PVA {
 					exec(config.get("audioplayer","raisevolume").split("x:x"));
 				}				
 				
-				if ( und("leiser|musik") ) {
-					if ( wort("viel") ) {
-						exec(config.get("audioplayer","lowervolume").split("x:x"));
-						exec(config.get("audioplayer","lowervolume").split("x:x"));
-						exec(config.get("audioplayer","lowervolume").split("x:x"));
-						exec(config.get("audioplayer","lowervolume").split("x:x"));
-						exec(config.get("audioplayer","lowervolume").split("x:x"));
-					} else {
-						exec(config.get("audioplayer","lowervolume").split("x:x"));
-					}
+				if ( cf.command.equals("DECVOLUMESMALL") ) {
+					exec(config.get("audioplayer","lowervolume").split("x:x"));
 				}
-				if ( und("lauter|musik") ) {
-					if ( wort("viel") ) {
-						exec(config.get("audioplayer","raisevolume").split("x:x"));
-						exec(config.get("audioplayer","raisevolume").split("x:x"));
-						exec(config.get("audioplayer","raisevolume").split("x:x"));
-						exec(config.get("audioplayer","raisevolume").split("x:x"));
-						exec(config.get("audioplayer","raisevolume").split("x:x"));
-					} else {
-						exec(config.get("audioplayer","raisevolume").split("x:x"));
-					}
+
+				if ( cf.command.equals("INCVOLUMESMALL") ) {
+					exec(config.get("audioplayer","raisevolume").split("x:x"));
 				}
-				if ( und("nächster|titel") || und("nächstes|stück") || und("nächstes|lied") ) {
+
+				if ( cf.command.equals("AUDIONEXTTRACK")  ) {
 					exec(config.get("audioplayer","nexttrack").split("x:x"));
 					if ( wort("übernächstes") ) exec(config.get("audioplayer","nexttrack").split("x:x"));
 				}
-				if ( und("letzter|titel") || und("letztes|stück") || und("letztes|lied") || und("ein|lied|zurück") ) {
+
+				if ( cf.command.equals("AUDIOPREVTRACK") ) {
 
 					exec(config.get("audioplayer","lasttrack").split("x:x"));
 					
 					if ( wort("vorletztes") ) exec(config.get("audioplayer","lasttrack").split("x:x"));;
 				}
-				if ( oder("lieder|lied") && wort("weiter") ) {
-				
+
+				if ( cf.command.equals("AUDIONTRACKSFORWARD") ) {
+
 					for(int i=0;i<za.length;i++) 
-						if ( wort( za[i] ) )
+						if ( text_raw.contains( za[i] ) )
 							for(int j=0;j<=i;j++ )
 								exec(config.get("audioplayer","nexttrack").split("x:x"));
 							
 				}
-				if ( oder("lieder|lied") && wort("zurück") ) {
-				
+
+				if ( cf.command.equals("AUDIONTRACKSBACKWARD") ) {
+
 					for(int i=0;i<za.length;i++) 
-						if ( wort( za[i] ) )
+						if ( text_raw.contains( za[i] ) )
 							for(int j=0;j<=i;j++ )
 								exec(config.get("audioplayer","lasttrack").split("x:x"));
 							
 				}
-				if ( wort("springe") && oder("vorwärts|vor") ) {
+
+				if ( cf.command.equals("AUDIOSKIPFORWARD") ) {
 	
-					if ( wort("sekunden") ) {			
-						for(int i=0;i<za.length;i++) 
-							if ( wort( za[i] ) )
-								exec( (config.get("audioplayer","forward")+i ).split("x:x") );
-					} else 	exec( (config.get("audioplayer","forward")+"20").split("x:x") );
-							
+					exec( (config.get("audioplayer","forward")+"20").split("x:x") );
+	
+				} 
+	
+				if ( cf.command.equals("AUDIOSKIPFORWARDN") ) {
+			
+					for(int i=0;i<za.length;i++) 
+						if ( wort( za[i] ) )
+							exec( (config.get("audioplayer","forward")+i ).split("x:x") );
 				}
-				if ( wort("springe") && wort("zurück") ) {
-				
-					if ( wort("sekunden") ) {			
-						for(int i=0;i<za.length;i++) 
-							if ( wort( za[i] ) )
-								exec( (config.get("audioplayer","backward")+i ).split("x:x") );
-					} else exec( (config.get("audioplayer","backward")+"20").split("x:x") );
+
+				if ( cf.command.equals("AUDIOSKIPBACKWARD") ) {
+	
+					exec( (config.get("audioplayer","backward")+"20").split("x:x") );
+	
+				}
+
+				if ( cf.command.equals("AUDIOSKIPBACKWARD") ) {
+					for(int i=0;i<za.length;i++) 
+						if ( wort( za[i] ) )
+							exec( (config.get("audioplayer","backward")+i ).split("x:x") );
 				}
 
 				if ( cf.command.equals("AUDIOTOGGLE") ) {
