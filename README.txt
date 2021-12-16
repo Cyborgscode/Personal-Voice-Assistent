@@ -149,7 +149,19 @@ Jitsi will be the bridge to your SIP provider, which can be your dsl or cable mo
 
 A online CardDAV addressbook (with content) is required for some functions like sending email or calling someone. If you find a way to get those infos from the desktop contact app, please send a pull request. CardDAV has the advantage of also working in Thunderbird, which gives you a nice UI to enter your data. Also Thunderbird is the main MailAPP.
 
-The pva.conf file is self explaning, 
+The pva.conf file is self explaning.
+
+## Since commit #2c74e1d (16.12.2021) you can have multiply config files. 
+
+There are two places config are found:
+
+/etc/pva/conf.d/00-test.conf
+~/.config/pva/conf.d/00-test.conf
+
+The actual config "./pva.conf" is always loaded as the last config file, to overwrite existing, alternative settings . I.E. if you changed the searchengine via "use duckduckgo as searchengine" and you had google before, you need to save this up.
+
+ Commit #2c74e1d is not perfect yet, we need to move parts of the none overwriteable configparts to the new system.
+
 
 COMMANDS:
 
@@ -163,8 +175,6 @@ in case of "und" it means ALL words have to be in the spoken text, with "oder" o
 Change the keywords and the logical pattern, thats best matching your desired language and recompile it. ( i.e. java --release 8 PVA.java ) . Done. 
 
 This hardcoded logic will be replace with a REGEXP based datafile, so code changes are not needed anymore to translate it to other languages.
-
-
 
 {TERM} mandatory infos needed to perform task
 [TYPE] i.e. optional info i.e. number type like cellphone, work or home
