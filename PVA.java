@@ -407,67 +407,106 @@ public class PVA {
 	static public void main(String[] args) {
 
 		try {
+			String configstoload = "./pva.conf";
 
-			// read in config, if no custom config is present, load defaults.
-			String[] conflines = null;
-			if ( dos.fileExists("./pva.conf") ) {
-				conflines = dos.readFile("./pva.conf").split("\n");
-			} else  conflines = dos.readFile("./pva.conf.default").split("\n");
+			NumericTreeSort ss = new NumericTreeSort();
+
+			File configdir = new File("~/.config/pva/conf.d");
+	                File[] entries = configdir.listFiles();
+	       	        if ( entries != null ) {     
+        	                for(int i =0; i < entries.length; i++ ) {
+        	                        if ( !entries[i].isDirectory() && !entries[i].getName().startsWith(".") && entries[i].getName().endsWith(".conf") ) {
+
+        	                        	if ( entries[i].getName().startsWith("[0-9]+-") ) {
+							ss.add( Long.parseLong(entries[i].getName().split("-")[0]), entries[i].getAbsolutePath() );
+						} else  ss.add( 0, entries[i].getAbsolutePath() );
+					}
+				}
+			}
 			
-			// our config is a three dimentional array 
-			// in PHP this would look like $config[$key1][$key2] = $value
+			if ( !ss.getValues_internal().trim().isEmpty() )
+				configstoload = ss.getValues_internal().replaceAll(",",":")+ ":"+ configstoload ;
+			
+			ss.reset();
 
-			for(String line : conflines) {
-				if ( !line.trim().startsWith("#") && !line.trim().isEmpty() && line.contains(",") && line.contains(":") ) {
-					try {
-						String[] level1 = line.split(":",2);
-						String[] level2 = level1[1].trim().replaceAll("^\"","").replaceAll("\"$","").trim().split("\",\"");
+			configdir = new File("/etc/pva/conf.d");
+	                entries = configdir.listFiles();
+	       	        if ( entries != null ) {     
+        	                for(int i =0; i < entries.length; i++ ) {
+        	                        if ( !entries[i].isDirectory() && !entries[i].getName().startsWith(".") && entries[i].getName().endsWith(".conf") ) {
+        	                        	if ( entries[i].getName().startsWith("[0-9]+-") ) {
+							ss.add( Long.parseLong(entries[i].getName().split("-")[0]), entries[i].getAbsolutePath() );
+						} else  ss.add( 0, entries[i].getAbsolutePath() );
+					}
+				}
+			}
 
-						// UPS! the above construct replaces |"key",""| into => |key","| which splits into just "key" with no value left, that's why we need to check for shorter Level2-Stringarrays
+			if ( !ss.getValues_internal().trim().isEmpty() )
+				configstoload = ss.getValues_internal().replaceAll(",",":")+ ":"+ configstoload ;
+
+			String[] cfiles = configstoload.split(":");
+			for(String conffile: cfiles) {
+				// read in config, if no custom config is present, load defaults.
+				String[] conflines = null;
 				
-						if ( level1[0].trim().equals("alternatives") ) {
-
-							alternatives.put(level2[0].trim() , level2[1].trim() , level2[2].trim());
-
-						} else if ( level1[0].trim().equals("text") ) {
-
-							texte.put(level2[0].trim() , level2[1].trim() , level2[2].trim());
-
-						} else if ( level1[0].trim().equals("contextreplacements") ) {
-
-							if ( level2.length == 3 ) {
-								context.put( level2[0].trim() , level2[1].trim() , level2[2].trim() );
-							} else  context.put( level2[0].trim() , level2[1].trim() , "" );
-							
-						} else if ( level1[0].trim().equals("reaction") ) {
-
-							if ( level2.length == 3 ) {
-								reactions.add( new Reaction( level2[0].trim() , level2[1].trim() , level2[2].trim() ) );
-							} else  reactions.add( new Reaction( level2[0].trim() , "" , level2[1].trim() ) );
-							
-						} else if ( level1[0].trim().equals("command") ) {
-
-							if ( level2.length == 4 ) {
-								commands.add( new Command( level2[0].trim() , level2[1].trim() , level2[2].trim(), level2[3].trim() ) );
-							} else if ( level2.length == 3 ) { 
-								commands.add( new Command( level2[0].trim() , level2[1].trim() , level2[2].trim(), "" ) );
-							} else  commands.add( new Command( level2[0].trim() , level2[1].trim() , "" , "") );
-
-						} else { 
+				if ( dos.fileExists( conffile ) ) {
+					conflines = dos.readFile(conffile).split("\n");
+				} else  conflines = dos.readFile("./pva.conf.default").split("\n");
+				
+				// our config is a three dimentional array 
+				// in PHP this would look like $config[$key1][$key2] = $value
+	
+				for(String line : conflines) {
+					if ( !line.trim().startsWith("#") && !line.trim().isEmpty() && line.contains(",") && line.contains(":") ) {
+						try {
+							String[] level1 = line.split(":",2);
+							String[] level2 = level1[1].trim().replaceAll("^\"","").replaceAll("\"$","").trim().split("\",\"");
+	
+							// UPS! the above construct replaces |"key",""| into => |key","| which splits into just "key" with no value left, that's why we need to check for shorter Level2-Stringarrays
+					
+							if ( level1[0].trim().equals("alternatives") ) {
+	
+								alternatives.put(level2[0].trim() , level2[1].trim() , level2[2].trim());
+	
+							} else if ( level1[0].trim().equals("text") ) {
+	
+								texte.put(level2[0].trim() , level2[1].trim() , level2[2].trim());
+	
+							} else if ( level1[0].trim().equals("contextreplacements") ) {
+	
+								if ( level2.length == 3 ) {
+									context.put( level2[0].trim() , level2[1].trim() , level2[2].trim() );
+								} else  context.put( level2[0].trim() , level2[1].trim() , "" );
 								
-							if ( level2.length == 2 ) {
-
-								config.put( level1[0].trim() , level2[0].trim() , level2[1].trim() );
-
-							} else  config.put( level1[0].trim() , level2[0].trim() , "" );
-
-						}
-					} catch (Exception e) {
-						log("ERROR:syntaxerror:config:"+line);
-						log(e.getMessage());
-						e.printStackTrace();
-						return;
-					} 
+							} else if ( level1[0].trim().equals("reaction") ) {
+								if ( level2.length == 3 ) {
+									reactions.add( new Reaction( level2[0].trim() , level2[1].trim() , level2[2].trim() ) );
+								} else  reactions.add( new Reaction( level2[0].trim() , "" , level2[1].trim() ) );
+								
+							} else if ( level1[0].trim().equals("command") ) {
+	
+								if ( level2.length == 4 ) {
+									commands.add( new Command( level2[0].trim() , level2[1].trim() , level2[2].trim(), level2[3].trim() ) );
+								} else if ( level2.length == 3 ) { 
+									commands.add( new Command( level2[0].trim() , level2[1].trim() , level2[2].trim(), "" ) );
+								} else  commands.add( new Command( level2[0].trim() , level2[1].trim() , "" , "") );
+	
+							} else { 
+									
+								if ( level2.length == 2 ) {
+	
+									config.put( level1[0].trim() , level2[0].trim() , level2[1].trim() );
+	
+								} else  config.put( level1[0].trim() , level2[0].trim() , "" );
+	
+							}
+						} catch (Exception e) {
+							log("ERROR:syntaxerror:config:"+line);
+							log(e.getMessage());
+							e.printStackTrace();
+							return;
+						} 
+					}
 				}
 			}
 
