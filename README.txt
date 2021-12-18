@@ -42,7 +42,7 @@ your need to checkout gsay, change your config to use gsay as "say" app and inst
 i.E. Fedora: dnf install gtts
 
 ## WARNING: 
-## your personal privacy is at risk, if you use gtts, as the text of the what PVA answeres ( which includes repeats you what you said ) 
+## your personal privacy is at risk, if you use gtts, as the text of the what PVA answeres ( which includes repeats of what you said ) 
 ## is tranfsered to a Google server, for which you need an active internet connection too. 
 
 O== Espeak:
