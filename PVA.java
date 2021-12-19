@@ -1,3 +1,11 @@
+/*
+
+PVA is coded by Marius Schwarz in 2021
+
+This software is free. You can copy it, use it or modify it, as long as the result is also published on this condition.
+You only need to refer to this original version in your own readme / license file. 
+
+*/
 
 import java.util.*;
 import java.io.*;
@@ -559,13 +567,13 @@ public class PVA {
 			// generate words for numbers 1-99
 			// use $HOME/.config/pva/conf.d/02-numbers-language.conf to overwrite the german defaults, or, systemwide, /etc/pva/99-numbers-language.conf
 
-			String[] bloecke = config.get("blocks").split(":");
-			String[] ziffern = config.get("numerics").split(":");
-			String zahlen = config.get("numbers");
+			String[] bloecke = config.get("conf","blocks").split(":");
+			String[] ziffern = config.get("conf","numerics").split(":");
+			String zahlen = config.get("conf","numbers");
 			for(String zig : bloecke ) {
 				zahlen += zig+":";
 				for(String zahl : ziffern ) 
-					zahlen += zahl+ config.get("numericsbindword") +zig+":";
+					zahlen += zahl+ config.get("conf","numericsbindword") +zig+":";
 			}
 			
 			za = zahlen.replaceAll(":$","").split(":");
@@ -792,6 +800,24 @@ public class PVA {
 					}
 				}
 				
+				
+				// selfstatusreport
+				
+				if ( cf.command.equals("HEALTHREPORT") ) {
+				
+					Float f = Float.parseFloat( dos.readPipe("cat /proc/loadavg").split(" ")[0].trim() );
+					long  c = Long.parseLong( dos.readPipe("grep -c processor /proc/cpuinfo").trim() );
+					
+					if ( f < 1 ) {
+							exec( (config.get("app","say")+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSENOTHINGTODO") ).split("x:x"));
+					} else if ( f > c ) {
+							exec( (config.get("app","say")+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSEHELPHELP") ).split("x:x"));						
+					} else if ( f > ( c/2 ) ) {
+							exec( (config.get("app","say")+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSESOLALA") ).split("x:x"));						
+					} else {
+							exec( (config.get("app","say")+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSENORMAL") ).split("x:x"));
+					}	
+				}				
 				
 				// repeat last cmd.. 
 
