@@ -1,0 +1,16 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Name=Personal Voice Assistent
+GenericName=PVA
+Comment=Carola
+Exec=/home/user/Programme/vosk/pva/start.sh
+Icon=pda
+Terminal=true
+Type=Application
+StartupNotify=true
+Categories=extras
+Keywords=carola;sophia;pva;assistent;personal;voice
+X-Desktop-File-Install-Version=0.21
+X-GNOME-Autostart-enabled=true
+Name[de_DE]=PVA
