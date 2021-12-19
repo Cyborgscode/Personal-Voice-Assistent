@@ -1,7 +1,6 @@
 
 import java.util.*;
 import java.io.*;
-import org.json.*;
 import io.*;
 import hash.*;
 import data.*;
@@ -327,12 +326,14 @@ public class PVA {
 					
 					String k = (String)en2.nextElement();
 					String v = sub.get( k );
-				
-					sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
+					if ( key.equals("app") )
+						sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
 
 				}
 			}
-			
+
+/*			
+
 			Enumeration en2 = alternatives.keys();
 			while ( en2.hasMoreElements() ) {
 				String key = (String)en2.nextElement();
@@ -395,7 +396,7 @@ public class PVA {
 
 
 			}
-
+*/
 
 //			log ( sb.toString() );
 
@@ -411,12 +412,11 @@ public class PVA {
 
 			NumericTreeSort ss = new NumericTreeSort();
 
-			File configdir = new File("~/.config/pva/conf.d");
+			File configdir = new File( System.getenv("HOME") + "/.config/pva/conf.d");
 	                File[] entries = configdir.listFiles();
 	       	        if ( entries != null ) {     
         	                for(int i =0; i < entries.length; i++ ) {
         	                        if ( !entries[i].isDirectory() && !entries[i].getName().startsWith(".") && entries[i].getName().endsWith(".conf") ) {
-
         	                        	if ( entries[i].getName().startsWith("[0-9]+-") ) {
 							ss.add( Long.parseLong(entries[i].getName().split("-")[0]), entries[i].getAbsolutePath() );
 						} else  ss.add( 0, entries[i].getAbsolutePath() );
@@ -455,7 +455,7 @@ public class PVA {
 				
 				// our config is a three dimentional array 
 				// in PHP this would look like $config[$key1][$key2] = $value
-	
+
 				for(String line : conflines) {
 					if ( !line.trim().startsWith("#") && !line.trim().isEmpty() && line.contains(",") && line.contains(":") ) {
 						try {
@@ -479,9 +479,32 @@ public class PVA {
 								} else  context.put( level2[0].trim() , level2[1].trim() , "" );
 								
 							} else if ( level1[0].trim().equals("reaction") ) {
+							
 								if ( level2.length == 3 ) {
+								
+									// overwrite "old" values by deleting them before adding the exact same combination
+									// this approach has limits, but it will work in 99% of cases.
+									
+									if ( conffile.contains("-overwrite") ) for(int i=0; i < reactions.size(); i++)	{
+										Reaction r = (Reaction)reactions.get(i);
+										if ( r.positives.equals( level2[0].trim() ) && r.negatives.equals( level2[1].trim() ) ) {
+											reactions.remove( r );													
+										}
+									}
 									reactions.add( new Reaction( level2[0].trim() , level2[1].trim() , level2[2].trim() ) );
-								} else  reactions.add( new Reaction( level2[0].trim() , "" , level2[1].trim() ) );
+								} else {
+									// overwrite "old" values by deleting them before adding the exact same combination
+									// this approach has limits, but it will work in 99% of cases.
+									
+									if ( conffile.contains("-overwrite") ) for(int i=0; i < reactions.size(); i++)	{
+										Reaction r = (Reaction)reactions.get(i);
+										if ( r.positives.equals( level2[0].trim() ) && r.negatives.equals( "" ) ) {
+											reactions.remove( r );		
+										}
+									}
+
+									reactions.add( new Reaction( level2[0].trim() , "" , level2[1].trim() ) );
+								}
 								
 							} else if ( level1[0].trim().equals("command") ) {
 	
@@ -513,24 +536,36 @@ public class PVA {
 			// for speed resons, we got often used content in variables.
 			keyword = config.get("conf","keyword");
 
+			// JSON Object is given by vosk, but the org.json package can't be shipped with distros, so we need to do it ourself, so .. don't wonder ;)
+			
+			// Format to parse "{text:"spoken text"}"
+
 			// now the part that extracts the text spoken from the JSON Object given to us.
 			if ( args.length > 0 ) {
+			
+/* removed for licenses issues with Fedora 
+				import org.json.*;
+
 				JSONObject jo = new JSONObject(args[0]);		
 				text = jo.getString("text");
+*/
+				text = zwischen(args[0].split(":")[1],"\"","\"");
+
 			} else {
 				// defaulttext for debugreasons
 				text = keyword +" ich möchte queen hören";
 			}
 
-			// generate german words for numbers 1-99
+			// generate words for numbers 1-99
+			// use $HOME/.config/pva/conf.d/02-numbers-language.conf to overwrite the german defaults, or, systemwide, /etc/pva/99-numbers-language.conf
 
-			String[] bloecke = "zwanzig:dreißig:vierzig:fünfzig:sechzig:siebzig:achzig:neunzig".split(":");
-			String[] ziffern = "ein:zwei:drei:vier:fünf:sechs:sieben:acht:neun".split(":");
-			String zahlen = "ein:zwei:drei:vier:fünf:sechs:sieben:acht:neun:zehn:elf:zwölf:dreizehn:vierzehn:fünfzehn:sechzehn:siebzehn:achtzehn:neunzehn:";
+			String[] bloecke = config.get("blocks").split(":");
+			String[] ziffern = config.get("numerics").split(":");
+			String zahlen = config.get("numbers");
 			for(String zig : bloecke ) {
 				zahlen += zig+":";
 				for(String zahl : ziffern ) 
-					zahlen += zahl+"und"+zig+":";
+					zahlen += zahl+ config.get("numericsbindword") +zig+":";
 			}
 			
 			za = zahlen.replaceAll(":$","").split(":");
@@ -617,16 +652,26 @@ public class PVA {
 			
 			// some context less reactions
 			
+			Vector<Reaction> temp = new Vector<Reaction>();
+
 			for(int i=0; i < reactions.size(); i++)	{
 
 				Reaction r = (Reaction)reactions.get(i);
-
+				
 				if ( und( r.positives ) && ( r.negatives.isEmpty() || !und( r.negatives ) ) ) {
 					
-					exec( (config.get("app","say")+"x:x" + r.answere.replaceAll("%KEYWORD", keyword )).split("x:x"));
+					temp.add( r );
 					
 				}
 			}
+			if ( temp.size() > 0 ) {
+				int j = (int)( Math.random() * temp.size() );
+				Reaction r = temp.get(j);
+				
+				exec( (config.get("app","say")+"x:x" + r.answere.replaceAll("%KEYWORD", keyword )).split("x:x"));
+			}
+
+
 
 			// now the part that interessts you most .. the context depending parser
 			
@@ -811,7 +856,8 @@ public class PVA {
 
 				if ( cf.command.equals("EXIT") ) {
 					dos.writeFile("cmd.last","exit");
-					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "EXIT") ).split("x:x"));							
+					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "EXIT") ).split("x:x"));
+					return;
 				}
 			
 				// this is more a convinient way to debug addressbooks
