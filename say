@@ -2,10 +2,45 @@
 
 
 if [ "$GTTS" == "1" ]; then
-	FILENAME=/tmp/gtts$RANDOM.mp3
-        gtts-cli "$1" --tld de --lang de --output $FILENAME; play $FILENAME tempo 1.5 2>/dev/null;rm -f $FILENAME
+
+	HASH=$(echo "$1"| sha256sum | sed -e "s/ .*$//g")
+
+	FILENAME="$HOME/.config/pva/cache/$HASH.mp3"
+
+	if [ ! -e $FILENAME ]; then
+		echo "download from G"
+		echo "gtts-cli \"$1\" --tld de --lang de --output $FILENAME"	
+		gtts-cli "$1" --tld de --lang de --output $FILENAME
+	fi 
+
+	play $FILENAME tempo 1.5 2>/dev/null
+
 	exit;
 fi
+
+# Check for mbrola
+
+MBROLAINSTALLED=$(which mbrola)
+
+
+if [ "$MBROLAINSTALLED" == "" ]; then 
+
+	# REVERTING to espeak, because mbrola is missing
+
+	if [ "$VOICE" == "" ]; then
+        	VOICE="de"
+	fi
+
+
+	if [ ! -f "$1" ]; then
+
+		espeak -v $VOICE "$1"
+
+	else 
+		cat "$1" | espeak -v $VOICE 
+
+	exit;
+fi 
 
 if [ "$VOICE" == "" ]; then
 	VOICE="de5"
@@ -14,18 +49,13 @@ fi
 FILENAME=/tmp/mbrola$RANDOM.wav
 
 if [ ! -f "$1" ]; then
-#	echo "$1" | nc --send-only  192.168.0.117 3000 
 	espeak -v mb-$VOICE -q --pho --phonout=/tmp/out.pho "$1"
 else 
-#	A=$(cat "$1")
 	cat "$1" | espeak -v mb-$VOICE -q --pho --phonout=/tmp/out.pho 
-#	cat "$1" | nc 192.168.0.117 3000
 fi
 
-#mbrola -t 1.2 -f 0.8 /usr/share/mbrola/$VOICE/$VOICE /tmp/out.pho -.au | aplay 1>/dev/null 2>/dev/null
 mbrola -t 1.2 -f 0.8 /usr/share/mbrola/$VOICE/$VOICE /tmp/out.pho $FILENAME
 aplay $FILENAME 1>/dev/null 2>/dev/null
-
 
 rm -f /tmp/mbrola*wav
 rm -f /tmp/out.pho
