@@ -123,7 +123,7 @@ edit pva.py and adjust it to this new while loop:
                 if dump_fn is not None:
                     dump_fn.write(data)
 
-it's just 4 lines of edit, can do this ;) 
+it's just 4 lines of edit, you can do this ;) 
 
 copy the say script to /usr/local/bin or sbin and your finished installing.
 
