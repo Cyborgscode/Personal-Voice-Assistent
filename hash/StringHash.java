@@ -1,3 +1,14 @@
+
+/* 
+ Author: Marius Schwarz
+
+License: 
+
+This software is free. You can copy it, use it or modify it, as long as the result is also published on this condition.
+You only need to refer to this original version in your own readme / license file. 
+
+*/
+
 package hash;
 
 import java.io.Serializable;
