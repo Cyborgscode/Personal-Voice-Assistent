@@ -39,6 +39,7 @@ if [ "$MBROLAINSTALLED" == "" ]; then
 	else 
 		cat "$1" | espeak -v $VOICE 
 
+	fi
 	exit;
 fi 
 
