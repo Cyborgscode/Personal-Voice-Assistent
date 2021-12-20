@@ -174,14 +174,18 @@ public class PVA {
 	
 	}
 
+	static String getHome() {
+		return System.getenv("HOME").trim();
+	}
+
 	static String searchExternalApps(String suchwort) {
 	
 		String filename ="";
 		filename += _searchExternalApps("/usr/share/applications/", suchwort );
 		if ( filename.isEmpty() ) 
 			if ( config.get("conf","lang").equals("de_DE") ) {
-				filename += _searchExternalApps("/home/"+ dos.readPipe("whoami").trim()+"/Schreibtisch", suchwort );
-			} else  filename += _searchExternalApps("/home/"+ dos.readPipe("whoami").trim()+"/Desktop", suchwort );
+				filename += _searchExternalApps(getHome() + "/Schreibtisch", suchwort );
+			} else  filename += _searchExternalApps(getHome() + "/Desktop", suchwort );
 	
 		return filename;
 	}
@@ -409,18 +413,87 @@ public class PVA {
 //			log ( sb.toString() );
 
 //		return true;
-		return dos.writeFile("./pva.conf", sb.toString() );
+		return dos.writeFile( getHome()+"/.config/pva/pva.conf", sb.toString() );
 	}
 
+	static private Command parseCommand(String textToParse) {
+
+		text = textToParse;
+
+		Command cf = new Command("DUMMY","","",""); // cf = commandFound
+		for(int i=0; i < commands.size(); i++)	{
+
+			Command cc = commands.get(i);
+	
+//					log("matching "+ cc.words +" against "+ text);
+	
+			if ( 
+				( 
+					( !cc.words.startsWith(".*") && und( cc.words ) ) ||  
+					( cc.words.startsWith(".*") && text.matches( cc.words ) ) 
+				) 
+				&& ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
+				
+				cf = cc;
+						
+				// Replace context related words i.e. the APP krita is often misunderstood in german for Kreta ( the greek island )
+				// it's ok replace it for STARTAPPS, but i may not ok to replace it i.e. in a MAP Context!
+						
+				StringHash r = context.get( cc.command );
+				if ( r != null ) {
+					Enumeration en = r.keys();
+					while ( en.hasMoreElements() ) {
+						String a = (String)en.nextElement();
+						String b = r.get( a );
+						
+//						log( "replace:"+a+" => "+b);
+						
+						text = text.replaceAll(a,b);
+					}
+				}
+				// make a raw copy .. it's needed for filterwords to be removed from the "search term" but still recognized as optional arguments 
+
+				text_raw = text;
+
+				// Apply special filter i.e. for binding words like "with"/"mit" 
+				// if filter words are defined, lets remove them now. this simplyfies processing in the actual function.
+				if ( ! cf.filter.isEmpty() ) {
+					log( "replace: ("+ cf.filter +") => ");
+					text = text.replaceAll("("+ cf.filter +")" , "");
+				}
+							
+//						log( "replace: ("+ cf.words +") => ");
+
+				// delete the command from the phrase
+							
+				if ( !cc.words.startsWith(".*") ) {
+					text = text.replaceAll( "("+cf.words+")", "" );
+				} else {
+					text = text.replaceAll( cf.words ,"");
+				}
+					
+				break;
+			
+			}
+		}
+	
+		return cf;
+					
+	}
 
 	static public void main(String[] args) {
 
 		try {
-			String configstoload = "./pva.conf";
+			String configstoload = getHome()+"/.config/pva/pva.conf";
 
 			NumericTreeSort ss = new NumericTreeSort();
 
-			File configdir = new File( System.getenv("HOME") + "/.config/pva/conf.d");
+			String debugLevel = System.getenv("DEBUG");
+			if ( debugLevel == null || debugLevel.isEmpty() ) debugLevel = "0";
+			long debug = Long.parseLong(debugLevel);
+			
+
+			File configdir = new File( getHome() + "/.config/pva/conf.d");
 	                File[] entries = configdir.listFiles();
 	       	        if ( entries != null ) {     
         	                for(int i =0; i < entries.length; i++ ) {
@@ -456,6 +529,8 @@ public class PVA {
 			for(String conffile: cfiles) {
 				// read in config, if no custom config is present, load defaults.
 				String[] conflines = null;
+
+                        	if ( debug > 0 ) log( "load config: "+ conffile );
 				
 				if ( dos.fileExists( conffile ) ) {
 					conflines = dos.readFile(conffile).split("\n");
@@ -487,7 +562,7 @@ public class PVA {
 								} else  context.put( level2[0].trim() , level2[1].trim() , "" );
 								
 							} else if ( level1[0].trim().equals("reaction") ) {
-							
+								
 								if ( level2.length == 3 ) {
 								
 									// overwrite "old" values by deleting them before adding the exact same combination
@@ -558,11 +633,18 @@ public class PVA {
 				text = jo.getString("text");
 */
 				text = zwischen(args[0].split(":")[1],"\"","\"");
+				if ( text == null ) text = "";
 
 			} else {
 				// defaulttext for debugreasons
 				text = keyword +" ich möchte queen hören";
 			}
+
+			// RAW Copy of what has been spoken. This is needed in case a filter is applied, but we need some of the filtered words to make decisions.
+
+			String text_raw = text; 
+
+			if ( debug > 1 ) log("raw="+ text);
 
 			// generate words for numbers 1-99
 			// use $HOME/.config/pva/conf.d/02-numbers-language.conf to overwrite the german defaults, or, systemwide, /etc/pva/99-numbers-language.conf
@@ -584,49 +666,53 @@ public class PVA {
 			// without this cache it would take several minutes to import addressbooks
 			// from time to time you should refresh it, by just deleteing it
 						
-			String vcards = dos.readFile( "./vcards.cache" );
+			String vcards = dos.readFile( getHome()+"/.cache/pva/vcards.cache" );
 			if ( vcards.isEmpty() ) {
-				exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "READPHONEBOOK") ).split("x:x"));
 				StringHash adb = config.get("addressbook");
-				Enumeration en = adb.keys();
-				while ( en.hasMoreElements() ) {
-					String key = (String) en.nextElement();
-					String value = adb.get(key);
-					log( key );
-					String[] url = key.split("/");
-					String basedomain = url[0]+"//"+url[2];
-					String[] html = dos.readPipe("curl "+ key +" --anyauth -u \""+ value +"\" 2>/dev/null").split("\n");
-					int c = 1, gesamt=0;
-					for(String line : html )
-						if ( line.contains("vcf\"><img") ) 
-							gesamt++;
-							
-					for(String line : html ){
-					
-						if ( line.contains("vcf\"><img") ) {
-							log("import Eintrag "+ c +"/"+gesamt);
-							String href = zwischen(line,"href=\"","\"");
-							String[] vcard = dos.readPipe("curl "+  basedomain+href +" --anyauth -u \""+ value +"\" 2>/dev/null").split("\n");
-							Contact vcf = new Contact();
-							for(String vline : vcard ) {
-								vcf.parseInput( vline );
+				if ( adb != null ) {
+					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "READPHONEBOOK") ).split("x:x"));
+
+					Enumeration en = adb.keys();
+					while ( en.hasMoreElements() ) {
+						String key = (String) en.nextElement();
+						String value = adb.get(key);
+						log( key );
+						String[] url = key.split("/");
+						String basedomain = url[0]+"//"+url[2];
+						String[] html = dos.readPipe("curl "+ key +" --anyauth -u \""+ value +"\" 2>/dev/null").split("\n");
+						int c = 1, gesamt=0;
+						for(String line : html )
+							if ( line.contains("vcf\"><img") ) 
+								gesamt++;
+								
+						for(String line : html ){
+						
+							if ( line.contains("vcf\"><img") ) {
+								log("import Eintrag "+ c +"/"+gesamt);
+								String href = zwischen(line,"href=\"","\"");
+								String[] vcard = dos.readPipe("curl "+  basedomain+href +" --anyauth -u \""+ value +"\" 2>/dev/null").split("\n");
+								Contact vcf = new Contact();
+								for(String vline : vcard ) {
+									vcf.parseInput( vline );
+								}
+								contacts.addElement( vcf );	
+								c++;
 							}
-							contacts.addElement( vcf );	
-							c++;
+						
 						}
-					
+				
 					}
-			
 				}
+	
 				vcards = "";
 				Enumeration<Contact> een = contacts.elements();
-				while ( een.hasMoreElements() ) {
+				if ( een != null ) while ( een.hasMoreElements() ) {
 					Contact c = een.nextElement();
 					vcards += c.exportVcard()+"XXXXXX---NEXT_ELEMENT---XXXXXX\n";
 				}
-				dos.writeFile("./vcards.cache", vcards);
+				dos.writeFile(getHome()+"/.cache/pva/vcards.cache", vcards);
 			} else {
-				log("Loading cache...");
+				// log("Loading cache...");
 				String[] x = vcards.split("XXXXXX---NEXT_ELEMENT---XXXXXX\n");
 				for(String card : x) { 
 					Contact vcf = new Contact();
@@ -665,7 +751,7 @@ public class PVA {
 			for(int i=0; i < reactions.size(); i++)	{
 
 				Reaction r = (Reaction)reactions.get(i);
-				
+		
 				if ( und( r.positives ) && ( r.negatives.isEmpty() || !und( r.negatives ) ) ) {
 					
 					temp.add( r );
@@ -700,73 +786,13 @@ public class PVA {
 			
 				text = text.substring( text.indexOf(keyword) + keyword.length() );
 
-				String text_raw = text; // RAW Copy of what has been spoken. This is needed in case a filter is applied, but we need some of the filtered words to make decisions.
-
 				// It can be very helpfull to output the sentence vosk heared to see, whats going wrong.
 
 				log(text);
 
 				// parse commands from config
 				
-				Command cf = new Command("DUMMY","","",""); // cf = commandFound
-				
-				for(int i=0; i < commands.size(); i++)	{
-
-					Command cc = commands.get(i);
-	
-//					log("matching "+ cc.words +" against "+ text);
-	
-					if ( 
-						( 
-							( !cc.words.startsWith(".*") && und( cc.words ) ) ||  
-							( cc.words.startsWith(".*") && text.matches( cc.words ) ) 
-						) 
-						&& ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
-						
-						cf = cc;
-						
-						// Replace context related words i.e. the APP krita is often misunderstood in german for Kreta ( the greek island )
-						// it's ok replace it for STARTAPPS, but i may not ok to replace it i.e. in a MAP Context!
-						
-						StringHash r = context.get( cc.command );
-						if ( r != null ) {
-							Enumeration en = r.keys();
-							while ( en.hasMoreElements() ) {
-								String a = (String)en.nextElement();
-								String b = r.get( a );
-								
-//								log( "replace:"+a+" => "+b);
-								
-								text = text.replaceAll(a,b);
-							}
-						}
-
-						// make a raw copy .. it's needed for filterwords to be removed from the "search term" but still recognized as optional arguments 
-
-						text_raw = text;
-
-						// Apply special filter i.e. for binding words like "with"/"mit" 
-						// if filter words are defined, lets remove them now. this simplyfies processing in the actual function.
-
-						if ( ! cf.filter.isEmpty() ) {
-//							log( "replace: ("+ cf.filter +") => ");
-							text = text.replaceAll("("+ cf.filter +")" , "");
-						}
-							
-//						log( "replace: ("+ cf.words +") => ");
-
-						// delete the command from the phrase
-							
-						if ( !cc.words.startsWith(".*") ) {
-							text = text.replaceAll( "("+cf.words+")", "" );
-						} else {
-							text = text.replaceAll( cf.words ,"");
-						}
-							
-						break;
-					
-					}
-				}
+				Command cf = parseCommand( text );
 				
 				log ( "found "+ cf.command +": "+text );
 
@@ -776,7 +802,7 @@ public class PVA {
 				if ( wort("autorisierung") ) {
 					if ( oder("scout|code|kurt|kot") && !oder("neu|neuer")  ) {
 						if ( wort( config.get("code","alpha")) ) {
-							String cmd = dos.readFile("cmd.last");
+							String cmd = dos.readFile(getHome()+"/.cache/pva/cmd.last");
 							if ( cmd.equals("exit") ) {
 								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "QUIT") ).split("x:x"));	
 								String[] e = dos.readPipe("pgrep -i -l -a python").split("\n");
@@ -821,16 +847,21 @@ public class PVA {
 				
 				// repeat last cmd.. 
 
+				boolean writeLastArg = true;
+
 				if ( cf.command.equals("REPEATLASTCOMMAND") ) {
-					String read = dos.readFile("cmd.last").trim();
-					if ( !read.isEmpty() && !read.equals( cf.words ) ) text = read;
+					String read = dos.readFile(getHome()+"/.cache/pva/cmd.last").trim();
+					if ( !read.isEmpty() && !read.equals( cf.words ) ) {
+						cf = parseCommand( read );
+						writeLastArg = false;
+					}
 				}
 				
 				// create caches
 				
 				if ( cf.command.equals("RECREATECACHE") ) {
 		
-					dos.writeFile("cache.musik", suche( config.get("path","music"), "*",".mp3|.aac" ) );
+					dos.writeFile( getHome()+"/.cache/pva/cache.musik", suche( config.get("path","music"), "*",".mp3|.aac" ) );
 					
 					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), cf.command) ).split("x:x"));	
 
@@ -860,7 +891,7 @@ public class PVA {
 				// selfcompiling is aware of errors  and this reads them out loud.
 								
 				if ( cf.command.equals("LASTERROR") ) {
-					exec( (config.get("app","say")+"x:x"+ dos.readFile("lasterror.txt").replaceAll("PVA.java:","Zeile ")).split("x:x"));							
+					exec( (config.get("app","say")+"x:x"+ dos.readFile(getHome()+"/.cache/pva/lasterror.txt").replaceAll("PVA.java:","Zeile ")).split("x:x"));							
 				}
 
 				// sometime we address carola itself i.e. shut yourself down:
@@ -870,7 +901,7 @@ public class PVA {
 					String result = dos.readPipe("javac --release 8 PVA.java");
 					if ( result.contains("error") ) {
 						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "RECOMPILE1") ).split("x:x"));	
-						dos.writeFile("lasterror.txt",result);
+						dos.writeFile(getHome()+"/.cache/pva/lasterror.txt",result);
 						if (  cf.command.equals("RECOMPILEWITHERRORREPORT") )
 							exec( (config.get("app","say")+"x:x"+result.replaceAll("PVA.java:","Zeile ")).split("x:x"));	
 					} else {
@@ -881,7 +912,7 @@ public class PVA {
 				
 
 				if ( cf.command.equals("EXIT") ) {
-					dos.writeFile("cmd.last","exit");
+					dos.writeFile(getHome()+"/.cache/pva/cmd.last","exit");
 					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "EXIT") ).split("x:x"));
 					return;
 				}
@@ -1093,7 +1124,7 @@ public class PVA {
 					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENSOURCECODE") ).split("x:x"));
 				}
 				if ( cf.command.equals("OPENCONFIG") ) {
-					exec( (config.get("app","txt") + " ./pva.conf").split(" ") );
+					exec( (config.get("app","txt") + getHome()+"/.cconfig/pva/pva.conf").split(" ") );
 					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENCONFIG") ).split("x:x"));
 				}
 			
@@ -1141,16 +1172,16 @@ public class PVA {
 								exec( exe.replaceAll("(%U|%F)","").split(" ") );
 							} else {
 								if ( with.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER-PICS") ) ) {
-									exec( buildFileArray(exe,dos.readFile("search.pics.cache")));
+									exec( buildFileArray(exe,dos.readFile(getHome()+"/.cache/pva/search.pics.cache")));
 								}
 								if ( with.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER-MUSIC") ) ) {
-									exec( buildFileArray(exe,dos.readFile("search.music.cache")));
+									exec( buildFileArray(exe,dos.readFile(getHome()+"/.cache/pva/search.music.cache")));
 								}
 								if ( with.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER-VIDEOS") ) ) {
-									exec( buildFileArray(exe,dos.readFile("search.videos.cache")));
+									exec( buildFileArray(exe,dos.readFile(getHome()+"/.cache/pva/search.videos.cache")));
 								}
 								if ( with.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER-DOCS") ) ) {
-									exec( buildFileArray(exe,dos.readFile("search.docs.cache")));
+									exec( buildFileArray(exe,dos.readFile(getHome()+"/.cache/pva/search.docs.cache")));
 								}
 							}
 					}
@@ -1177,9 +1208,9 @@ public class PVA {
 					log("Ich suche nach Musik : "+ subtext);
 
 					String suchergebnis = "";
-					if ( dos.fileExists("cache.musik") ) {
+					if ( dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
 						log("Suche im Cache");
-						suchergebnis = cacheSuche( dos.readFile("cache.musik"), subtext,".mp3|.aac" );												
+						suchergebnis = cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), subtext,".mp3|.aac" );												
 					} else {
 						log("Suche im Filesystem");
 						suchergebnis = suche( config.get("path","music"), subtext,".mp3|.aac" );
@@ -1187,7 +1218,7 @@ public class PVA {
 
 					if (!suchergebnis.isEmpty() ) {	
 
-						dos.writeFile("search.music.cache",suchergebnis);
+						dos.writeFile(getHome()+"/.cache/pva/search.music.cache",suchergebnis);
 
 						int c = 0;
 
@@ -1272,7 +1303,7 @@ public class PVA {
 
  					if (!suchergebnis.isEmpty() ) {	
 
-						dos.writeFile("search.video.cache",suchergebnis);					
+						dos.writeFile(getHome()+"/.cache/pva/search.video.cache",suchergebnis);					
 
 						TreeSort ts = new TreeSort();
 
@@ -1414,7 +1445,7 @@ public class PVA {
 
 					if (!suchergebnis.isEmpty() ) {
 
-						dos.writeFile("search.pics.cache",suchergebnis );
+						dos.writeFile(getHome()+"/.cache/pva/search.pics.cache",suchergebnis );
 						
 						String[] files = suchergebnis.split("x:x");
 						for(String filename : files ) {
@@ -1454,7 +1485,7 @@ public class PVA {
 					// System.out.println("suchergebnis: "+ suchergebnis );
 					if (!suchergebnis.isEmpty() ) {	
 					
-						dos.writeFile("search.docs.cache",suchergebnis);
+						dos.writeFile(getHome()+"/.cache/pva/search.docs.cache",suchergebnis);
 					
 						String[] files = suchergebnis.split("x:x");
 						for(String filename : files ) {
@@ -1509,7 +1540,7 @@ public class PVA {
 					// System.out.println("suchergebnis: "+ suchergebnis );
 					if (!suchergebnis.isEmpty() ) {	
 					
-						dos.writeFile("search.docs.cache",suchergebnis);
+						dos.writeFile(getHome()+"/.cache/pva/search.docs.cache",suchergebnis);
 					
 						String[] files = suchergebnis.split("x:x");
 						int c = 1;
@@ -1555,11 +1586,11 @@ public class PVA {
 					} else {	
 						log("Ich katalogisiere Musik ...");
 						String suchergebnis = "";
-						if ( dos.fileExists("cache.musik") ) {
-							suchergebnis = dos.readFile("cache.musik");
+						if ( dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
+							suchergebnis = dos.readFile(getHome()+"/.cache/pva/cache.musik");
 						} else {
 							suchergebnis = suche( config.get("path","music"), "*",".mp3|.aac" );
-							dos.writeFile("cache.musik", suchergebnis);
+							dos.writeFile(getHome()+"/.cache/pva/cache.musik", suchergebnis);
 						}
 						// System.out.println("suche: "+ suchergebnis );
 						if (!suchergebnis.isEmpty() ) {	
@@ -1586,11 +1617,11 @@ public class PVA {
 				if ( cf.command.equals("ADDTITLE") ) {
 					log("Ich katalogisiere Musik ...");
 					String suchergebnis = "";
-					if ( dos.fileExists("cache.musik") ) {
-						suchergebnis = dos.readFile("cache.musik");
+					if ( dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
+						suchergebnis = dos.readFile(getHome()+"/.cache/pva/cache.musik");
 					} else {
 						suchergebnis = suche( config.get("path","music"), "*",".mp3|.aac" );
-						dos.writeFile("cache.musik", suchergebnis);
+						dos.writeFile(getHome()+"/.cache/pva/cache.musik", suchergebnis);
 					}
 					// System.out.println("suche: "+ suchergebnis );
 					if (!suchergebnis.isEmpty() ) {	
@@ -1702,7 +1733,6 @@ public class PVA {
 					exec(config.get("audioplayer","togglemute").split("x:x"));
 				}
 				
-				
 				if ( !reaction ) {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
 						System.out.println("Ich glaube, Du hast nichts gesagt!");
@@ -1718,7 +1748,8 @@ public class PVA {
 				} else {
 					// If we had a reaction, it was a valid cmd.
 					
-					dos.writeFile("cmd.last", text);
+					if ( writeLastArg ) 
+						dos.writeFile(getHome()+"/.cache/pva/cmd.last", text_raw);
 				}
 			} else {
 				System.out.println("Nicht für mich gedacht:" + text);
@@ -1759,3 +1790,4 @@ class Reaction {
 		this.answere = a;
 	}
 }
+
