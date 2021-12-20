@@ -116,7 +116,8 @@ edit pva.py and adjust it to this new while loop:
                 data = q.get()
                 if rec.AcceptWaveform(data):
                     # print(rec.Result())
-                    os.system( "java PVA '"+ rec.Result()  +"'");
+                    str = rec.Result();
+                    os.system( "java PVA '"+ str.replace("'","")  +"'");
 #                else: 
 #                   print("\r");
 #                    print(rec.PartialResult())
