@@ -22,4 +22,28 @@ if [ ! -f $HOME/.config/pva/conf.d/02-paths.conf ]; then
 	echo "path:\"docs\",\"$HOME/Dokumente\"" >> $HOME/.config/pva/conf.d/02-paths.conf
 fi 
 
-./pva.py 
+if [ ! -e $HOME/.var/log ]; then
+
+        mkdir -p $HOME/.var/log
+
+fi
+
+# grep choosen language from configfiles, where userfiles overwrite the global defaults.
+
+MLANG=$(grep "^conf:.*lang_short" /etc/pva/conf.d/* $HOME/.config/pva/conf.d/* | tail -n 1 | sed -e "s/^.*,//g" -e "s/\"//g")
+MODEL=$(ls -d *-$MLANG-*);
+
+# In case we want to have an accustic message on app start, i.e. on desktopstart, you can configure this per user i.e. in /home/%U/.config/pva/conf.d/06-greeting.conf
+
+GREETING=$(grep "^conf:.*greeting" /etc/pva/conf.d/* $HOME/.config/pva/conf.d/* | tail -n 1 | sed -e "s/^.*,//g" -e "s/\"//g")
+if [ "$GREETING" != "" ]; then
+        SAY=$(grep say $HOME/.config/pva/pva.conf| sed -e "s/^.*,//g" -e "s/\"//g")
+        if [ "$SAY" == ""]; then
+		# set a default speak app if pva.conf is not created nor populated
+                SAY="/usr/local/sbin/say"
+        fi
+
+        $SAY "$GREETING"
+fi
+
+./pva.py -m $MODEL >> $HOME/.var/log/pva.log
