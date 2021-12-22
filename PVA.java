@@ -48,7 +48,8 @@ public class PVA {
 				log("exec():Illegal Argument NULL detected");
 				reaction = false;
 				return;
-			}
+			} 
+			// else cmd = cmd.replace("%VOICE", config.get("conf","lang_short") );
 		}
 		Runtime.getRuntime().exec( cmds );
 		reaction = true;
@@ -339,6 +340,8 @@ public class PVA {
 					String k = (String)en2.nextElement();
 					String v = sub.get( k );
 					if ( key.equals("app") )
+						sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
+					if ( key.equals("conf") && ( k.equals("lang_short") || k.equals("lang") ) )
 						sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
 
 				}
@@ -646,6 +649,8 @@ public class PVA {
 
 			if ( debug > 1 ) log("raw="+ text);
 
+			log("LANG="+ config.get("conf","lang") );
+
 			// generate words for numbers 1-99
 			// use $HOME/.config/pva/conf.d/02-numbers-language.conf to overwrite the german defaults, or, systemwide, /etc/pva/99-numbers-language.conf
 
@@ -670,7 +675,7 @@ public class PVA {
 			if ( vcards.isEmpty() ) {
 				StringHash adb = config.get("addressbook");
 				if ( adb != null ) {
-					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "READPHONEBOOK") ).split("x:x"));
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "READPHONEBOOK") ).split("x:x"));
 
 					Enumeration en = adb.keys();
 					while ( en.hasMoreElements() ) {
@@ -762,7 +767,7 @@ public class PVA {
 				int j = (int)( Math.random() * temp.size() );
 				Reaction r = temp.get(j);
 				
-				exec( (config.get("app","say")+"x:x" + r.answere.replaceAll("%KEYWORD", keyword )).split("x:x"));
+				exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x" + r.answere.replaceAll("%KEYWORD", keyword )).split("x:x"));
 			}
 
 
@@ -804,7 +809,7 @@ public class PVA {
 						if ( wort( config.get("code","alpha")) ) {
 							String cmd = dos.readFile(getHome()+"/.cache/pva/cmd.last");
 							if ( cmd.equals("exit") ) {
-								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "QUIT") ).split("x:x"));	
+								exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "QUIT") ).split("x:x"));	
 								String[] e = dos.readPipe("pgrep -i -l -a python").split("\n");
 								for(String a : e ) {
 									if ( a.contains("pva.py") ) {
@@ -814,15 +819,15 @@ public class PVA {
 								}
 							}
 							if ( cmd.equals("compile") ) {
-								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "RECOMPILING") ).split("x:x"));	
+								exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "RECOMPILING") ).split("x:x"));	
 								System.out.println( dos.readPipe("javac --release 8 PVA.java") );
 							}
 							return;
-						} else 	exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "FALSEAUTHCODE") ).split("x:x"));	
+						} else 	exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "FALSEAUTHCODE") ).split("x:x"));	
 					}
 					if ( oder("neu|neuer") && oder("scout|code|kurt|kot") ) {
 						text = text.replaceAll("(autorisierung|neuer|neu|scout|code|kurt|kot)","").trim();
-						exec( (config.get("app","say")+"x:x"+ text).split("x:x"));	
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ text).split("x:x"));	
 					}
 				}
 				
@@ -835,13 +840,13 @@ public class PVA {
 					long  c = Long.parseLong( dos.readPipe("grep -c processor /proc/cpuinfo").trim() );
 					
 					if ( f < 1 ) {
-							exec( (config.get("app","say")+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSENOTHINGTODO") ).split("x:x"));
+							exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSENOTHINGTODO") ).split("x:x"));
 					} else if ( f > c ) {
-							exec( (config.get("app","say")+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSEHELPHELP") ).split("x:x"));						
+							exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSEHELPHELP") ).split("x:x"));						
 					} else if ( f > ( c/2 ) ) {
-							exec( (config.get("app","say")+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSESOLALA") ).split("x:x"));						
+							exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSESOLALA") ).split("x:x"));						
 					} else {
-							exec( (config.get("app","say")+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSENORMAL") ).split("x:x"));
+							exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+  texte.get( config.get("conf","lang_short"), "HEALTHRESPONSENORMAL") ).split("x:x"));
 					}	
 				}				
 				
@@ -863,7 +868,7 @@ public class PVA {
 		
 					dos.writeFile( getHome()+"/.cache/pva/cache.musik", suche( config.get("path","music"), "*",".mp3|.aac" ) );
 					
-					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), cf.command) ).split("x:x"));	
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), cf.command) ).split("x:x"));	
 
 				}
 
@@ -876,14 +881,28 @@ public class PVA {
 						Enumeration en1 = sub.keys(); // This Enumeration has only one Entry 
 						String changeapp = (String)en1.nextElement();
 						String changevalue = sub.get(changeapp);
-						
-						config.put("app",changeapp,changevalue);
-						exec(( config.get("app","say")+"x:x"+  texte.get( config.get("conf","lang_short"), cf.command+"1").replaceAll("<TERM1>", changeapp.replace("say","Sprachausgabe")).replaceAll("<TERM2>",subtext)).split("x:x"));										
+						log( "SWAP:"+ changeapp +" mit "+ changevalue);
+						String[] apps = changeapp.split("\\|");
+						String[] values = changevalue.split("\\|");
+						if ( apps.length == values.length ) {
+							for(int i=0;i< apps.length;i++) {
+								log( "SWAP:"+ apps[i] +" mit "+ values[i] );
+								if ( apps[i].contains(":") ) {
+									String[] arr = apps[i].split(":");
+									if ( arr.length > 1 ) {
+										config.put(arr[0],arr[1],values[i]);
+									} else log("config error on alternative: "+ apps[i] );
+								} else {		
+									config.put("app",apps[i],values[i]);
+								}
+							}
+						} else log( "apps="+ apps.length +" <> values="+ values.length);
+						exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+  texte.get( config.get("conf","lang_short"), cf.command+"1").replaceAll("<TERM1>", changeapp.replace("say","Sprachausgabe")).replaceAll("<TERM2>",subtext)).split("x:x"));										
 
 						saveConfig();
 						
 					} else {
-						exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), cf.command+"2").replaceAll("<TERM1>", subtext ) ).split("x:x"));
+						exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), cf.command+"2").replaceAll("<TERM1>", subtext ) ).split("x:x"));
 					}
 				}
 
@@ -891,7 +910,7 @@ public class PVA {
 				// selfcompiling is aware of errors  and this reads them out loud.
 								
 				if ( cf.command.equals("LASTERROR") ) {
-					exec( (config.get("app","say")+"x:x"+ dos.readFile(getHome()+"/.cache/pva/lasterror.txt").replaceAll("PVA.java:","Zeile ")).split("x:x"));							
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ dos.readFile(getHome()+"/.cache/pva/lasterror.txt").replaceAll("PVA.java:","Zeile ")).split("x:x"));							
 				}
 
 				// sometime we address carola itself i.e. shut yourself down:
@@ -900,12 +919,12 @@ public class PVA {
 
 					String result = dos.readPipe("javac --release 8 PVA.java");
 					if ( result.contains("error") ) {
-						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "RECOMPILE1") ).split("x:x"));	
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "RECOMPILE1") ).split("x:x"));	
 						dos.writeFile(getHome()+"/.cache/pva/lasterror.txt",result);
 						if (  cf.command.equals("RECOMPILEWITHERRORREPORT") )
-							exec( (config.get("app","say")+"x:x"+result.replaceAll("PVA.java:","Zeile ")).split("x:x"));	
+							exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+result.replaceAll("PVA.java:","Zeile ")).split("x:x"));	
 					} else {
-						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "RECOMPILE2") ).split("x:x"));			
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "RECOMPILE2") ).split("x:x"));			
 					}
 					System.out.println( result.trim() );		
 				}				
@@ -913,7 +932,7 @@ public class PVA {
 
 				if ( cf.command.equals("EXIT") ) {
 					dos.writeFile(getHome()+"/.cache/pva/cmd.last","exit");
-					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "EXIT") ).split("x:x"));
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "EXIT") ).split("x:x"));
 					return;
 				}
 			
@@ -972,7 +991,7 @@ public class PVA {
 											stop = true;
 										}
 										
-									} else exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "CANTDECIDEWHOMTOCALL") ).split("x:x"));
+									} else exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "CANTDECIDEWHOMTOCALL") ).split("x:x"));
 								} else {
 									exec( (config.get("app","phone")+"x:xtel:"+ parts[1] ).split("x:x"));
 								}
@@ -981,7 +1000,7 @@ public class PVA {
 			
 
 					} else {
-						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "NUMBERNOTFOUND").replaceAll("<TERM1>", subtext ) ).split("x:x"));							
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "NUMBERNOTFOUND").replaceAll("<TERM1>", subtext ) ).split("x:x"));							
 					}
 					reaction = true; // make sure, any case is handled.					
 				}
@@ -989,17 +1008,17 @@ public class PVA {
 				// make screenshot
 			
 				if ( cf.command.equals("MAKESCREENSHOT") ) {
-					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "MAKESCREENSHOT") ).split("x:x"));	
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "MAKESCREENSHOT") ).split("x:x"));	
 					exec( config.get("app","screenshot").split("x:x"));	
 				}		
 				
 				// "what time is it?"				
 				if ( cf.command.equals("REPORTTIME") ) {
-					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "REPORTTIME").replaceAll("<TERM1>", dos.readPipe("date +%H")).replaceAll("<TERM2>", dos.readPipe("date +%M")) ).split("x:x"));	
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "REPORTTIME").replaceAll("<TERM1>", dos.readPipe("date +%H")).replaceAll("<TERM2>", dos.readPipe("date +%M")) ).split("x:x"));	
 				}			
 				// "whats the systemload"			
 				if ( cf.command.equals("REPORTLOAD") ) {
-					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "REPORTLOAD").replaceAll("<TERM1>", dos.readPipe("cat /proc/loadavg").split(" ")[0] ) ).split("x:x"));	
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "REPORTLOAD").replaceAll("<TERM1>", dos.readPipe("cat /proc/loadavg").split(" ")[0] ) ).split("x:x"));	
 				}						
 			
 				// "hows the weather" + options like now + today + tomorrow
@@ -1029,7 +1048,7 @@ public class PVA {
 							if ( i == 6) text += line6.replaceAll("<TERM1>", line.replace("mm", texte.get( config.get("conf","lang_short"), "mm") ) );
 						}
 						
-						exec( (config.get("app","say")+"x:x"+text).split("x:x"));
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+text).split("x:x"));
 						reaction = true;
 				} 
 				if ( cf.command.equals("CURRENTWEATHERNEXT") ) {
@@ -1062,7 +1081,7 @@ public class PVA {
 							}
 						}
 						text = text.replaceAll("     ","").replace(" | ","");
-						exec( (config.get("app","say")+"x:x"+text).split("x:x"));
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+text).split("x:x"));
 						reaction = true;
 				
 				}
@@ -1096,7 +1115,7 @@ public class PVA {
 						}
 						text = text.replaceAll("     ","").replace(" | ","");
 
-						exec( (config.get("app","say")+"x:x"+text).split("x:x"));
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+text).split("x:x"));
 						reaction = true;
 				}
 			
@@ -1104,7 +1123,7 @@ public class PVA {
 			
 				if ( cf.command.equals("STOPAPP") ) {
 
-					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "STOPAPP").replaceAll("<TERM1>", text.replaceAll("("+ cf.words +")","") ).trim()).split("x:x"));
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "STOPAPP").replaceAll("<TERM1>", text.replaceAll("("+ cf.words +")","") ).trim()).split("x:x"));
 					
 					if ( wort("firefox") )	exec("killall GeckMain");
 					if ( wort("chrome") )	exec("killall google-chrome");
@@ -1121,11 +1140,11 @@ public class PVA {
 
 				if ( cf.command.equals("OPENSOURCECODE") ) {
 					exec( (config.get("app","txt") + " ./PVA.java").split(" ") );
-					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENSOURCECODE") ).split("x:x"));
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENSOURCECODE") ).split("x:x"));
 				}
 				if ( cf.command.equals("OPENCONFIG") ) {
 					exec( (config.get("app","txt") + getHome()+"/.cconfig/pva/pva.conf").split(" ") );
-					exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENCONFIG") ).split("x:x"));
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENCONFIG") ).split("x:x"));
 				}
 			
 				if ( cf.command.equals("OPENAPP") || cf.command.equals("STARTAPP") ) {
@@ -1189,10 +1208,10 @@ public class PVA {
 					if ( reaction ) {
 					
 						if ( cf.command.equals("OPENAPP") ) {
-							exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENAPP-RESPONSE").replaceAll("<TERM1>", text) ).split("x:x"));
-						} else  exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "STARTAPP-RESPONSE").replaceAll("<TERM1>", text) ).split("x:x"));
+							exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENAPP-RESPONSE").replaceAll("<TERM1>", text) ).split("x:x"));
+						} else  exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "STARTAPP-RESPONSE").replaceAll("<TERM1>", text) ).split("x:x"));
 						
-					} else 	exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENAPP-RESPONSE-FAIL").replaceAll("<TERM1>", text) ).split("x:x"));
+					} else 	exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "OPENAPP-RESPONSE-FAIL").replaceAll("<TERM1>", text) ).split("x:x"));
 			
 							
 										
@@ -1248,13 +1267,13 @@ public class PVA {
 
 						if ( c > 500 ) {
 							log("Ich habe "+c+" Titel gefunden");
-							exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUNDN").replaceAll("<TERM1>", ""+c ) ).split("x:x"));
+							exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUNDN").replaceAll("<TERM1>", ""+c ) ).split("x:x"));
 							return	;				
 						}
 
 						if ( c > 1 ) {
 							log("Ich habe "+c+" Titel gefunden");
-							exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUND").replaceAll("<TERM1>", ""+c )).split("x:x"));
+							exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUND").replaceAll("<TERM1>", ""+c )).split("x:x"));
 						}
 						
 						args = suchergebnis.split("x:x");
@@ -1267,7 +1286,7 @@ public class PVA {
 						exec( config.get("audioplayer","playpl").split("x:x"));
 						exec( config.get("audioplayer","play").split("x:x"));
 					} else {
-						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUNDNOTHING").replaceAll("<TERM1>", subtext ) ).split("x:x"));
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUNDNOTHING").replaceAll("<TERM1>", subtext ) ).split("x:x"));
 						log("keine treffer");
 					}
 					
@@ -1277,7 +1296,7 @@ public class PVA {
 					for(String x : result ) 
 						if ( x.contains("TITLE") ) {
 							log("Ich spiele gerade: "+ x);
-							exec( (config.get("app","say")+"x:x"+ x ).split("x:x"));
+							exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ x ).split("x:x"));
 						}
 					
 					reaction = true;
@@ -1373,7 +1392,7 @@ public class PVA {
 							reaction = true;
 						} 
 					} else {
-						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "COMPOSEERROR").replaceAll("<TERM1>", subtext) ).split("x:x"));							
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "COMPOSEERROR").replaceAll("<TERM1>", subtext) ).split("x:x"));							
 					}
 
 				}
@@ -1388,11 +1407,11 @@ public class PVA {
 							String[] parts = numbers.replaceAll("\"","").split("=");
 							parts[1] = parts[1].trim();
 							log("Die Emailadresse von "+ subtext + " ist " + parts[1]);
-							exec( (config.get("app","say")+"x:x"+texte.get( config.get("conf","lang_short"), "EMAILFOUNDR1")
+							exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+texte.get( config.get("conf","lang_short"), "EMAILFOUNDR1")
 												  .replaceAll("<TERM1>", subtext ).replaceAll("<TERM2>", parts[1]) ).split("x:x"));							
 						} 
 					} else {
-						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "EMAILFOUNDR2").replaceAll("<TERM1>", subtext ) ).split("x:x"));							
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "EMAILFOUNDR2").replaceAll("<TERM1>", subtext ) ).split("x:x"));							
 					}
 				}
 				
@@ -1406,17 +1425,17 @@ public class PVA {
 							String[] parts = numbers.replaceAll("\"","").split("=");
 							parts[1] = parts[1].trim();
 							if ( numbers.contains("cell") ) 
-								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR1")
+								exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR1")
 												          .replaceAll("<TERM1>", subtext ).replaceAll("<TERM2>", einzelziffern(parts[1]) )).split("x:x"));
 							if ( numbers.contains("home") ) 
-								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR2")
+								exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR2")
 												          .replaceAll("<TERM1>", subtext ).replaceAll("<TERM2>", einzelziffern(parts[1]) )).split("x:x"));							
 							if ( numbers.contains("work") ) 
-								exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR3")
+								exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR3")
 												          .replaceAll("<TERM1>", subtext ).replaceAll("<TERM2>", einzelziffern(parts[1]) )).split("x:x"));							
 						} 
 					} else {
-						exec( (config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR0").replaceAll("<TERM1>", subtext ) ).split("x:x"));							
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PHONENUMBERFOUNDR0").replaceAll("<TERM1>", subtext ) ).split("x:x"));							
 					}
 				}
 				
@@ -1436,7 +1455,7 @@ public class PVA {
 				if (  cf.command.equals("PICSEARCH") ) {
 
 					String subtext = text.replaceAll("(jpg|png|gif|jpeg)","").trim();
-					//exec(( config.get("app","say")+"x:xIch suche nach "+ subtext ).split("x:x"));
+					//exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:xIch suche nach "+ subtext ).split("x:x"));
 					System.out.println("Ich suche nach "+ subtext);
 					
 					String suchergebnis = "";					
@@ -1461,12 +1480,12 @@ public class PVA {
 						String anzahl = ""+files.length;
 						if ( files.length == 1 ) anzahl = "einen";
 						if ( !text_raw.matches( texte.get( config.get("conf","lang_short"), "OPENRESULTWITHAPP" ) ) && files.length > 1 ) {
-							exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT1" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
-						} else  exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT2" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
+							exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT1" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
+						} else  exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT2" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
 						
 						System.out.println("Fertig mit Suchen ");
 
-					} else exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT3" ).replaceAll("<TERM1>", ""+ subtext ) ).split("x:x"));
+					} else exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT3" ).replaceAll("<TERM1>", ""+ subtext ) ).split("x:x"));
 				}						
 						
 				if ( cf.command.equals("DOCSEARCH") ) {
@@ -1513,19 +1532,19 @@ public class PVA {
 						String anzahl = ""+files.length;
 						if ( files.length == 1 ) anzahl = "einen";
 						if ( !text_raw.matches( texte.get( config.get("conf","lang_short"), "OPENRESULTWITHAPP" ) ) && files.length > 1 ) {
-							exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT1" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
-						} else  exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT2" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
+							exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT1" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
+						} else  exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT2" ).replaceAll("<TERM1>", ""+anzahl) ).split("x:x"));
 						
 						System.out.println("Fertig mit Suchen ");
 						
-					} else exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT3" ).replaceAll("<TERM1>", ""+ subtext ) ).split("x:x"));
+					} else exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "PICSEARCHRESULT3" ).replaceAll("<TERM1>", ""+ subtext ) ).split("x:x"));
 					
 				}
 			
 				if ( cf.command.equals("DOCREAD") ) {
 
 					String subtext = text.trim();
-					//exec(( config.get("app","say")+"x:xIch suche nach "+ subtext ).split("x:x"));
+					//exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:xIch suche nach "+ subtext ).split("x:x"));
 					System.out.println("Ich suche nach "+ subtext);
 					
 					String suchergebnis = "";					
@@ -1560,20 +1579,20 @@ public class PVA {
 							 
 							 	System.out.println("Lese "+ filename);
 								if ( filename.endsWith(".txt") ) {
-									exec( (config.get("app","say")+"x:x"+ filename).split("x:x") );
+									exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ filename).split("x:x") );
 								}
 								if ( filename.endsWith(".pdf") ) {
-									String txt =  dos.readPipe("pdftotext -nopgbrk "+ filename+ " /tmp/."+keyword+".say");
+									String txt =  dos.readPipe("pdftotext -nopgbrk "+ filename+ " /tmp/."+keyword+".say").replace("%VOICE", config.get("conf","lang_short") );
 									System.out.println( txt );
 //									dos.writeFile("/tmp/."+keyword+".say", txt);
-									exec( (config.get("app","say")+"x:x/tmp/."+keyword+".say").split("x:x") );
+									exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x/tmp/."+keyword+".say").replace("%VOICE", config.get("conf","lang_short") ).split("x:x") );
 								}
 							}
 							c++;
 						}
 
 						if ( files.length > 1 ) {
-							exec(( config.get("app","say")+"x:x"+ texte.get( config.get("conf","lang_short"), "DOCREADRESPONSE" ).replaceAll("<TERM1>", ""+ files.length )).split("x:x"));
+							exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:x"+ texte.get( config.get("conf","lang_short"), "DOCREADRESPONSE" ).replaceAll("<TERM1>", ""+ files.length )).split("x:x"));
 						} 
 						System.out.println("Fertig mit suchen nach Text");
 					}
@@ -1737,13 +1756,13 @@ public class PVA {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
 						System.out.println("Ich glaube, Du hast nichts gesagt!");
 						if ( (int)Math.random()*1 == 1 ) {
-							exec(( config.get("app","say")+"x:xIch glaube, Du hast nichts gesagt!").split("x:x"));
-						} else  exec(( config.get("app","say")+"x:xJa, bitte?").split("x:x"));
+							exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:xIch glaube, Du hast nichts gesagt!").split("x:x"));
+						} else  exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:xJa, bitte?").split("x:x"));
 					} else {
 						text = text.replace(keyword,"").trim();
 						if ( text.length()>40 ) text = text.substring(0,40)+" usw. usw. ";
 						System.out.println("Ich habe "+ text +" nicht verstanden");
-						exec(( config.get("app","say")+"x:xIch habe "+ text +" nicht verstanden").split("x:x"));
+						exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+"x:xIch habe "+ text +" nicht verstanden").split("x:x"));
 					}
 				} else {
 					// If we had a reaction, it was a valid cmd.
