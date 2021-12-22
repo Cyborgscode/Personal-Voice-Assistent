@@ -2,6 +2,10 @@
 
 cd /usr/share/pva/
 
+DATE=$(date -R)
+
+echo "PVA starting $DATE" >> $HOME/.var/log/pva.log
+
 if [ ! -e $HOME/.config/pva ]; then
 
 	mkdir -p $HOME/.config/pva/conf.d
@@ -28,22 +32,17 @@ if [ ! -e $HOME/.var/log ]; then
 
 fi
 
-# grep choosen language from configfiles, where userfiles overwrite the global defaults.
-
-MLANG=$(grep "^conf:.*lang_short" /etc/pva/conf.d/* $HOME/.config/pva/conf.d/* | tail -n 1 | sed -e "s/^.*,//g" -e "s/\"//g")
+MLANG=$(grep "^conf:.*lang_short" /etc/pva/conf.d/* $HOME/.config/pva/conf.d/* $HOME/.config/pva/pva.conf | tail -n 1 | sed -e "s/^.*,//g" -e "s/\"//g")
 MODEL=$(ls -d *-$MLANG-*);
 
-# In case we want to have an accustic message on app start, i.e. on desktopstart, you can configure this per user i.e. in /home/%U/.config/pva/conf.d/06-greeting.conf
-
 GREETING=$(grep "^conf:.*greeting" /etc/pva/conf.d/* $HOME/.config/pva/conf.d/* | tail -n 1 | sed -e "s/^.*,//g" -e "s/\"//g")
-if [ "$GREETING" != "" ]; then
-        SAY=$(grep say $HOME/.config/pva/pva.conf| sed -e "s/^.*,//g" -e "s/\"//g")
-        if [ "$SAY" == ""]; then
-		# set a default speak app if pva.conf is not created nor populated
-                SAY="/usr/local/sbin/say"
-        fi
-
-        $SAY "$GREETING"
+if [ "$GREETING" != "" ]; then 
+	SAY=$(grep say $HOME/.config/pva/pva.conf| sed -e "s/^.*,//g" -e "s/\"//g" -e "s/%VOICE/$MLANG/g" -e "s/x:x/ /g")
+	
+	if [ "$SAY" == "" ]; then
+		SAY="/usr/local/sbin/say"
+	fi
+	$SAY "$GREETING"
 fi
 
 ./pva.py -m $MODEL >> $HOME/.var/log/pva.log
