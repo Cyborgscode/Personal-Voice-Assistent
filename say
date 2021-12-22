@@ -57,15 +57,16 @@ else
 fi
 
 FILENAME=/tmp/mbrola$RANDOM.wav
+PHONAME=/tmp/out.pho.$RANDOM
 
 if [ ! -f "$1" ]; then
-	espeak -v mb-$VOICE -q --pho --phonout=/tmp/out.pho "$1"
+	espeak -v mb-$VOICE -q --pho --phonout=$PHONAME "$1"
 else 
-	cat "$1" | espeak -v mb-$VOICE -q --pho --phonout=/tmp/out.pho 
+	cat "$1" | espeak -v mb-$VOICE -q --pho --phonout=$PHONAME
 fi
 
-mbrola -t 1.2 -f 0.8 /usr/share/mbrola/$VOICE/$VOICE /tmp/out.pho $FILENAME
+mbrola -t 1.2 -f 0.8 /usr/share/mbrola/$VOICE/$VOICE $PHONAME $FILENAME
 aplay $FILENAME 1>/dev/null 2>/dev/null
 
-rm -f /tmp/mbrola*wav
-rm -f /tmp/out.pho
+rm -f $FILENAME
+rm -f $PHONAME
