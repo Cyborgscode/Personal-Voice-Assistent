@@ -155,28 +155,58 @@ The pva.conf file is self explaning.
 
 ## Since commit #2c74e1d (16.12.2021) you can have multiply config files. 
 
-There are two places config are found:
+There are two places configs are found:
 
 /etc/pva/conf.d/00-test.conf
 ~/.config/pva/conf.d/00-test.conf
 
 The actual config "./pva.conf" is always loaded as the last config file, to overwrite existing, alternative settings . I.E. if you changed the searchengine via "use duckduckgo as searchengine" and you had google before, you need to save this up.
 
- Commit #2c74e1d is not perfect yet, we need to move parts of the none overwriteable configparts to the new system.
-
-
 COMMANDS:
 
 You will find here the commands, PVA can undertand atm. You will see, they are in german, but explained in english.
-Thats because the ATM the project is hard coded for german users, but that should not stop you ;)
+Thats because, it has been developed in german. Now any language can be supported, but someone still needs to write those commands and responses in theire native language and post them. If you wannte help out, get the /etc/pva/conf.d/ files and move them from 0x-.. to 1x-... then translate them. It may be easier for you to do that at $HOME/.config/pva/conf.d/ , because you don't need to be root to do it.
 
-Checkout the PVA.java code and search for the a keyword listed below, you will notice 3 simple methods: und() oder() wort() which handle
-the keywords: und => and , oder => or, wort = word => "exactly this text" . und and oder take arguments like ("word1|word2|...|wordX)" ,
-in case of "und" it means ALL words have to be in the spoken text, with "oder" only ONE needs to be in it. The order does not matter.
+Any time you see a "|" it seperates AND-connected keywords:
 
-Change the keywords and the logical pattern, thats best matching your desired language and recompile it. ( i.e. java --release 8 PVA.java ) . Done. 
+"you|succeed|will" can be any combination of those words, but they ALL need to be in the spoken sentence to have a match.
+In case the cmd has an optional part like this:
 
-This hardcoded logic will be replace with a REGEXP based datafile, so code changes are not needed anymore to translate it to other languages.
+command:"i|want|to|listen","PLAYAUDIO","add|it"
+
+it matches: "I want to listen to queen "
+
+it also matches: "I want to listen to queen add it" AND it removes "add" and "it" from the sentence, so those words do not end up in the searchterm.
+
+it also matches: "I want to listen to queen it" and removes the "it", because it tries to still remove "add" and "it". 
+
+You need this to remove words, that shall not part of the search term.
+
+There are two different ways to start playing music:  "PLAYAUDIO" and "PLAYMUSIC"
+
+They do the same thing, but sligtly different:
+
+PLAYAUDIO is a cmd to search for a song or artistname and add all matches to a new playlist, afterwards the playback starts.
+If you use the PLAYAUDIO keywords and ADD the "PLAYMUSICRADD" keywords, the playlist is not cleared and all matches will be added to the list.
+
+PLAYMUSIC means, "start playback" whatever is in the list, from the actual position in the list. You can use this to restart a stopped playback. 
+But PLAYMUSIC can do more, it can randomly search the database and play a song. If you use PLAYMUSIC + PLAYMUSICRANDOM + PLAYMUSICRADD together, 
+it add those randomly loaded song to the end of the current playlist. 
+
+You find those keywords defined in the textsection:
+
+text:"de","PLAYMUSICRANDOM",".*(zufällig).*"
+text:"de","PLAYMUSICRADD",".*(noch|dazu).*"
+
+in english:
+
+text:"en","PLAYMUSICRANDOM",".*(random).*"
+text:"en","PLAYMUSICRADD",".*(add).*"
+
+As you see, it's a Regular Expression, which is a mighty tool to match patterns in texts. If you know how to use them, you can have a lot of fun here,
+BUT REMEMBER, all additional keywords need to be removed in the cmd section to they end up as parts of the searchterm!
+
+There are some commands that have optional parameters. The easiest way to spot them is to check the source OR to search for the keyword in conjunction with the "text:" definition ( i.e. PLAYMUSIC -> PLAYMUSICRANDOM )
 
 {TERM} mandatory infos needed to perform task
 [TYPE] i.e. optional info i.e. number type like cellphone, work or home
@@ -203,7 +233,7 @@ Keywords in Bot Reaction: " Keyword " + content
 "wie war die fehlermeldung" 		-> readout last error message of selfcompile try
 
 "schalte dich ab" 			-> request Alpha code and exit
-"compiliere dich neu" 			-> compile the PVA.java file new
+"compiliere dich neu" 			-> compile the PVA.java file new  ( This obviously can only work, if it's installed for your userid )
 
 "liste telefonbuch auf" 		-> print out entries in carddav database (it's for debug) 
 
