@@ -26,6 +26,7 @@ To run it, you need at least:
     mbrola             (found on github)
     espeak
     vosk               (found on github)
+    sox                (needed in case you wanne make use of GTTS)
 
 # JAVA deps have been removed, to prepare for distro packaging
 
