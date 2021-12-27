@@ -19,6 +19,8 @@ public class PVA {
 
 	static String keyword = "carola";
 
+	static long debug = 0;
+
 	static TwoKeyHash config          = new TwoKeyHash();
 	static TwoKeyHash alternatives    = new TwoKeyHash();
 	static TwoKeyHash texte           = new TwoKeyHash();
@@ -43,13 +45,12 @@ public class PVA {
 
 	static void exec(String[] cmds) throws IOException {
 		for(String cmd : cmds) {
-//			log( "argument:"+cmd );
+			if (debug > 2 ) log( "argument:"+cmd );
 			if ( cmd == null ) {
 				log("exec():Illegal Argument NULL detected");
 				reaction = false;
 				return;
 			} 
-			// else cmd = cmd.replace("%VOICE", config.get("conf","lang_short") );
 		}
 		Runtime.getRuntime().exec( cmds );
 		reaction = true;
@@ -153,7 +154,7 @@ public class PVA {
 								String[] keys = name.split(";");
 								for(String key: keys) {
 								
-									if ( key.contains(suchwort) || key.equals( suchwort ) ) {
+									if ( key.toLowerCase().contains(suchwort) || key.toLowerCase().equals( suchwort ) ) {
 										hit = true; // we can't know, if "Exec=" stands before or after Name*= in the desktopfile!
 									}
 								}
@@ -161,7 +162,10 @@ public class PVA {
 						
 						}
 				
-						if ( hit ) filename = app_exe.trim(); // This way, we garantee, that it's found, it's it really present. it's possible that someone made a mistake and did not write Exec= into the file. 
+						if ( hit ) {
+							if ( debug > 2 ) log( "found match for "+ suchwort +" in " +  entries[i].toString());
+							filename = app_exe.trim(); // This way, we garantee, that it's found, it's it really present. it's possible that someone made a mistake and did not write Exec= into the file. 
+						}
 			
 					}
 				} catch(IOException e) {
@@ -493,7 +497,7 @@ public class PVA {
 
 			String debugLevel = System.getenv("DEBUG");
 			if ( debugLevel == null || debugLevel.isEmpty() ) debugLevel = "0";
-			long debug = Long.parseLong(debugLevel);
+			debug = Long.parseLong(debugLevel);
 			
 
 			File configdir = new File( getHome() + "/.config/pva/conf.d");
@@ -649,7 +653,7 @@ public class PVA {
 
 			if ( debug > 1 ) log("raw="+ text);
 
-			log("LANG="+ config.get("conf","lang") );
+			// log("LANG="+ config.get("conf","lang") );
 
 			// generate words for numbers 1-99
 			// use $HOME/.config/pva/conf.d/02-numbers-language.conf to overwrite the german defaults, or, systemwide, /etc/pva/99-numbers-language.conf
@@ -1154,14 +1158,14 @@ public class PVA {
 					String with = "";
 
 					text = text.toLowerCase().trim();
-					if ( text.contains(  with_key ) ) {
+					if ( text_raw.contains(  with_key ) ) {
 						with = text.substring( text.indexOf( with_key )+ with_key.length() ).trim();
 						text = text.substring( 0, text.indexOf( with_key ) );
 					}
 						
 					// in case our keywords are the first argument, we need to swap text+with : "öffne bilder mit gimp" which is more human like
-						
-					if ( text.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER")  ) ) {
+
+					if ( text_raw.contains(  with_key ) && text.matches( texte.get( config.get("conf","lang_short"), "OPENAPP-FILTER")  ) ) {
 						log(" tausche Suchbegriff(e) "+ text + " mit " + with ); // not important logline
 
 						String a = with; with = text;text = a;
