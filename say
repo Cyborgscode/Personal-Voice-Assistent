@@ -3,8 +3,9 @@
 if [ "$GTTS" == "1" ]; then
 
         GTTSBIN=$(which gtts-cli)
+        PLAYBIN=$(which play)
 
-        if [ "$GTTSBIN" != "" ]; then
+        if [ "$GTTSBIN" != "" ] && [ "$PLAYBIN" != "" ]; then
 
                 if [ "$VOICE" == "" ]; then
                         VOICE="de";
@@ -24,10 +25,11 @@ if [ "$GTTS" == "1" ]; then
                 exit;
         fi
 
-        # GTTS is not here, continue with mbrola, if available
+        # GTTS/SOXPLAY is not here, continue with mbrola, if available
 fi
 
 # Check for mbrola
+
 
 
 MBROLAINSTALLED=$(which mbrola)
