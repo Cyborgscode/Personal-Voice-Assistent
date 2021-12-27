@@ -160,7 +160,7 @@ There are two places configs are found:
 /etc/pva/conf.d/00-test.conf
 ~/.config/pva/conf.d/00-test.conf
 
-The actual config "./pva.conf" is always loaded as the last config file, to overwrite existing, alternative settings . I.E. if you changed the searchengine via "use duckduckgo as searchengine" and you had google before, you need to save this up.
+The actual config "./pva.conf" is always loaded as the last config file, to overwrite existing, alternative settings . I.E. if you changed the searchengine via "use duckduckgo as searchengine" and you had google before, you need to save this up. The file is found in $HOME/.config/pva/ .
 
 COMMANDS:
 
@@ -169,7 +169,7 @@ Thats because, it has been developed in german. Now any language can be supporte
 
 Any time you see a "|" it seperates AND-connected keywords:
 
-"you|succeed|will" can be any combination of those words, but they ALL need to be in the spoken sentence to have a match.
+"you|succeed|will" can be any combination of those words, but they ALL need to be in the spoken sentence to have a positive match.
 In case the cmd has an optional part like this:
 
 command:"i|want|to|listen","PLAYAUDIO","add|it"
@@ -182,16 +182,18 @@ it also matches: "I want to listen to queen it" and removes the "it", because it
 
 You need this to remove words, that shall not part of the search term.
 
+## more advanced commands:
+
 There are two different ways to start playing music:  "PLAYAUDIO" and "PLAYMUSIC"
 
 They do the same thing, but sligtly different:
 
-PLAYAUDIO is a cmd to search for a song or artistname and add all matches to a new playlist, afterwards the playback starts.
+PLAYAUDIO is a cmd to search for a song or artistname and adds all matches to a new playlist, afterwards the playback starts.
 If you use the PLAYAUDIO keywords and ADD the "PLAYMUSICRADD" keywords, the playlist is not cleared and all matches will be added to the list.
 
 PLAYMUSIC means, "start playback" whatever is in the list, from the actual position in the list. You can use this to restart a stopped playback. 
 But PLAYMUSIC can do more, it can randomly search the database and play a song. If you use PLAYMUSIC + PLAYMUSICRANDOM + PLAYMUSICRADD together, 
-it add those randomly loaded song to the end of the current playlist. 
+it adds those randomly loaded songs to the end of the current playlist. 
 
 You find those keywords defined in the textsection:
 
@@ -207,6 +209,9 @@ As you see, it's a Regular Expression, which is a mighty tool to match patterns 
 BUT REMEMBER, all additional keywords need to be removed in the cmd section to they end up as parts of the searchterm!
 
 There are some commands that have optional parameters. The easiest way to spot them is to check the source OR to search for the keyword in conjunction with the "text:" definition ( i.e. PLAYMUSIC -> PLAYMUSICRANDOM )
+
+A third cmd, "ADDTITLES" adds a number of randomly selected songs to the playlist.
+
 
 {TERM} mandatory infos needed to perform task
 [TYPE] i.e. optional info i.e. number type like cellphone, work or home
