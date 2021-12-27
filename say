@@ -2,26 +2,33 @@
 
 if [ "$GTTS" == "1" ]; then
 
-        if [ "$VOICE" == "" ]; then
-                VOICE="de";
+        GTTSBIN=$(which gtts-cli)
+
+        if [ "$GTTSBIN" != "" ]; then
+
+                if [ "$VOICE" == "" ]; then
+                        VOICE="de";
+                fi
+
+                HASH=$(echo "$VOICE$1"| sha256sum | sed -e "s/ .*$//g")
+
+                FILENAME="$HOME/.cache/pva/audio/$HASH.mp3"
+
+                if [ ! -e $FILENAME ]; then
+                        echo "download from G -> \"$1\" -> $FILENAME"
+                        gtts-cli "$1" --tld de --lang $VOICE --output $FILENAME
+                fi
+
+                play $FILENAME tempo 1.5 2>/dev/null
+
+                exit;
         fi
 
-
-	HASH=$(echo "$VOICE$1"| sha256sum | sed -e "s/ .*$//g")
-
-	FILENAME="$HOME/.cache/pva/audio/$HASH.mp3"
-
-	if [ ! -e $FILENAME ]; then
-		echo "download from G -> \"$1\" -> $FILENAME"
-		gtts-cli "$1" --tld de --lang $VOICE --output $FILENAME 
-	fi 
-
-	play $FILENAME tempo 1.5 2>/dev/null
-
-	exit;
+        # GTTS is not here, continue with mbrola, if available
 fi
 
 # Check for mbrola
+
 
 MBROLAINSTALLED=$(which mbrola)
 
