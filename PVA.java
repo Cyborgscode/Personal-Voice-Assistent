@@ -119,8 +119,8 @@ public class PVA {
 
 		// we want to prefer matches with the Nameentry above the keywordentries, so we need to track both matches seperatly
 
-		String namematches    = "";
-		String keywordmatches = "";
+		NumericTreeSort namematches = new NumericTreeSort();
+		NumericTreeSort keywordmatches = new NumericTreeSort();
 
 		if ( debug > 2 ) log("_searchExternalApps: searchpath="+ path +" searchterm="+ suchwort);
 
@@ -139,19 +139,16 @@ public class PVA {
 						// directoryname contains searchword(s) so we add it entirely
 						// log("add "+ entries[i].getCanonicalPath() +" mit *");
 						
-						// We have to assume, that the result is the best result we can get from 
+						// We have to assume, that the result is the best result we can get from this subdirectory and import it in our active NumericTreeSort
+						// if it's the best we ever get, it will be on top of all results in our actual directory also
 						
 						AppResult r = __searchExternalApps( entries[i].getCanonicalPath() , suchwort);
 						if ( r != null ) {
 							if ( !r.namematches.isEmpty() ) { 
-								if ( namematches.isEmpty() ) {
-									namematches = r.namematches;
-								} else  namematches += config.get("conf","splitter") + r.namematches;		
+								namematches.add( r.namerelevance, r.namematches);
 							} 
 							if ( !r.keywordmatches.isEmpty() ) { 
-								if ( keywordmatches.isEmpty() ) {
-									keywordmatches = r.keywordmatches;
-								} else  keywordmatches += config.get("conf","splitter") + r.keywordmatches;
+								keywordmatches.add( r.keywordrelevance, r.keywordmatches);
 							}
 						}
 
@@ -160,9 +157,9 @@ public class PVA {
 						String[] content = dos.readFile( entries[i].getCanonicalPath() ).split("\n");
 						
 						// those hitflags are required because the order of "Exec=" and i.e. "Name=" is not fix. The flags indicate a match, even if Exec= wasn't found jet.
-						
-						boolean nhit = false;
-						boolean khit = false;
+						// they also represent the relevance factor of that entry > -1 
+						long nhit = -1;
+						long khit = -1;
 						String app_exe = "";
 						for(String line: content) {
 							line=line.trim();
@@ -176,7 +173,7 @@ public class PVA {
 							if ( line.startsWith("Name=") || line.startsWith("Name["+config.get("conf","lang")+"]=") || line.startsWith("Name["+config.get("conf","lang_short")+"]=") ) {
 								String name = line.substring( line.indexOf("=")+1 );
 								if ( name.toLowerCase().contains(suchwort) ) {
-									nhit = true; // we can't know, if "Exec=" stands before or after Name*= in the desktopfile!
+									nhit = suchwort.length()*100/name.length(); // we can't know, if "Exec=" stands before or after Name*= in the desktopfile!
 								}
 								if ( debug > 3 ) log("_searchExternalApps: name="+name.toLowerCase()+" suchwort="+suchwort+" hit="+ nhit );
 							}
@@ -186,7 +183,7 @@ public class PVA {
 								for(String key: keys) {
 								
 									if ( key.toLowerCase().contains(suchwort) || key.toLowerCase().equals( suchwort ) ) {
-										khit = true; // we can't know, if "Exec=" stands before or after Name*= in the desktopfile!
+										khit = suchwort.length()*100/name.length(); // we can't know, if "Exec=" stands before or after Name*= in the desktopfile!
 									}
 								}
 							}
@@ -194,42 +191,43 @@ public class PVA {
 							// if line starts with [ we hit a desktop file with multiply entries in it and need to reset the search. 
 							
 							if ( line.startsWith("[") ) {
-								if ( nhit ) {
+								if ( nhit > -1 ) {
 									if ( debug > 2 ) log( "found namematch for "+ suchwort +" in " +  entries[i].toString());
 
-									if ( namematches.isEmpty() ) {
-									       namematches = app_exe.trim(); 
-									} else namematches += config.get("conf","splitter") + app_exe.trim();
-									nhit = false;
+									if ( ! app_exe.trim().isEmpty() ) 
+										namematches.add( nhit , app_exe.trim() );
+
+									nhit = -1;
 								}
-								if ( khit ) {
+								if ( khit > -1 ) {
 									if ( debug > 2 ) log( "found keywordmatch for "+ suchwort +" in " +  entries[i].toString());
 
-									if ( keywordmatches.isEmpty() ) {
-									       keywordmatches = app_exe.trim(); 
-									} else keywordmatches += config.get("conf","splitter") + app_exe.trim();
-									khit = false;
+									if ( ! app_exe.trim().isEmpty() ) 
+										keywordmatches.add( khit , app_exe.trim() );
+
+									khit = -1;
+
 								}
 							} 
 						}
 				
-						if (!namematches.contains( app_exe.trim() ) && nhit ) {
+						if ( nhit > -1 ) {
 							// if the app is already in the list, ignore it.
 							
 							if ( debug > 2 ) log( "found namematch for "+ suchwort +" in " +  entries[i].toString());
 						
-							if ( namematches.isEmpty() ) {
-							       namematches = app_exe.trim(); 
-							} else namematches += config.get("conf","splitter") + app_exe.trim();
-							nhit = false;
+							if ( ! app_exe.trim().isEmpty() ) 
+								namematches.add( nhit , app_exe.trim() );
+
+							nhit = -1;
 						}
-						if (!keywordmatches.contains( app_exe.trim() ) && khit ) {
+						if ( khit > -1 ) {
 							if ( debug > 2 ) log( "found keywordmatch for "+ suchwort +" in " +  entries[i].toString());
 						
-							if ( keywordmatches.isEmpty() ) {
-							       keywordmatches = app_exe.trim(); 
-							} else keywordmatches += config.get("conf","splitter") + app_exe.trim();
-							khit = false;
+							if ( ! app_exe.trim().isEmpty() ) 
+								keywordmatches.add( khit , app_exe.trim() );
+							
+							khit = -1;
 						}
 					}
 				} catch(IOException e) {
@@ -238,7 +236,20 @@ public class PVA {
 			}
 		}
 		
-		return new AppResult( namematches, keywordmatches );
+		String n = "";
+		String k = "";
+		long nr = 0;
+		long kr = 0;
+		
+		// If we have matches, the try-part does succeed, if it fails, we did not have a match and we use "" as default
+		// n and nr depend on each other, so it's 100% safe to assume that, if one fails, both fail. 
+		
+		try {	String[] r = namematches.getValues_internal().split(","); n = r[r.length-1]; nr = Long.parseLong( namematches.getKeys_internal().split(",")[r.length-1] );    } catch (Exception e) { } 
+		try {	String[] r = keywordmatches.getValues_internal().split(","); k = r[r.length-1]; kr = Long.parseLong( keywordmatches.getKeys_internal().split(",")[r.length-1] ); } catch (Exception e) { }
+		
+		// we now return our best match result.
+
+		return new AppResult( n, k, nr, kr );
 	}
 	
 	static String _searchExternalApps(String path,String suchwort) {
@@ -249,9 +260,12 @@ public class PVA {
 		if ( r != null ) {
 		
 			if ( debug > 2 ) log("_searchExternalApps: "+ r.namematches +" or "+ r.keywordmatches);
-		
-			if ( ! r.namematches.isEmpty() ) return r.namematches;
+			
+			if ( ! r.namematches.isEmpty() ) {
+				return r.namematches;
+			}
 			return r.keywordmatches;
+		
 		}
 		return "";
 	
@@ -267,6 +281,7 @@ public class PVA {
 		String filename ="";
 		filename += _searchExternalApps("/usr/share/applications/", suchwort );
 		if ( filename.isEmpty() ) 
+			// TODO: Add more folderselection based on languages. Is there a database? How does gnome knows it on First Launch?
 			if ( config.get("conf","lang").equals("de_DE") ) {
 				filename += _searchExternalApps(getHome() + "/Schreibtisch", suchwort );
 			} else  filename += _searchExternalApps(getHome() + "/Desktop", suchwort );
@@ -1842,11 +1857,16 @@ class AppResult {
 
 	public String namematches = "";
 	public String keywordmatches ="";
+	public long namerelevance = 0;
+	public long keywordrelevance = 0;
 	
-	public AppResult( String n, String k ) {
+	public AppResult( String n, String k, long nr, long kr ) {
 	
 		this.namematches = n;
+		this.namerelevance = nr;
 		this.keywordmatches = k;
+		this.keywordrelevance = kr;
+
 	}
 	
 }
