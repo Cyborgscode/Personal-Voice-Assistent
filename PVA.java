@@ -271,6 +271,10 @@ public class PVA {
 	
 	
 	}
+	
+	static String getDesktop() {
+		return System.getenv("DESKTOP_SESSION").trim();
+	}
 
 	static String getHome() {
 		return System.getenv("HOME").trim();
@@ -466,14 +470,14 @@ public class PVA {
 			if ( 
 				( 
 					( !cc.words.startsWith(".*") && und( cc.words ) ) ||  
-					( cc.words.startsWith(".*") && text.matches( cc.words ) ) 
+					( cc.words.startsWith(".*") && text.matches( cc.words +".*" ) ) 
 				) 
 				&& ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
 				
 				cf = cc;
 						
 				// Replace context related words i.e. the APP krita is often misunderstood in german for Kreta ( the greek island )
-				// it's ok replace it for STARTAPPS, but i may not ok to replace it i.e. in a MAP Context!
+				// it's ok to replace it for STARTAPPS, but i may not ok to replace it i.e. in a MAP Context!
 						
 				StringHash r = context.get( cc.command );
 				if ( r != null ) {
@@ -507,6 +511,8 @@ public class PVA {
 				} else {
 					text = text.replaceAll( cf.words ,"");
 				}
+				
+//				log("found match: "+ cc.words +" text="+ text);
 					
 				break;
 			
@@ -842,9 +848,11 @@ public class PVA {
 
 			
 				// The so called Star Trek part :) 
-				
-				if ( wort("autorisierung") ) {
-					if ( oder("scout|code|kurt|kot") && !oder("neu|neuer")  ) {
+				if ( cf.command.equals("AUTHORIZE") ) {
+
+						log("suche in "+text+" nach "+ config.get("code","alpha") );
+						log("suche in "+text+" nach "+ config.get("code","beta") );
+
 						if ( wort( config.get("code","alpha")) ) {
 							String cmd = dos.readFile(getHome()+"/.cache/pva/cmd.last");
 							if ( cmd.equals("exit") ) {
@@ -862,12 +870,19 @@ public class PVA {
 								System.out.println( dos.readPipe("javac --release 8 PVA.java") );
 							}
 							return;
+						} else if ( wort( config.get("code","beta")) ) {
+							String cmd = dos.readFile(getHome()+"/.cache/pva/cmd.last");
+							if ( cmd.equals("unlockscreen") ) {
+								exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), "UNLOCKSCREENRESPONSE") ).split(config.get("conf","splitter")));	
+								if ( getDesktop().equals("cinnamon") ) {
+									dos.readPipe("/usr/bin/cinnamon-screensaver-command -e");
+								} else if ( getDesktop().equals("gnome") ) {
+									dos.readPipe("/usr/bin/gnome-screensaver-command -e");
+								}
+							}
+							return;
 						} else 	exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), "FALSEAUTHCODE") ).split(config.get("conf","splitter")));	
-					}
-					if ( oder("neu|neuer") && oder("scout|code|kurt|kot") ) {
-						text = text.replaceAll("(autorisierung|neuer|neu|scout|code|kurt|kot)","").trim();
-						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ text).split(config.get("conf","splitter")));	
-					}
+					
 				}
 				
 				
@@ -1795,6 +1810,33 @@ public class PVA {
 					exec(config.get("audioplayer","togglemute").split(config.get("conf","splitter")));
 				}
 				
+				if ( cf.command.equals("UNLOCKSCREEN") ) {
+					if ( getDesktop().equals("cinnamon") || getDesktop().equals("gnome") ) {
+						dos.writeFile(getHome()+"/.cache/pva/cmd.last","unlockscreen");
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), "UNLOCKSCREEN") ).split(config.get("conf","splitter")));
+						return;
+					}
+					
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), "UNLOCKSCREENRESPONSEERROR") ).split(config.get("conf","splitter")));
+					
+				}
+				
+				if ( cf.command.equals("LOCKSCREEN") ) {
+					if ( getDesktop().equals("cinnamon") ) {
+						dos.readPipe("/usr/bin/cinnamon-screensaver-command -l");
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), "LOCKSCREEN") ).split(config.get("conf","splitter")));
+						return;
+					}
+					if ( getDesktop().equals("gnome") ) {
+						dos.readPipe("/usr/bin/gnome-screensaver-command -l");
+						exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), "LOCKSCREEN") ).split(config.get("conf","splitter")));
+						return;
+					}
+					
+					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), "LOCKSCREENRESPONSEERROR") ).split(config.get("conf","splitter")));
+					
+				}
+
 				if ( !reaction ) {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
 						System.out.println("Ich glaube, Du hast nichts gesagt!");
@@ -1866,7 +1908,5 @@ class AppResult {
 		this.namerelevance = nr;
 		this.keywordmatches = k;
 		this.keywordrelevance = kr;
-
-	}
-	
+	}	
 }
