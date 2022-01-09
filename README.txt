@@ -336,3 +336,5 @@ Keywords in Bot Reaction: " Keyword " + content
 
 "benutze {TERM}"                        -> switches to named alternative for a command
 "websuche {TERM}"                       -> starts a websearch based on configured searchengine and prefered browser.
+"bildschirm sperren"                    -> locks the desktop
+"bildschirm entsperren"                 -> locks the desktop
