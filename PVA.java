@@ -96,6 +96,111 @@ public class PVA {
                 return null;
         }
 
+	static void handleMediaplayer(String servicename, String cmd) {
+
+		try {
+
+			String 	vplayer = dos.readPipe( config.get("mediaplayer","status").replaceAll("<TARGET>", servicename).replaceAll( config.get("conf","splitter")," ") );
+	
+			if ( ! vplayer.trim().isEmpty() && vplayer.trim().contains("Playing") ) {
+		
+				// variant       double 0.8
+		
+				Double f = 0.5;
+		
+				String volume = dos.readPipe( config.get("mediaplayer","getvolume").replaceAll("<TARGET>", servicename).replaceAll( config.get("conf","splitter")," ") );
+							
+				if ( !volume.trim().isEmpty() ) {
+					volume = volume.substring( volume.indexOf("double")+6 ).trim();
+					f = Double.parseDouble( volume );
+				}
+		
+				if ( cmd.equals("DECVOLUME") ) {
+					f = f - 0.25;
+					if ( f < 0.0 ) f = 0.0;
+								
+					dos.readPipe( config.get("mediaplayer","lowervolume").replaceAll("<TARGET>", servicename).replaceAll("<TERM>", ""+ f ).replaceAll(config.get("conf","splitter")," ") );
+					reaction = true;;
+				}
+				if ( cmd.equals("INCVOLUME") ) {
+					f = f + 0.25;
+					if ( f > 2.0 ) f = 2.0;
+						
+					dos.readPipe( config.get("mediaplayer","raisevolume").replaceAll("<TARGET>", servicename).replaceAll("<TERM>", ""+ f ).replaceAll(config.get("conf","splitter")," ") );
+					reaction = true;;
+				}				
+							
+				if ( cmd.equals("DECVOLUMESMALL") ) {
+					f = f - 0.05;
+					if ( f < 0.0 ) f = 0.0;
+					dos.readPipe( config.get("mediaplayer","lowervolume").replaceAll("<TARGET>", servicename).replaceAll("<TERM>", ""+ f ).replaceAll(config.get("conf","splitter")," ") );
+					reaction = true;;
+				}
+		
+				if ( cmd.equals("INCVOLUMESMALL") ) {
+					f = f + 0.05;
+					if ( f > 2.0 ) f = 2.0;
+
+					dos.readPipe( config.get("mediaplayer","raisevolume").replaceAll("<TARGET>", servicename).replaceAll("<TERM>", ""+ f ).replaceAll(config.get("conf","splitter")," ") );
+					reaction = true;;
+				}
+		
+			} 
+		
+						
+			if ( cmd.equals("VIDEOPLAYBACKPLAY")  ) {
+				exec(config.get("mediaplayer","play").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
+			}
+		
+			if ( cmd.equals("VIDEOPLAYBACKSTOP")  ) {
+				exec(config.get("mediaplayer","stop").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
+			}
+		
+			if ( cmd.equals("VIDEOPLAYBACKPAUSE")  ) {
+				exec(config.get("mediaplayer","pause").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
+			}
+		
+			if ( cmd.equals("VIDEOPLAYBACKTOGGLE")  ) {
+				exec(config.get("mediaplayer","toggle").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
+			}
+		
+			if ( cmd.equals("VIDEONEXTTRACK")  ) {
+				exec(config.get("mediaplayer","nexttrack").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
+				if ( wort("übernächstes") ) exec(config.get("mediaplayer","nexttrack").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
+			}
+		
+			if ( cmd.equals("VIDEOPREVTRACK") ) {
+		
+				exec(config.get("mediaplayer","lasttrack").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
+						
+				if ( wort("vorletztes") ) exec(config.get("mediaplayer","lasttrack").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));;
+			}
+	
+			if ( cmd.equals("VIDEONTRACKSFORWARDS") ) {
+		
+				for(int i=0;i<za.length;i++) 
+					if ( text_raw.contains( za[i] ) )
+						for(int j=0;j<=i;j++ )
+							exec(config.get("mediaplayer","nexttrack").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
+								
+			}
+	
+			if ( cmd.equals("VIDEONTRACKSBACKWARDS") ) {
+			
+				for(int i=0;i<za.length;i++) 
+					if ( text_raw.contains( za[i] ) )
+						for(int j=0;j<=i;j++ )
+							exec(config.get("mediaplayer","lasttrack").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
+			}
+
+		} catch (IOException e) {
+			System.out.println(e.getMessage());
+		}
+
+
+	}
+
+
 	static String[] buildFileArray(String str,String rpl) {
 
 		String[] x = str.split(" ");
@@ -443,7 +548,7 @@ public class PVA {
 					String v = sub.get( k );
 					if ( key.equals("app") )
 						sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
-					if ( key.equals("conf") && ( k.equals("lang_short") || k.equals("lang") ) )
+					if ( key.equals("conf") && ( k.equals("lang_short") || k.equals("lang") || k.equals("keyword") ) )
 						sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
 
 				}
@@ -465,12 +570,12 @@ public class PVA {
 
 			Command cc = commands.get(i);
 	
-//					log("matching "+ cc.words +" against "+ text);
+			if (debug > 0 ) log("matching \""+ cc.words +"\" against \""+ text +"\" match_und="+ und( cc.words ) +" match_matches="+ text.matches( ".*"+ cc.words +".*" ) );
 	
 			if ( 
 				( 
-					( !cc.words.startsWith(".*") && und( cc.words ) ) ||  
-					( cc.words.startsWith(".*") && text.matches( cc.words +".*" ) ) 
+					( !cc.words.contains(".*") && und( cc.words ) ) ||  
+					( cc.words.contains(".*") && text.matches( ".*"+ cc.words +".*" ) )
 				) 
 				&& ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
 				
@@ -506,9 +611,11 @@ public class PVA {
 
 				// delete the command from the phrase
 							
-				if ( !cc.words.startsWith(".*") ) {
+				if ( und( cc.words ) ) {
+					// Remove none REGEX
 					text = text.replaceAll( "("+cf.words+")", "" );
 				} else {
+					// Remove REGEX
 					text = text.replaceAll( cf.words ,"");
 				}
 				
@@ -850,9 +957,6 @@ public class PVA {
 				// The so called Star Trek part :) 
 				if ( cf.command.equals("AUTHORIZE") ) {
 
-						log("suche in "+text+" nach "+ config.get("code","alpha") );
-						log("suche in "+text+" nach "+ config.get("code","beta") );
-
 						if ( wort( config.get("code","alpha")) ) {
 							String cmd = dos.readFile(getHome()+"/.cache/pva/cmd.last");
 							if ( cmd.equals("exit") ) {
@@ -925,6 +1029,28 @@ public class PVA {
 					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), cf.command) ).split(config.get("conf","splitter")));	
 
 				}
+				if ( cf.command.equals("SWAPNAME") ) {
+
+					String subtext = text.replaceAll(cf.filter,"").replaceAll(cf.words,"").trim();
+					
+					if ( subtext.length() > 5 ) {
+					
+						config.put("conf", "keyword", subtext );
+
+						exec( ( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  texte.get( config.get("conf","lang_short"), cf.command+"RESPONSE").replaceAll("<TERM1>", subtext ) ).split(config.get("conf","splitter")));										
+
+						saveConfig();
+						
+					} else if ( ! subtext.isEmpty() ) { 
+					
+						exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), cf.command+"RESPONSE1").replaceAll("<TERM1>", subtext ) ).split(config.get("conf","splitter")));
+					
+					} else {
+						subtext = "nichts";
+						exec(( config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), cf.command+"RESPONSE2").replaceAll("<TERM1>", subtext ) ).split(config.get("conf","splitter")));
+					}
+				}
+
 
 				if ( cf.command.equals("SWAPALTERNATIVES") ) {
 
@@ -1197,7 +1323,7 @@ public class PVA {
 					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), "OPENSOURCECODE") ).split(config.get("conf","splitter")));
 				}
 				if ( cf.command.equals("OPENCONFIG") ) {
-					exec( (config.get("app","txt") + getHome()+"/.cconfig/pva/pva.conf").split(" ") );
+					exec( (config.get("app","txt") +" "+ getHome() +"/.config/pva/pva.conf").split(" ") );
 					exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+ texte.get( config.get("conf","lang_short"), "OPENCONFIG") ).split(config.get("conf","splitter")));
 				}
 			
@@ -1728,28 +1854,39 @@ public class PVA {
 						exec(config.get("audioplayer","stop").split(config.get("conf","splitter")));
 				}
 				
-				if ( cf.command.equals("DECVOLUME") ) {
-					exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
-					exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
-					exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
-					exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
-					exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
-				}
-				if ( cf.command.equals("INCVOLUME") ) {
-					exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
-					exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
-					exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
-					exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
-					exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
-				}				
-				
-				if ( cf.command.equals("DECVOLUMESMALL") ) {
-					exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
+				// Check 
+			
+				String aplayer = dos.readPipe( "pgrep -f "+ config.get("audioplayer","pname").replaceAll( config.get("conf","splitter")," ") );
+				if ( ! aplayer.trim().isEmpty() ) {
+					aplayer = dos.readPipe( config.get("audioplayer","status").replaceAll( config.get("conf","splitter")," ") );
 				}
 
-				if ( cf.command.equals("INCVOLUMESMALL") ) {
-					exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
-				}
+				if ( ! aplayer.trim().isEmpty() && ! aplayer.contains("paused") ) {
+					
+					if ( cf.command.equals("DECVOLUME") ) {
+						exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
+						exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
+						exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
+						exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
+						exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
+					}
+					if ( cf.command.equals("INCVOLUME") ) {
+						exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
+						exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
+						exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
+						exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
+						exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
+					}				
+					
+					if ( cf.command.equals("DECVOLUMESMALL") ) {
+						exec(config.get("audioplayer","lowervolume").split(config.get("conf","splitter")));
+					}
+	
+					if ( cf.command.equals("INCVOLUMESMALL") ) {
+						exec(config.get("audioplayer","raisevolume").split(config.get("conf","splitter")));
+					}
+
+				} 
 
 				if ( cf.command.equals("AUDIONEXTTRACK")  ) {
 					exec(config.get("audioplayer","nexttrack").split(config.get("conf","splitter")));
@@ -1763,7 +1900,7 @@ public class PVA {
 					if ( wort("vorletztes") ) exec(config.get("audioplayer","lasttrack").split(config.get("conf","splitter")));;
 				}
 
-				if ( cf.command.equals("AUDIONTRACKSFORWARD") ) {
+				if ( cf.command.equals("AUDIONTRACKSFORWARDS") ) {
 
 					for(int i=0;i<za.length;i++) 
 						if ( text_raw.contains( za[i] ) )
@@ -1772,7 +1909,7 @@ public class PVA {
 							
 				}
 
-				if ( cf.command.equals("AUDIONTRACKSBACKWARD") ) {
+				if ( cf.command.equals("AUDIONTRACKSBACKWARDS") ) {
 
 					for(int i=0;i<za.length;i++) 
 						if ( text_raw.contains( za[i] ) )
@@ -1809,7 +1946,137 @@ public class PVA {
 				if ( cf.command.equals("AUDIOTOGGLE") ) {
 					exec(config.get("audioplayer","togglemute").split(config.get("conf","splitter")));
 				}
+				if ( cf.command.equals("AUDIOPAUSE") ) {
+					exec(config.get("audioplayer","pause").split(config.get("conf","splitter")));
+				}
+
+
+				// if there is no videoplayerstatuscmd configured, we may run in mediaplayermode, and skip the direct videoplayer component, as it's part of the mediaplayer part anyway
 				
+				if ( !config.get("videoplayer","status").isEmpty() ) {
+
+					String vplayer = dos.readPipe( "pgrep -f "+ config.get("videoplayer","pname").replaceAll( config.get("conf","splitter")," ") );
+					if ( ! vplayer.trim().isEmpty() && !config.get("videoplayer","status").isEmpty() ) {
+						vplayer = dos.readPipe( config.get("videoplayer","status").replaceAll( config.get("conf","splitter")," ") );
+					}
+
+					if ( ! vplayer.trim().isEmpty() && vplayer.trim().contains("Playing") ) {
+	
+						// variant       double 0.8
+	
+						Double f = 0.5;
+	
+						String volume = dos.readPipe( config.get("videoplayer","getvolume").replaceAll( config.get("conf","splitter")," ") );
+						
+						if ( !volume.trim().isEmpty() ) {
+							volume = volume.substring( volume.indexOf("double")+6 ).trim();
+							f = Double.parseDouble( volume );
+							//log("vol="+ f);
+						}
+	
+						if ( cf.command.equals("DECVOLUME") ) {
+							f = f - 0.25;
+							if ( f < 0.0 ) f = 0.0;
+							// log( config.get("videoplayer","lowervolume").replaceAll("<TERM>", ""+ f ).replace("'","\"").replaceAll(config.get("conf","splitter")," ") );
+							//exec(config.get("videoplayer","lowervolume").replaceAll("<TERM>", ""+ f ).split(config.get("conf","splitter")));
+							// dbus-send via exec() does only work for Getting value, not for Setting one ... no idea why.
+							
+							dos.readPipe( config.get("videoplayer","lowervolume").replaceAll("<TERM>", ""+ f ).replaceAll(config.get("conf","splitter")," ") );
+							reaction = true;;
+						}
+						if ( cf.command.equals("INCVOLUME") ) {
+							f = f + 0.25;
+							if ( f > 2.0 ) f = 2.0;
+							// exec(config.get("videoplayer","raisevolume").replaceAll("<TERM>", ""+ f ).split(config.get("conf","splitter")));
+							
+							dos.readPipe( config.get("videoplayer","raisevolume").replaceAll("<TERM>", ""+ f ).replaceAll(config.get("conf","splitter")," ") );
+							reaction = true;;
+						}				
+						
+						if ( cf.command.equals("DECVOLUMESMALL") ) {
+							f = f - 0.05;
+							if ( f < 0.0 ) f = 0.0;
+							// exec(config.get("videoplayer","lowervolume").replaceAll("<TERM>", ""+ f ).split(config.get("conf","splitter")));
+							dos.readPipe( config.get("videoplayer","lowervolume").replaceAll("<TERM>", ""+ f ).replaceAll(config.get("conf","splitter")," ") );
+							reaction = true;;
+						}
+	
+						if ( cf.command.equals("INCVOLUMESMALL") ) {
+							f = f + 0.05;
+							if ( f > 2.0 ) f = 2.0;
+							// exec(config.get("videoplayer","raisevolume").replaceAll("<TERM>", ""+ f ).split(config.get("conf","splitter")));
+							dos.readPipe( config.get("videoplayer","raisevolume").replaceAll("<TERM>", ""+ f ).replaceAll(config.get("conf","splitter")," ") );
+							reaction = true;;
+						}
+	
+					} 
+	
+					
+					if ( cf.command.equals("VIDEOPLAYBACKPLAY")  ) {
+						exec(config.get("videoplayer","play").split(config.get("conf","splitter")));
+					}
+	
+					if ( cf.command.equals("VIDEOPLAYBACKSTOP")  ) {
+						exec(config.get("videoplayer","stop").split(config.get("conf","splitter")));
+					}
+	
+					if ( cf.command.equals("VIDEOPLAYBACKPAUSE")  ) {
+						exec(config.get("videoplayer","pause").split(config.get("conf","splitter")));
+					}
+	
+					if ( cf.command.equals("VIDEOPLAYBACKTOGGLE")  ) {
+						exec(config.get("videoplayer","toggle").split(config.get("conf","splitter")));
+					}
+	
+					if ( cf.command.equals("VIDEONEXTTRACK")  ) {
+						exec(config.get("videoplayer","nexttrack").split(config.get("conf","splitter")));
+						if ( wort("übernächstes") ) exec(config.get("videoplayer","nexttrack").split(config.get("conf","splitter")));
+					}
+	
+					if ( cf.command.equals("VIDEOPREVTRACK") ) {
+	
+						exec(config.get("videoplayer","lasttrack").split(config.get("conf","splitter")));
+						
+						if ( wort("vorletztes") ) exec(config.get("videoplayer","lasttrack").split(config.get("conf","splitter")));;
+					}
+
+					if ( cf.command.equals("VIDEONTRACKSFORWARDS") ) {
+	
+						for(int i=0;i<za.length;i++) 
+							if ( text_raw.contains( za[i] ) )
+								for(int j=0;j<=i;j++ )
+									exec(config.get("videoplayer","nexttrack").split(config.get("conf","splitter")));
+								
+					}
+	
+					if ( cf.command.equals("VIDEONTRACKSBACKWARDS") ) {
+						log("springe videos zurück: "+ text);
+						for(int i=0;i<za.length;i++) 
+							if ( text_raw.contains( za[i] ) )
+								for(int j=0;j<=i;j++ )
+									exec(config.get("videoplayer","lasttrack").split(config.get("conf","splitter")));
+					}
+	
+				}
+	
+				// now we handle all mediaplayers
+				// IF you configure both, a dbus serviceable videoplayer AND the mediaplayer api, you will end up with some funny effects by "toogle" cmds.
+				
+				if ( !config.get("mediaplayer","find").isEmpty() ) {
+
+					String allplayerservices = dos.readPipe( config.get("mediaplayer","find").replaceAll(config.get("conf","splitter")," ") );
+					if ( ! allplayerservices.isEmpty() ) {
+						String[] lines = allplayerservices.split("\n");
+						for(String service : lines ) {
+						
+							if ( service.contains("org.mpris.MediaPlayer2") ) {
+								handleMediaplayer( zwischen( service, "\"","\""),  cf.command ) ;
+							}
+						}
+					}
+				}
+	
+	
 				if ( cf.command.equals("UNLOCKSCREEN") ) {
 					if ( getDesktop().equals("cinnamon") || getDesktop().equals("gnome") ) {
 						dos.writeFile(getHome()+"/.cache/pva/cmd.last","unlockscreen");
@@ -1908,5 +2175,7 @@ class AppResult {
 		this.namerelevance = nr;
 		this.keywordmatches = k;
 		this.keywordrelevance = kr;
-	}	
+
+	}
+	
 }
