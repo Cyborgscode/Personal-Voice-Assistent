@@ -1,6 +1,6 @@
 /*
 
-PVA is coded by Marius Schwarz in 2021
+PVA is coded by Marius Schwarz in 2021-2022
 
 This software is free. You can copy it, use it or modify it, as long as the result is also published on this condition.
 You only need to refer to this original version in your own readme / license file. 
@@ -70,6 +70,9 @@ If you need help with mbrola: https://marius.bloggt-in-braunschweig.de/2021/03/2
 O== Python3 + Pip3 + Portaudio:
 
 pip3 install sounddevice
+
+ATTN: do not install it as user, if you wanne install it systewide ( see below on "Installation" )
+
 sudo dnf install python3-pyaudio espeak
 
 O== Vosk:
@@ -77,6 +80,8 @@ O== Vosk:
 On your desktop you can directly install vosk :
 
 pip3 install vosk
+
+ATTN: do not install it as user, if you wanne install it systewide ( see below on "Installation" )
 
 If you wanne run this on a Pinephone, as recently demonstrated, you need atleast this BETA version:
 
@@ -94,46 +99,116 @@ https://alphacephei.com/vosk/models
 
 There are small models, with a smaller stock of words, but it may already be enough for your tasks, or you can use the big ones ( ~1.9 GB ), which have a lot more words, but tend to have false positives for exactly this reason :) i.e. in german "füge" and "flüge" sound very similar and this gives us a relativly high error rate. You should use the small model on the Pinephone, due to it's size advantage.
 
-Installation: (replace the modelfile with your filename! )
+####
+ATTN: previouse installation procedures focused on a private, one user only installation. We now focus on a MULTI-USER systemwide installation.
+####
 
-mkdir Programme
-cd Programme/
-mkdir vosk
-cd vosk/
-git clone https://github.com/alphacep/vosk-api
-cd vosk-api/python/example/
-unzip vosk-model-small-de-0.15.zip
-ln -s vosk-model-small-de-0.15 model
-./test_microphone.py
+PVA is now fully aware of systemd --user actions and freedesktop directorystructures
 
-Your nearly done. The link in the above script gives us the opportunity to change the model on the fly, i.e. with a voice cmd given to carola ;)
+O== Installation: 
 
-cp test_microphone.py pva.py 
+(replace the modelfile with your filename! )
 
-edit pva.py and adjust it to this new while loop:
+become root, sudo alone is not enough!
 
-            rec = vosk.KaldiRecognizer(model, args.samplerate)
-            while True:
-                data = q.get()
-                if rec.AcceptWaveform(data):
-                    # print(rec.Result())
-                    str = rec.Result();
-                    os.system( "java PVA '"+ str.replace("'","")  +"'");
-#                else: 
-#                   print("\r");
-#                    print(rec.PartialResult())
-                if dump_fn is not None:
-                    dump_fn.write(data)
+use "sudo -i" or "sudo su" or just "su" if you still have a root password.
 
-it's just 4 lines of edit, you can do this ;) 
+pip3 install sounddevice vosk
 
-copy the say script to /usr/local/bin or sbin and your finished installing.
+mkdir -p /usr/share/pva
+cd /usr/share/pva
+clone the repo content here 
+mv etc/pva /etc/
+
+Example on the modelfile:
+
+unzip vosk-model-small-de-0.21.zip
+ln -s vosk-model-small-de-0.21 model
+
+mkdir -p /usr/local/sbin
+cp *say /usr/local/sbin 
+
+now compile the JAVA Classes :
+
+cd /usr/share/pva
+javac PVA.java
+
+if you do not have other java apps running with 8 you can use "javac PVA.java" and compile for the latest version. If you see error messages, use:
+
+javac --release 8 PVA.java
+
+move desktop/* to /usr/share/applications/
+
+You should now find two PVA entries in your desktop app menu.
+
+You can now use your desktop specific autostarttool ( Startprogramme ) to add PVA to your desktop autostart.
+
+You should hear the default ( german ) startup greeting, next time your start your desktop session.
+Of course, you can start PVA the first time manually from the app menu ;)
+
+Check the processlist if a process "python3" appeared for pva.py. If not, the startup did not work, something is wrong.
+
+In this case:
+
+switch to your desktop userid
+cd /usr/share/pva
+./pva 
+
+If you did not install the german model file, you need to change the /etc/pva/conf.d/01-default.conf to your model name, by overwriting the config in a user.conf file:
+
+the directory "~/.config/pva/conf.d/" should already exists, as you had started PVA via your app menu. The executed "pva" bash script will create all necessary directory and basic config files for you.
+
+In case it does not exist, the PVA start failed much earlier in the chain and you need to check the desktop files in /usr/share/applications/ for more.
+
+To overwrite the config you create this:
+
+mkdir -p ~/.config/pva/conf.d/
+echo 'vosk:"model","vosk-model-de-0.21"' > ~/.config/pva/conf.d/00-model-overwrite.conf
+
+Of course you have to use the model name, you need, not this example ;) 
+
+Don't forget to update it everytime you update the model version. 
+
+O== Why is it in the config file and not defaulting to the symlink "model" from above?
+
+Because PVA can switch the model on a voice command :) It will be changed on the next app restart.
+
+PVA will search for a matching language model from the list of models located in /usr/share/pva.
+To add a model, just download and unpack it there.
+
+Example:
+
+$ ll /usr/share/pva/
+insgesamt 244
+-rw-r--r--. 1 root root   478 26. Jan 10:50  AppResult.class
+drwxrwxr-x. 3 root root  4096 30. Dez 2020   com
+-rw-rw-r--. 1 root root   480 26. Jan 10:50  Command.class
+drwxr-xr-x. 2 root root  4096 17. Jul 2021   data
+drwxrwxr-x. 2 root root  4096 16. Dez 18:58  hash
+drwxrwxr-x. 2 root root  4096  4. Dez 17:41  io
+lrwxrwxrwx. 1 root root    18 20. Dez 17:44  model -> vosk-model-de-0.21
+-rwxr-xr-x. 1 root root  2246 26. Jan 11:18  pva
+-rw-r--r--. 1 root root  1977 26. Jan 10:50 'PVA$AnalyseMP3.class'
+-rw-rw-r--. 1 root root 55337 26. Jan 10:50  PVA.class
+-rw-r--r--. 1 root root 14214 20. Dez 17:27  pva.conf.default
+-rw-r--r--. 1 root root 99253 26. Jan 10:50  PVA.java
+-rwxrwxr-x. 1 root root  2512 20. Dez 21:55  pva.py
+-rwxr-xr-x. 1 root root   970 20. Jan 18:42  pvatrayicon.py
+-rw-rw-r--. 1 root root   421 26. Jan 10:50  Reaction.class
+-rw-rw-r--. 1 root root  4963 23. Jul 2021   README.txt
+-rwxr-xr-x. 1 root root   461 10. Jan 11:43  shutdown.sh
+drwxr-xr-x. 2 root root  4096 26. Jan 11:17  systemd
+-rwxr-xr-x. 1 root root    41 25. Jan 20:03  timer.sh
+drwxr-xr-x. 8 root root  4096 15. Sep 00:21  vosk-model-de-0.21
+drwxr-xr-x. 6 root root  4096  8. Dez 2020   vosk-model-small-en-us-0.15
+
+it does detect small and large model files, but don't use both per language.
 
 
 <== Carola, a PVA ==>
 
 
-Carola is the keyword i use to address the pva. You can change this in the pva.conf file you have to create ;)
+Carola is the keyword I use to address the pva. You can change this in an overwrite file in ~/.config/pva/conf.d/00-keyword-overwrite.conf you need to create.
 
 HINT:
 
