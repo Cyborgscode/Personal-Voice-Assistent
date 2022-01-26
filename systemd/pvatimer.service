@@ -1,0 +1,9 @@
+[Unit]
+
+Description=Timer für Carola
+
+[Service]
+
+Type=oneshot
+ExecStart=/usr/share/pva/timer.sh
+WorkingDirectory=/usr/share/pva
