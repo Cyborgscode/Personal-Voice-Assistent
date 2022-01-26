@@ -216,9 +216,34 @@ In case your desired app does not have the same functionality as the default app
 
 SETUP:
 
-You noticed the "pva.conf.default" file? 
+You noticed the "pva.conf.default" file? It's now completly useless, but may give some impression on how to configure it.
 
-Open it with a texteditor and change(in some cases add) the required infos, i.e. the keyword "carola" if you wanne use a different one.
+To start visit /etc/pva/conf.d/  and check the german numbers file. It's the equivilant to a "locale" file. It container numbers, monthnames and weekdaynames etc. Clone it as 10-<yourlanguage>-numbers.conf and change the content accordingly. Most languages of the western world will match the format used. Numbers from 0-19 differently but from 20+ calculateable, 7 days a week etc. If you need to use a none romanic based language, PVA may needs to be rewritten and for this we surely need to your help with examples, rulesets etc. 
+
+There are two ways to handle changes: 
+
+you can do them for YOUR useraccount only by placing the configfiles into ~/.config/pva/conf.d/  OR
+you can write new configfiles with higher startnumbers in /etc/pva/conf.d/ like 10-defaults-english.conf and just rewrite and slightly adapt the texts used in the german default file. 
+
+The higher number ( 10 ) means, this configfile is read later, which means, it's content is overwriting stuff the is unique. 
+
+text:"de","KEYWORD","meine text version in deutsch"
+command:"erzeuge|metadata","MAKEMETACACHE",""
+
+Of course you do not overwrite the german "text" base, instead you change it like this:
+
+conf:"lang_short","en"
+conf:"lang","en_EN"
+
+text:"en","KEYWORD","your version in english"
+command:"create|metadata","MAKEMETACACHE",""
+
+The "command" line does not overwrite the german command, it adds it to the command hashtable. You ask why: because an english model won't recognize german words anyway and vice versa, and so we don't need to overwrite those texts. You can just add as may lines in as many languages as you like and give them the ACTIONKEYWORD it needs.
+
+For the "text" section, you can't do this simple way, we need those texts distinguished per as tripple-pairs of Language+Keyword+Text. 
+
+The "conf" entry overwrites the german default setting, as you can only have one language per user. 
+
 If you don't have the apps  in there, just install them. 
 
 You can find qmmp & celluloid in the fedora repos, but to fully make use of qmmp, you may wanne install some plugins from rpmfusion.org. 
