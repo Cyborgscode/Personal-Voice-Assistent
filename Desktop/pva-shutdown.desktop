@@ -1,0 +1,17 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Comment=Carola
+Icon=pda
+Terminal=false
+Type=Application
+StartupNotify=false
+Categories=Network
+Keywords=carola;sophia;pva;assistent;personal;voice
+X-Desktop-File-Install-Version=0.26
+X-GNOME-Autostart-enabled=true
+Name=Personal Voice Assistent Shutdown
+Name[de_DE]=PVA beenden
+Exec=/usr/share/pva/shutdown.sh
+
