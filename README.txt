@@ -308,7 +308,7 @@ Keywords in Bot Reaction: " Keyword " + content
 "autorisierung code {TERM}"		-> give secret code to ack previous command
 "autorisierung neuer code {TERM} "	-> set new secret code 
 
-"nochmal" -> repeat last cmdline
+"nochmal"                               -> repeat last cmdline
 
 "wie war der letzte fehler" 		-> readout last error message of selfcompile try
 "wie war die fehlermeldung" 		-> readout last error message of selfcompile try
@@ -413,3 +413,50 @@ Keywords in Bot Reaction: " Keyword " + content
 "websuche {TERM}"                       -> starts a websearch based on configured searchengine and prefered browser.
 "bildschirm sperren"                    -> locks the desktop
 "bildschirm entsperren"                 -> locks the desktop
+
+"video fullscreen"			-> tell media/videoplayer to go to fullscreen 
+"video vollbild"			
+
+"video fullscreen aus"			-> tell media/videoplayer to go back to windowed mode
+"video vollbild aus"
+
+"{NUMBER} videos weiter"		-> skip N videos in the playback queue forward
+"{NUMBER} videos zurück"		-> skip N videos in the playback queue backwards
+"ein video weiter"			-> skip 1 video forward
+"nächstes video"
+
+"ein video zurück"			-> skip 1 video backwards
+"letztes|video"				
+
+"video weiter"				-> UNPAUSE or start videoplayback, which in most mpris implementations does the same.
+"video start"
+"video|fortsetzen
+"wiedergabe|starten
+"wiedergabe|fortsetzen
+
+"video stop"				-> stop videoplayck FULLY <- this is an important difference regarding PAUSE!
+"wiedergabe|stop
+
+"pausiere video"			-> pause videoplayback
+"video pause"        
+"wiedergabe|pausiere
+
+"erzeuge metadata"
+"erzeuge mp3 metadata"
+
+"erinnere mich {DAY} um {TIME} an {TEXT}" 
+					-> add a timed reminder to the database at {TIME} on {DAY} with the reminder {TEXT}
+					DAY parameter is optional and defaults to "today"
+					Example: "erinnere mich um neun uhr zwölf an Frühstück einnehmen mit Carola"
+						 which result in an entry for TODAY 09:12 (AM) with the text "Frühstück einnehmen mit Carola"
+					Example: "erinnere mich morgen um neun uhr zwölf an Frühstück einnehmen mit Carola"
+						 which result in an entry for the next morning 09:12 (AM) with the text "Frühstück einnehmen mit Carola"
+					Example: "erinnere mich freitag um neunzehn uhr fünfundfünfzig an romatisches Abendessen im Donbass mit Carola"
+						 which result in an entry for next Friday 19:55 (PM) with the text "romatisches Abendessen im Donbass mit Carola"
+						 
+"ließ termine vor"			-> lists verbally all reminders
+"meine termine"
+
+"benenne dich in {NAME} um"		-> rename yourself to {NAME}
+"dein neuer name ist {NAME}"
+"dein neuer name lautet {NAME}"
