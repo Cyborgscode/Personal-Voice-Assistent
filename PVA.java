@@ -144,10 +144,10 @@ public class PVA {
 	static void handleMediaplayer(String servicename, String cmd) {
 
 		try {
-			if ( debug > 1 ) log(  config.get("mediaplayer","status").replaceAll("<TARGET>", servicename).replaceAll( config.get("conf","splitter")," " ) );
-			
 			String 	vplayer = dos.readPipe( config.get("mediaplayer","status").replaceAll("<TARGET>", servicename).replaceAll( config.get("conf","splitter")," ") );
-	
+
+			if ( debug > 1 ) log(  "handleMediaplayer: "+ config.get("mediaplayer","status").replaceAll("<TARGET>", servicename).replaceAll( config.get("conf","splitter")," " ) +"\nResult:"+ vplayer );
+				
 			if ( ! vplayer.trim().isEmpty() && vplayer.trim().contains("Playing") ) {
 		
 				// variant       double 0.8
@@ -226,7 +226,7 @@ public class PVA {
 			if ( cmd.equals("VIDEONTRACKSFORWARDS") ) {
 		
 				for(int i=0;i<za.length;i++) 
-					if ( text_raw.contains( za[i] ) )
+					if ( text_raw.matches( ".* "+za[i]+" .*" ) )
 						for(int j=0;j<i;j++ )
 							exec(config.get("mediaplayer","nexttrack").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
 								
@@ -235,7 +235,7 @@ public class PVA {
 			if ( cmd.equals("VIDEONTRACKSBACKWARDS") ) {
 			
 				for(int i=0;i<za.length;i++) 
-					if ( text_raw.contains( za[i] ) )
+					if ( text_raw.matches( ".* "+za[i]+" .*" ) )
 						for(int j=0;j<i;j++ )
 							exec(config.get("mediaplayer","lasttrack").replaceAll("<TARGET>", servicename).split(config.get("conf","splitter")));
 			}
@@ -324,7 +324,7 @@ static private class AnalyseMP3 extends Thread {
 	static String createMetadata(String start) {
 
 		String[] files = start.split(config.get("conf","splitter"));
-		StringBuffer data = new StringBuffer(2000000);
+		StringBuffer data = new StringBuffer(3000000);
 		
 		TwoKeyHash tk = new TwoKeyHash();
 		tk.put("proc","counter","0");
@@ -1294,8 +1294,6 @@ static private class AnalyseMP3 extends Thread {
 					String[] wochentage   = texte.get( config.get("conf","lang_short"), "WEEKDAYS").split("\\|");
 					String[] words_future = texte.get( config.get("conf","lang_short"), "FUTUREKEYWORDS").split("\\|");
 	
-					texte.get( config.get("conf","lang_short"), "MAKETIMERTIMEWORD ");
-	
 					boolean timer = false;
 					Calendar rightNow = Calendar.getInstance();
 	
@@ -1330,7 +1328,7 @@ static private class AnalyseMP3 extends Thread {
 							if ( times.length == 1 ) {
 								// only a full hour is given
 								for(int i=0;i<za.length && i<24;i++) {
-									if ( times[0].trim().equals( za[i] ) ) 
+									if ( times[0].trim().matches( za[i] ) ) 
 										hour = i;
 								}
 							} 
@@ -1338,11 +1336,11 @@ static private class AnalyseMP3 extends Thread {
 							if ( times.length == 2 ) {
 								// HOUR + MINUTES
 								for(int i=0;i<za.length && i<24;i++) {
-									if ( times[0].trim().equals( za[i] ) ) 
+									if ( times[0].trim().matches( za[i] ) ) 
 										hour = i;
 								}
 								for(int i=0;i<za.length && i<60;i++) {
-									if ( times[1].trim().equals( za[i] ) ) 
+									if ( times[1].trim().matches( za[i] ) ) 
 										minutes = i;
 								}
 
@@ -1389,6 +1387,59 @@ static private class AnalyseMP3 extends Thread {
 				
 				}
 				
+				if ( cf.command.equals("MAKETIMERRELATIVE") ) {				
+				
+					boolean timer = false;
+					Calendar rightNow = Calendar.getInstance();
+	
+					Pattern pattern = Pattern.compile( "("+ texte.get( config.get("conf","lang_short"), "MAKETIMERATRELATIVE") +")" );
+					String[] stepone = pattern.split( text_raw.replaceAll( keyword, "").trim() , 2 );
+					if ( stepone.length == 2) {
+					
+						pattern = Pattern.compile( "("+ texte.get( config.get("conf","lang_short"), "MAKETIMERFOR") +")" );
+						String[] steptwo = pattern.split( stepone[1], 2 );
+						if ( steptwo.length == 2) {
+							String time = steptwo[0].trim();
+							String subject = steptwo[1].trim();
+
+							// analyse time
+							// we assume "today" , which is the absence of any match
+					
+							// log("time="+time +" subject="+ subject);
+					
+							int when = 0, multiply = 1;
+	
+							if ( text_raw.contains( texte.get( config.get("conf","lang_short"), "TIMEHOURS") ) ) {
+								multiply = 60;
+							} else 	if ( text_raw.contains( texte.get( config.get("conf","lang_short"), "TIMEDAYS") ) ) {
+								multiply = 60*24;
+							}
+
+							for(int i=0;i<za.length;i++) 
+								if ( text_raw.matches( ".* "+za[i]+" .*" ) ) 
+									when = i+1;
+							
+							if ( when > 0 ) {	
+								for ( int i=0; i < when*multiply; i++ )
+									rightNow.add(Calendar.MINUTE, 1 );
+								rightNow.set(Calendar.SECOND, 0 );
+								rightNow.set(Calendar.MILLISECOND, 0 );
+
+								log ( rightNow.getTime().toString() );
+								timers.put( ""+rightNow.getTimeInMillis(), subject );
+								saveTimers();
+								timer = true;
+							}
+						}
+					}
+	
+					if ( timer ) {
+
+						say( texte.get( config.get("conf","lang_short"), "MAKETIMEROK").replaceAll( "<TERM1>", makeDate( rightNow.getTimeInMillis() ) ));
+					} else  say( texte.get( config.get("conf","lang_short"), "MAKETIMERERROR") );
+				
+				}
+
 				// selfstatusreport
 				
 				if ( cf.command.equals("HEALTHREPORT") ) {
@@ -2281,7 +2332,7 @@ static private class AnalyseMP3 extends Thread {
 						String[] files = suchergebnis.split( config.get("conf","splitter") );
 
 						for(int i=0;i<za.length;i++) 
-							if ( wort( za[i] ) )
+							if ( text_raw.matches( ".* "+za[i]+" .*" ) )
 								for(int j=0;j<=i;j++ ) {
 													
 									int p = (int)( Math.random() * files.length);
@@ -2350,7 +2401,7 @@ static private class AnalyseMP3 extends Thread {
 				if ( cf.command.equals("AUDIONTRACKSFORWARDS") ) {
 
 					for(int i=0;i<za.length;i++) 
-						if ( text_raw.contains( za[i] ) )
+						if ( text_raw.matches( ".* "+za[i]+" .*" ) )
 							for(int j=0;j<i;j++ )
 								exec(config.get("audioplayer","nexttrack").split(config.get("conf","splitter")));
 							
@@ -2359,7 +2410,7 @@ static private class AnalyseMP3 extends Thread {
 				if ( cf.command.equals("AUDIONTRACKSBACKWARDS") ) {
 
 					for(int i=0;i<za.length;i++) 
-						if ( text_raw.contains( za[i] ) )
+						if ( text_raw.matches( ".* "+za[i]+" .*" ) )
 							for(int j=0;j<i;j++ )
 								exec(config.get("audioplayer","lasttrack").split(config.get("conf","splitter")));
 							
@@ -2374,7 +2425,7 @@ static private class AnalyseMP3 extends Thread {
 				if ( cf.command.equals("AUDIOSKIPFORWARDN") ) {
 			
 					for(int i=0;i<za.length;i++) 
-						if ( wort( za[i] ) )
+						if ( text_raw.matches( ".* "+za[i]+" .*" ) )
 							exec( (config.get("audioplayer","forward")+i ).split(config.get("conf","splitter")) );
 				}
 
@@ -2386,7 +2437,7 @@ static private class AnalyseMP3 extends Thread {
 
 				if ( cf.command.equals("AUDIOSKIPBACKWARDN") ) {
 					for(int i=0;i<za.length;i++) 
-						if ( wort( za[i] ) )
+						if ( text_raw.matches( ".* "+za[i]+" .*" ) )
 							exec( (config.get("audioplayer","backward")+i ).split(config.get("conf","splitter")) );
 				}
 
@@ -2490,8 +2541,8 @@ static private class AnalyseMP3 extends Thread {
 					if ( cf.command.equals("VIDEONTRACKSFORWARDS") ) {
 	
 						for(int i=0;i<za.length;i++) 
-							if ( text_raw.contains( za[i] ) )
-								for(int j=0;j<i;j++ )
+							if ( text_raw.matches( ".* "+za[i]+" .*" ) ) 
+								for(int j=0;j<i;j++ ) 
 									exec(config.get("videoplayer","nexttrack").split(config.get("conf","splitter")));
 								
 					}
@@ -2499,7 +2550,7 @@ static private class AnalyseMP3 extends Thread {
 					if ( cf.command.equals("VIDEONTRACKSBACKWARDS") ) {
 						log("springe videos zurück: "+ text);
 						for(int i=0;i<za.length;i++) 
-							if ( text_raw.contains( za[i] ) )
+							if ( text_raw.matches( ".* "+za[i]+" .*" ) )
 								for(int j=0;j<i;j++ )
 									exec(config.get("videoplayer","lasttrack").split(config.get("conf","splitter")));
 					}
