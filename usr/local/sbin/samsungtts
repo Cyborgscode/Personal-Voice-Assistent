@@ -1,0 +1,6 @@
+#!/bin/bash
+
+echo "$1" | nc ip.of.android.phone 3000 
+
+# the App "Hardcore" is required to use SamsungsTTS System on your device
+# the use of this is very limited to the public, never the less, it's working like a charm :D
