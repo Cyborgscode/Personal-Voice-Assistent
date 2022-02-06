@@ -65,13 +65,13 @@ public class PVA {
 
 	static void exec(String cmd, boolean wait) throws IOException {
 //	log( cmd );
-		Process p = Runtime.getRuntime().exec( cmd );
-		if ( wait ) {
-			try {
+		try {
+			Process p = Runtime.getRuntime().exec( cmd );
+			if ( wait ) {
 				p.waitFor();
-			} catch (Exception e) {
-				// we don't care 
 			}
+		} catch (Exception e) {
+				// we don't care 
 		}
 		reaction = true;
 	}
@@ -82,6 +82,10 @@ public class PVA {
 	}
 
 	static void exec(String[] cmds, boolean wait ) throws IOException {
+		if ( cmds == null || cmds.length == 0 ) {
+			log("EMPTY Command given to Exec()");
+			return;
+		}
 		for(String cmd : cmds) {
 			if (debug > 2 ) log( "argument:"+cmd );
 			if ( cmd == null ) {
@@ -90,13 +94,13 @@ public class PVA {
 				return;
 			} 
 		}
-		Process p = Runtime.getRuntime().exec( cmds );
-		if ( wait ) {
-			try {
+		try {
+			Process p = Runtime.getRuntime().exec( cmds );
+			if ( wait ) {
 				p.waitFor();
-			} catch (Exception e) {
-				// we don't care 
 			}
+		} catch (Exception e) {
+			// we don't care 
 		}
 		reaction = true;
 	}
@@ -263,7 +267,7 @@ public class PVA {
 	
 		if ( id3v1Tag != null ) {
 
-			return ( filename + config.get("conf","splitter") + id3v1Tag.getTrack() +config.get("conf","splitter") + id3v1Tag.getArtist() +config.get("conf","splitter") + id3v1Tag.getTitle() +config.get("conf","splitter") + id3v1Tag.getAlbum() +config.get("conf","splitter") + id3v1Tag.getYear() + config.get("conf","splitter") + id3v1Tag.getComment() ).replaceAll("\n","\\n") + "\n";
+			return ( filename + config.get("conf","splitter") + id3v1Tag.getTrack() +config.get("conf","splitter") + id3v1Tag.getArtist() +config.get("conf","splitter") + id3v1Tag.getTitle() +config.get("conf","splitter") + id3v1Tag.getAlbum() +config.get("conf","splitter") + id3v1Tag.getYear() + config.get("conf","splitter") + id3v1Tag.getComment() ).replaceAll("(\n|\r)"," ") + "\n";
 			
 		} else return "";
 
@@ -272,7 +276,7 @@ public class PVA {
 	static String formatMetadata(String filename, ID3v2 id3v2Tag ) {
 	
 		if ( id3v2Tag != null ) {
-			return ( filename.replace("'","\'") + config.get("conf","splitter") + id3v2Tag.getTrack() +config.get("conf","splitter") + id3v2Tag.getArtist() +config.get("conf","splitter") + id3v2Tag.getTitle() +config.get("conf","splitter") + id3v2Tag.getAlbum() +config.get("conf","splitter") + id3v2Tag.getYear() + config.get("conf","splitter") + id3v2Tag.getComment() + config.get("conf","splitter") + id3v2Tag.getComposer() + config.get("conf","splitter") + id3v2Tag.getPublisher() + config.get("conf","splitter") + id3v2Tag.getOriginalArtist() ).replaceAll("\n","\\n") + "\n" ;
+			return ( filename.replace("'","\'") + config.get("conf","splitter") + id3v2Tag.getTrack() +config.get("conf","splitter") + id3v2Tag.getArtist() +config.get("conf","splitter") + id3v2Tag.getTitle() +config.get("conf","splitter") + id3v2Tag.getAlbum() +config.get("conf","splitter") + id3v2Tag.getYear() + config.get("conf","splitter") + id3v2Tag.getComment() + config.get("conf","splitter") + id3v2Tag.getComposer() + config.get("conf","splitter") + id3v2Tag.getPublisher() + config.get("conf","splitter") + id3v2Tag.getOriginalArtist() ).replaceAll("(\n|\r)"," ") + "\n" ;
 
 		} else return "";
 			
@@ -582,7 +586,10 @@ static private class AnalyseMP3 extends Thread {
 	
 	static String cacheSuche(String start,String suchwort,String type) {
 
+
 		suchwort = suchwort.trim().toLowerCase();
+
+		if ( debug > 4 ) log("cacheSuche:suchwort = "+ suchwort);
 		
 		if ( suchwort.isEmpty() ) return "";
 		
@@ -591,11 +598,11 @@ static private class AnalyseMP3 extends Thread {
 
                 if ( files != null ) {     
                         for(int i =0; i < files.length; i++ ) {
-                        	// System.out.println("processing file "+ entries[i].toString() +" matches ("+type+")$ ??? "+  entries[i].toString().matches(".*("+type+")$") );
+                        	if ( debug > 4 ) log("processing file "+ files[i].toString() +" matches ("+type+")$ ??? "+  files[i].toString().matches(".*("+type+")$") );
                         	if ( files[i].toLowerCase().endsWith(type) || files[i].toLowerCase().matches(".*("+type+")$") ) {
 
 					if ( files[i].toLowerCase().matches( suchwort ) ) {
-						//System.out.println("cacheSuche:filename:found="+ files[i]);
+						if ( debug > 4 ) log("cacheSuche:filename:found="+ files[i]);
 						filename += files[i]+config.get("conf","splitter");
 					}
 
@@ -609,9 +616,9 @@ static private class AnalyseMP3 extends Thread {
 				files = start.split("\n");
 				if ( files != null ) {     
 		                        for(int i =0; i < files.length; i++ ) {
-		                   		
+		                   		if ( debug > 4 ) log("cacheSuche:mp3:metacache:search in file = "+ files[i] );
 						if ( files[i].toLowerCase().matches( suchwort ) ) {
-							// System.out.println("cacheSuche:metadata:found="+ files[i]);
+							if ( debug > 4 ) log("cacheSuche:metadata:found="+ files[i]);
 							filename += files[i].split(config.get("conf","splitter"))[0]+config.get("conf","splitter");
 						}
 					}
@@ -1177,7 +1184,7 @@ static private class AnalyseMP3 extends Thread {
 					}
 				}
 
-				String vplayer = dos.readPipe( "pgrep -f "+ config.get("videoplayer","pname").replaceAll( config.get("conf","splitter")," ") );
+// obsolete???			String vplayer = dos.readPipe( "pgrep -f "+ config.get("videoplayer","pname").replaceAll( config.get("conf","splitter")," ") );
 
 				if ( ! dos.readPipe( "pgrep -f "+ config.get("audioplayer","pname").replaceAll( config.get("conf","splitter")," ") ).trim().isEmpty()  && !config.get("audioplayer","status").isEmpty() ) {
 
