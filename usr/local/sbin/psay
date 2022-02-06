@@ -1,0 +1,13 @@
+#!/bin/bash
+
+
+if [ "$VOICE" == "" ]; then
+        VOICE="de-DE"
+fi
+
+# ADD MORE REPLACEMENTS HERE
+
+VOICE=$(echo $VOICE | sed -e "s/^de$/de-DE/g")
+
+pico2wave -l $VOICE --wave=/tmp/picotts.wav "$1"; play /tmp/picotts.wav 2>/dev/null;rm -f /tmp/picotts.wav
+
