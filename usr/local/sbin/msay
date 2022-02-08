@@ -1,0 +1,19 @@
+#!/bin/bash
+
+#
+# ATTN: This script REQUIRES a locally installed MaryTTS Server on Port 59125
+#
+
+if [ "$VOICE" == "" ]; then 
+
+	VOICE="bits1-hsmm"
+	LANG="de"
+
+fi 
+
+if [ "$VOICE" == "de" ]; then
+	VOICE="bits1-hsmm"
+        LANG="de"
+fi
+
+sox --no-show-progress <(curl --silent --get --data "INPUT_TYPE=TEXT&OUTPUT_TYPE=AUDIO&AUDIO=WAVE_FILE&LOCALE=$LANG&VOICE=$VOICE" --data-urlencode "INPUT_TEXT=$1" http://localhost:59125/process) --type wav - | play - bass -10 treble +10 2>/dev/null
