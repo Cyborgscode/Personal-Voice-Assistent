@@ -1,6 +1,6 @@
 /*
 
-PVA is coded by Marius Schwarz since 2021
+PVA is coded by Marius Schwarz since 2021 - 2022
 
 This software is free. You can copy it, use it or modify it, as long as the result is also published on this condition.
 You only need to refer to this original version in your own readme / license file. 
@@ -56,7 +56,28 @@ public class PVA {
         }
 
 	static void say(String text) throws IOException {
-		exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), true);
+		exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), false);
+	}
+
+
+	// Speakers tend to pronounce 1746 as a year, not 1.746.
+	// we translate this to a numberformat most speakers understand better.
+
+	static String makeNumber(long c) {
+		
+		String b = "";
+		String number = ""+c;
+		for(int i=number.length();(i-3)>0;i=i-3) {
+			// log("i="+i);
+			b = "."+ number.substring(i-3,i) + b;
+			// log("b="+b);
+		}
+		int modulo = number.length()%3;
+		if ( modulo != 0 ) {
+			b = number.substring(0, modulo)+ b;
+		} else  b = b.substring(1);
+	
+		return b;
 	}
 
 	static void exec(String cmd) throws IOException {
@@ -983,12 +1004,18 @@ static private class AnalyseMP3 extends Thread {
 				}
 			}
 
-			String[] timedata = dos.readFile( getHome()+"/.config/pva/timers.conf" ).split("\n");
-			for(String data: timedata) {
-				if ( !data.trim().isEmpty() ) {
-					String[] x = data.split(":");
-					timers.put(x[0],x[1]);
+			String[] timedata;
+	
+			if ( dos.fileExists(  getHome()+"/.config/pva/timers.conf" ) ) {
+				timedata = dos.readFile( getHome()+"/.config/pva/timers.conf" ).split("\n");
+				for(String data: timedata) {
+					if ( !data.trim().isEmpty() ) {
+						String[] x = data.split(":");
+						timers.put(x[0],x[1]);
+					}
 				}
+			} else {
+				timedata = "".split(":"); // create empty array
 			}
 
 			// check if we have metadata support is enabled
@@ -1183,8 +1210,6 @@ static private class AnalyseMP3 extends Thread {
 						}
 					}
 				}
-
-// obsolete???			String vplayer = dos.readPipe( "pgrep -f "+ config.get("videoplayer","pname").replaceAll( config.get("conf","splitter")," ") );
 
 				if ( ! dos.readPipe( "pgrep -f "+ config.get("audioplayer","pname").replaceAll( config.get("conf","splitter")," ") ).trim().isEmpty()  && !config.get("audioplayer","status").isEmpty() ) {
 
@@ -1871,7 +1896,7 @@ static private class AnalyseMP3 extends Thread {
 					boolean uncertainresult = false;
 					
 					String suchergebnis = "";
-					if ( dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
+					if ( !subtext.trim().isEmpty() && dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
 						log("Suche im Cache");
 						suchergebnis = cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), ".*"+subtext+".*", ".mp3|.aac" );
 						if ( suchergebnis.isEmpty() ) {
@@ -1950,7 +1975,7 @@ static private class AnalyseMP3 extends Thread {
 
 						if ( c > 500 ) {
 							log("Ich habe "+c+" Titel gefunden");
-							say( texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUNDN").replaceAll("<TERM1>", ""+c ) );
+							say( texte.get( config.get("conf","lang_short"), "PLAYAUDIOFOUNDN").replaceAll("<TERM1>", makeNumber(c) ) );
 							return	;				
 						}
 
