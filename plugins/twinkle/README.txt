@@ -27,9 +27,10 @@ CALL ENDED REMOTLY: /home/$USER/.local/bin/twinkle.anrufende
 
 4. mkdir -p /home/$USER/.local/bin/
 
-5. copy the two twinkle files to your home ~/.local/bin/
+5. copy the two twinkle files and the pulse.in/out to your home ~/.local/bin/
+   make them executeable.
 
-6. edit those two files and replace YOUR SINKS & SOURCES
+6. edit those four files and replace YOUR SINKS & SOURCES and/or "profile" names ;)
 
 ATTN: 
 
@@ -37,12 +38,12 @@ The files contain two SINKS/SOURCE(Monitors) because I have a HDMI display with 
 
 If you only have the mainboard sinks/sources(monitors) you need to connect the input source of PVA to the output (monitor) of Twinkle and vice versa.
 
-If you have multiply sinks/sources, it's better to use two different devices which get cross connected, because the call is not mixed with PVA's answeres.
+If you have multiply sinks/sources, it's better to use two different devices which get cross connected, because of this, the call is not mixed with PVA's answeres.
 
 HINT: it's better to keep the PVA output device as usual and change Twinkle output, because it's a f****** nightmare to redirect the output of SOX ( say/gsay etc ) when it's not playing sound. It's not just a nightmare, it's simply impossible, without altering the PA sinkstate database.
 
-HOW TO FIND YOR SINK & SOURCE?
-==============================
+HOW TO FIND YOUR SINK & SOURCE?
+===============================
 
 # pactl list sources | grep Name
 # pactl list sinks | grep Name
