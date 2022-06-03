@@ -1,6 +1,6 @@
 /*
 
-PVA is coded by Marius Schwarz since 2021 - 2022
+PVA is coded by Marius Schwarz since 2021
 
 This software is free. You can copy it, use it or modify it, as long as the result is also published on this condition.
 You only need to refer to this original version in your own readme / license file. 
@@ -165,6 +165,42 @@ public class PVA {
 
                 return null;
         }
+
+	static String replaceVariables(String term) {
+
+//		log("LOOP-Start: "+ term );
+		String rpl = "";
+		String srx = zwischen( term, "{","}");
+		if ( srx != null && srx.length() > 0 ) {
+			// log( srx );
+
+			String[] rargs = srx.split(":");
+			// we need at least 3 Arguments to this or it won't work  
+
+			if ( rargs.length == 3 ) {
+				if ( rargs[0].equals("config") )
+					rpl = config.get( rargs[1], rargs[2] );
+										
+				if ( rargs[0].equals("texte") ) 				
+					rpl = texte.get( rargs[1], rargs[2] );
+
+				if (rpl == null ) rpl = "";
+										
+//				log("replacement: |"+ rpl +"|" );
+
+
+					
+			} else rpl = ""; // avoid unsolvable loop-of-death 
+								
+		} else rpl = ""; // avoid unsolvable loop-of-death 
+
+		term = term.replace("{"+srx+"}",rpl);
+								
+//		log( term );
+						
+	 	return term;
+	 }
+	 
 
 	static void handleMediaplayer(String servicename, String cmd) {
 
@@ -1268,12 +1304,21 @@ static private class AnalyseMP3 extends Thread {
 					String[] ecmd = cf.command.split(":",2);
 					if ( ecmd.length > 1 ) {
 						// Execute cmd without reprocessing
-						exec( ecmd[1].split(config.get("conf","splitter")));
+
+						String term = ecmd[1];
+						
+						// log( "EXEC:"+ term );
+												
+						while ( term.indexOf("{") >= 0 ) 
+							term = replaceVariables( term );
+						
+						exec( term.split(config.get("conf","splitter")));
 				
 					} else {
 						say( texte.get( config.get("conf","lang_short"), "SYNTAXERROR") );
 					}
 				}
+
 			
 				// The so called Star Trek part :) 
 				if ( cf.command.equals("AUTHORIZE") ) {
