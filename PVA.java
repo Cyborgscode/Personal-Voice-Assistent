@@ -1258,6 +1258,22 @@ static private class AnalyseMP3 extends Thread {
 				
 				log ( "found "+ cf.command +": "+text );
 
+				if ( cf.command.startsWith("EXEC:") ) {
+
+					// Format: EXEC:[/path/to/]exec[<SPLITTER>argument1<SPLITTER>argument2...]
+					// Example: "EXEC:pulse.outx:xqmmpx:xhdmi" translates to "pulse.out qmmp hdmi"
+				
+					// extract cmd
+				
+					String[] ecmd = cf.command.split(":",2);
+					if ( ecmd.length > 1 ) {
+						// Execute cmd without reprocessing
+						exec( ecmd[1].split(config.get("conf","splitter")));
+				
+					} else {
+						say( texte.get( config.get("conf","lang_short"), "SYNTAXERROR") );
+					}
+				}
 			
 				// The so called Star Trek part :) 
 				if ( cf.command.equals("AUTHORIZE") ) {
