@@ -11,7 +11,7 @@ if [ -n "${1}" ] && [ -n "${2}" ]; then
 
   app=$(echo $1 | sed -e "s/\\[/\\\[/g" -e  "s/\\]/\\\]/g")
   out=$2
-  appstream=$(echo $(pactl list source-outputs | grep -e "Source\ Output" -e "node.name") | grep -o "Source\ Output\ #[0-9]*\ node\.name\ =\ \"$app\"" | sed -e 's/^.*#//' -e 's/\ .*//')
+  appstream=$(echo $(pactl list source-outputs | grep -e "Source\ Output" -e "node.name") | grep -i -o "Source\ Output\ #[0-9]*\ node\.name\ =\ \"$app\"" | sed -e 's/^.*#//' -e 's/\ .*//')
 
 case "$out" in
   default|speakers|system|pa)
