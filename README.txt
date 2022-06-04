@@ -485,3 +485,9 @@ Keywords in Bot Reaction: " Keyword " + content
 "benenne dich in {NAME} um"		-> rename yourself to {NAME}
 "dein neuer name ist {NAME}"
 "dein neuer name lautet {NAME}"
+
+! This part works only, if you add the twinkle scripts & configs to your main or user config directory. 
+! The config and scripts need manual adjustment to your system to function proper! 
+! But, you can archive cool stuff with the underlying command mechanics!
+
+"schalte X auf Y um" 	-> switches pulseaudio output device for process X to sink Y
