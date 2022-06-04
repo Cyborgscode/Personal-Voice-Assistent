@@ -1284,11 +1284,12 @@ static private class AnalyseMP3 extends Thread {
 				if ( ! dos.readPipe( "pgrep -f "+ config.get("audioplayer","pname").replaceAll( config.get("conf","splitter")," ") ).trim().isEmpty()  && !config.get("audioplayer","status").isEmpty() ) {
 
 					String[] result = dos.readPipe( config.get("audioplayer","status").replaceAll(config.get("conf","splitter")," "),true).split("\n");
-					for(String x : result ) 
+					for(String x : result ) {
+						if ( x.contains("[paused]") ) break;
 						if ( x.contains("TITLE") ) {
 							playing = false; // because a player is running.
 						}
-					
+					}
 				}
 			
 				if ( playing ) 
