@@ -858,6 +858,8 @@ static private class AnalyseMP3 extends Thread {
 				) 
 				&& ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
 				
+				Vector terms = new Vector();
+				
 				cf = cc;
 						
 				// Replace context related words i.e. the APP krita is often misunderstood in german for Kreta ( the greek island )
@@ -894,6 +896,34 @@ static private class AnalyseMP3 extends Thread {
 					// Remove none REGEX
 					text = text.replaceAll( "("+cf.words+")", "" );
 				} else {
+				
+					// Before we remove all RegExpressions, we search for lonely " .* " , invert the result to have only the parts that are represented by the ".*" are left.
+					// not an easy task .. :(
+					
+					String rp = text;
+					
+//					log(rp);
+					
+					String[] parts = cf.words.split( Pattern.quote(" .* ") );
+					
+					for(String x: parts) {
+						rp = rp.replaceAll(x,"");
+//						log("replace "+x+" : result "+ rp);
+					}
+				
+					while ( rp.contains("  ") ) 
+						rp = rp.replaceAll("[  ]+"," ");
+				
+//					log(rp);
+				
+					String[] ra = rp.trim().split(" ");
+					for(String x: ra) 
+						terms.add( x );
+				
+//					log("ra.length = "+ra.length +" and Vector.size = "+ terms.size());
+					
+					cf.terms = terms;
+				
 					// Remove REGEX
 					text = text.replaceAll( cf.words ,"");
 				}
@@ -1315,6 +1345,14 @@ static private class AnalyseMP3 extends Thread {
 												
 						while ( term.indexOf("{") >= 0 ) 
 							term = replaceVariables( term );
+						
+						// replace Terms, IF a Vector cf.terms are present and filled
+						
+						if ( cf.terms.size() > 0 ) 
+							for(int i=0;i<cf.terms.size();i++)
+								term = term.replaceAll( "%"+i , (String)cf.terms.get(i) );						
+						
+						// log( term );
 						
 						exec( term.split(config.get("conf","splitter")));
 				
@@ -2761,13 +2799,25 @@ class Command {
 	public String command = "";
 	public String filter = "";
 	public String negative = "";
+	public Vector terms = null;
 	
 	public Command (String w,String c,String f,String n) {
 		this.words = w;
 		this.command = c;
 		this.filter = f;
 		this.negative = n;
+		this.terms = new Vector();
 	}
+	public Command (String w,String c,String f,String n,Vector t) {
+		this.words = w;
+		this.command = c;
+		this.filter = f;
+		this.negative = n;
+		if ( t != null ) {
+			this.terms = t;
+		} else	this.terms = new Vector();
+	}
+	
 }
 
 class Reaction {
