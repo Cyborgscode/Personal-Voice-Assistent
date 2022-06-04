@@ -55,8 +55,12 @@ public class PVA {
                 return d.get(Calendar.DAY_OF_MONTH)+"."+( months[ d.get(Calendar.MONTH) ] )+" "+d.get(Calendar.HOUR_OF_DAY)+":"+ minutes;
         }
 
-	static void say(String text) throws IOException {
-		exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), false);
+	static void say(String text, boolean wait) throws IOException {
+		exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
+	}
+
+        static void say(String text) throws IOException {
+		say( text, false );        
 	}
 
 
@@ -1087,7 +1091,7 @@ static private class AnalyseMP3 extends Thread {
 							timers.remove(x[0]);
 							String text = texte.get( config.get("conf","lang_short"), "MAKETIMERRESPONSE") .replaceAll("<TERM>", x[1]);
 							log( text );
-							say( text );
+							say( text , true );
 						 	update = true;
 						}
 					}
