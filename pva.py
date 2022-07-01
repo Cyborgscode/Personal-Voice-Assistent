@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# This Script is modified for PVA usage
+# it's originally shipped by the VOSK package from Alpha Cephi itself.
+
+
 import argparse
 import os
 import queue
@@ -68,7 +72,7 @@ try:
             while True:
                 data = q.get()
                 if rec.AcceptWaveform(data):
-                    # print(rec.Result()
+                    # print(rec.Result() // instead of printing the final sentence, we give it to pva as JSON
                     str = rec.Result();
                     os.system( "java PVA '"+ str.replace("'","")  +"'");
 
