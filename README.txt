@@ -115,10 +115,16 @@ use "sudo -i" or "sudo su" or just "su" if you still have a root password.
 
 pip3 install sounddevice vosk
 
+# NOTE: if you wanne do development work on this, your repo should be located somewhere else, as you will move files out of the repo directories and git won't like that ;)
+
+# Example if you i.e. used a zip archiv of pva
+
 mkdir -p /usr/share/pva
 cd /usr/share/pva
-clone the repo content here 
+copy the relevant zip content here (means, do not include "master" or something similar in the path)
 mv etc/pva /etc/
+
+# NOTE: you don't need to "move" files into place, you can of course copy them i.e. with cp or "tar c files | tar x -C /target"
 
 Example on the modelfile:
 
