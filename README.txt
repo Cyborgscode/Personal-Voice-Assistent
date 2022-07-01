@@ -124,7 +124,7 @@ cd /usr/share/pva
 copy the relevant zip content here (means, do not include "master" or something similar in the path)
 mv etc/pva /etc/
 
-# NOTE: you don't need to "move" files into place, you can of course copy them i.e. with cp or "tar c files | tar x -C /target"
+# NOTE: you don't need to "move" files into place, you can of course copy them i.e. with cp or "tar c etc | tar x -C /"
 
 Example on the modelfile:
 
@@ -132,7 +132,9 @@ unzip vosk-model-small-de-0.21.zip
 ln -s vosk-model-small-de-0.21 model
 
 mkdir -p /usr/local/sbin
-cp *say /usr/local/sbin 
+cp usr/local/sbin/*say /usr/local/sbin 
+
+# NOTE: alternative: "tar c usr |tar x -C /"
 
 now compile the JAVA Classes :
 
