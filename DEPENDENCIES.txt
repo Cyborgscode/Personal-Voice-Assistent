@@ -1,0 +1,11 @@
+02.07.2022 :
+
+for the new IMAP Notification Service, we need this package:
+
+javax.mail package from https://maven.java.net/content/repositories/releases/com/sun/mail/javax.mail/1.6.2/javax.mail-1.6.2.jar
+
+Compile instructions change to :
+
+cd /usr/share/pva
+javac --release 8 PVA.java -cp "./javax.mail-1.6.2.jar:."
+
