@@ -30,6 +30,10 @@ To run it, you need at least:
 
 # JAVA deps have been removed, to prepare for distro packaging
 
+O=== NEWS
+
+02.07.2022 Upcoming Dependency on javax.mail package.
+
 O=== How to install:
 
 We don't need fancy frameworks or complicated makefiles, so relax, it's just done in about 5 minutes :) The author uses Fedora as OS,
