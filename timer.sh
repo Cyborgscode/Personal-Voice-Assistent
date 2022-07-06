@@ -4,4 +4,6 @@
 # it will just load the timer db and check, if a reminder should be presented (accustically)
 
 cd /usr/share/pva
-java PVA
+CP=""
+for file in lib/*;do  CP="$CP:./$file"; done 
+java -cp "$CP:." PVA
