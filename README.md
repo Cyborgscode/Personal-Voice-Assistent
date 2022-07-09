@@ -367,7 +367,7 @@ Keyword-Sentences in Human Response Simulation:
 
 Keywords in Bot Reaction: " Keyword " + content
 
-
+```
 "autorisierung code {TERM}"		-> give secret code to ack previous command
 "autorisierung neuer code {TERM} "	-> set new secret code 
 
@@ -529,3 +529,4 @@ Keywords in Bot Reaction: " Keyword " + content
 ! But, you can archive cool stuff with the underlying command mechanics!
 
 "schalte X auf Y um" 	-> switches pulseaudio output device for process X to sink Y
+```
