@@ -52,6 +52,39 @@ if [ ! -e $HOME/.config/systemd/user/pvatimer.timer ]; then
 	cp systemd/pvatimer.timer $HOME/.config/systemd/user/pvatimer.timer
 	systemctl --user enable --now pvatimer.timer
 fi
+if [ ! -e $HOME/.config/pva/kspass.txt ]; then
+
+        echo "$RANDOMkeystore$RANDOM" | /usr/bin/sha256sum | sed -e "s/ *-.*$//" > $HOME/.config/pva/kspass.txt
+        
+fi
+
+if [ ! -e $HOME/.config/pva/.keystore ]; then
+        
+        storepass=$(cat $HOME/.config/pva/kspass.txt)
+
+        NAME=$(grep "^conf:.*keyword" /etc/pva/conf.d/* $HOME/.config/pva/conf.d/* | tail -n 1 | sed -e "s/^.*,//g" -e "s/\"//g")
+        if [ "$NAME" != "" ]; then
+
+        LANG=C echo "$NAME
+PVA Server $HOSTNAME
+PVA
+unkown
+unkown
+DE
+Yes" | LANG=C /usr/bin/keytool -genkey -alias PVA -keyalg RSA -validity 3650 -storepass "$storepass" -storetype pkcs12 -keystore $HOME/.config/pva/.keystore 2>/dev/null
+
+        else
+
+         LANG=C echo "Carola
+PVA Server $HOSTNAME
+PVA
+unkown
+unkown
+DE
+Yes" | LANG=C /usr/bin/keytool -genkey -alias PVA -keyalg RSA -validity 3650 -storepass "$storepass" -storetype pkcs12 -keystore $HOME/.config/pva/.keystore 2>/dev/null
+
+        fi
+fi
 
 MLANG=$(grep "^conf:.*lang_short" /etc/pva/conf.d/* $HOME/.config/pva/conf.d/* $HOME/.config/pva/pva.conf | tail -n 1 | sed -e "s/^.*,//g" -e "s/\"//g")
 MODEL=$(ls -d *-$MLANG-*);
