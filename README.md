@@ -32,10 +32,6 @@ sox                (needed in case you wanne make use of GTTS)
 
 # JAVA deps have been removed to prepare for distro packaging
 
-### NEWS
-
-02.07.2022 Upcoming Dependency on javax.mail package.
-
 ### How to install:
 
 We don't need fancy frameworks or complicated makefiles, so relax, it's just done in about 5 minutes :) The author uses Fedora as OS,
