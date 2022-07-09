@@ -208,6 +208,7 @@ To add a model, just download and unpack it there.
 
 Example:
 
+```
 $ ls -l /usr/share/pva/
 insgesamt 244
 -rw-r--r--. 1 root root   478 26. Jan 10:50  AppResult.class
@@ -231,6 +232,7 @@ drwxr-xr-x. 2 root root  4096 26. Jan 11:17  systemd
 -rwxr-xr-x. 1 root root    41 25. Jan 20:03  timer.sh
 drwxr-xr-x. 8 root root  4096 15. Sep 00:21  vosk-model-de-0.21
 drwxr-xr-x. 6 root root  4096  8. Dez 2020   vosk-model-small-en-us-0.15
+```
 
 it does detect small and large model files, but don't use both per language.
 
@@ -246,19 +248,21 @@ In case your desired app does not have the same functionality as the default app
 
 SETUP:
 
-You noticed the "pva.conf.default" file? It's now completely useless, but may give some impression on how to configure it.
+You noticed the `pva.conf.default` file? It's now completely useless, but may give some impression on how to configure it.
 
 To start, visit /etc/pva/conf.d/  and check the german numbers file. It's the equivilant to a "locale" file. It container numbers, monthnames and weekdaynames etc. Clone it as 10-<yourlanguage>-numbers.conf and change the content accordingly. Most languages of the western world will match the format used. Numbers from 0-19 differently but from 20+ calculateable, 7 days a week etc. If you need to use a none romanic based language, PVA may needs to be rewritten and for this we surely need to your help with examples, rulesets etc. 
 
 There are two ways to handle changes: 
 
-you can do them for YOUR useraccount only by placing the configfiles into ~/.config/pva/conf.d/  OR
-you can write new configfiles with higher startnumbers in /etc/pva/conf.d/ like 10-defaults-english.conf and just rewrite and slightly adapt the texts used in the german default file. 
+You can do them for YOUR useraccount only by placing the configfiles into ~/.config/pva/conf.d/  OR
+You can write new configfiles with higher startnumbers in /etc/pva/conf.d/ like 10-defaults-english.conf and just rewrite and slightly adapt the texts used in the german default file. 
 
 The higher number ( 10 ) means, this configfile is read later, which means, it's content is overwriting stuff the is unique. 
 
+```
 text:"de","KEYWORD","meine text version in deutsch"
 command:"erzeuge|metadata","MAKEMETACACHE",""
+```
 
 Of course you do not overwrite the german "text" base, instead you change it like this:
 
