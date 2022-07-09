@@ -21,41 +21,40 @@ https://alphacephei.com/vosk/models
 To run it, you need at least:
 
 ```
-    Python3
-    pip3
-    portaudio
-    mbrola             (found on github)
-    espeak
-    vosk               (found on github)
-    sox                (needed in case you wanne make use of GTTS)
+Python3
+pip3
+portaudio
+mbrola             (found on github)
+espeak
+vosk               (found on github)
+sox                (needed in case you wanne make use of GTTS)
 ```
 
 # JAVA deps have been removed, to prepare for distro packaging
 
-=== NEWS
+### NEWS
 
 02.07.2022 Upcoming Dependency on javax.mail package.
 
-=== How to install:
+### How to install:
 
 We don't need fancy frameworks or complicated makefiles, so relax, it's just done in about 5 minutes :) The author uses Fedora as OS,
 so if you run Ubuntu or Arch, your install commands will vary a bit.
 
-== if you want to use GTTS instead of espeak/mbrola
+## if you want to use GTTS instead of espeak/mbrola:
 
 You need to checkout gsay, change your config to use gsay as "say" app and install gtts for your distro:
 
 i.E. Fedora: `dnf install gtts`
 
 ## WARNING: 
-## Your personal privacy is at risk, if you use gtts, as the text of the what PVA answers ( which includes repeats of what you said ) 
-## is transfered to a Google server, for which you need an active internet connection too. 
+## Your personal privacy is at risk, if you use gtts, as the text of the what PVA answers ( which includes repeats of what you said ) is transferred to a Google server, for which you need an active internet connection too. 
 
-== Espeak:
+## Espeak:
 
 ```sudo dnf -y install espeak```
 
-== Mbrola: ( OPTIONAL, but than you have to live with espeak ;) 
+## Mbrola: ( OPTIONAL, but than you have to live with espeak ;) ) 
 
 # The say script now checks if mbrola is available. if it's not, it uses native espeak which sounds terrible ;)
 
@@ -77,7 +76,7 @@ Just replace de5 with your prefered language and don't forget to translate the r
 
 If you need help with mbrola: https://marius.bloggt-in-braunschweig.de/2021/03/24/mbrola-etwas-bessere-sprachsynthese/
 
-== Python3 + Pip3 + Portaudio:
+## Python3 + Pip3 + Portaudio:
 
 ```pip3 install sounddevice```
 
@@ -85,23 +84,23 @@ ATTN: do not install it as user, if you wanne install it systewide ( see below o
 
 ```sudo dnf install python3-pyaudio espeak```
 
-== Vosk:
+## Vosk:
 
 On your desktop you can directly install vosk :
 
-pip3 install vosk
+```pip3 install vosk```
 
 ATTN: do not install it as user, if you wanne install it systewide ( see below on "Installation" )
 
 If you wanne run this on a Pinephone, as recently demonstrated, you need atleast this BETA version:
 
-pip3 install https://github.com/alphacep/vosk-api/releases/download/v0.3.30/vosk-0.3.30-py3-none-linux_aarch64.whl
+```pip3 install https://github.com/alphacep/vosk-api/releases/download/v0.3.30/vosk-0.3.30-py3-none-linux_aarch64.whl```
 
 check if there is a newer version, before you run this command.
 
 Demonstration: http://static.bloggt-in-braunschweig.de/Pinephone-PVA-TEST1.mp4
 
-O== Getting the right language model:
+## Getting the right language model:
 
 Download them here:
 
@@ -125,35 +124,43 @@ use "sudo -i" or "sudo su" or just "su" if you still have a root password.
 
 pip3 install sounddevice vosk
 
-# NOTE: if you wanne do development work on this, your repo should be located somewhere else, as you will move files out of the repo directories and git won't like that ;)
+# NOTE: If you wanna do development work on this, your repo should be located somewhere else, as you will move files out of the repo directories and git won't like that ;)
 
-# Example if you i.e. used a zip archiv of pva
+# Example if you i.e. used a zip archive of pva
 
+```
 mkdir -p /usr/share/pva
 cd /usr/share/pva
 copy the relevant zip content here (means, do not include "master" or something similar in the path)
 mv etc/pva /etc/
+```
 
-# NOTE: you don't need to "move" files into place, you can of course copy them i.e. with cp or "tar c etc | tar x -C /"
+# NOTE: You don't need to "move" files into place, you can of course copy them i.e. with cp or "tar c etc | tar x -C /"
 
 Example on the modelfile:
 
+```
 unzip vosk-model-small-de-0.21.zip
 ln -s vosk-model-small-de-0.21 model
 
 mkdir -p /usr/local/sbin
 cp usr/local/sbin/*say /usr/local/sbin 
+```
 
-# NOTE: alternative: "tar c usr |tar x -C /"
+# NOTE: alternative: `tar c usr |tar x -C /`
 
 now compile the JAVA Classes :
 
+```
 cd /usr/share/pva
 javac PVA.java
+```
 
 if you do not have other java apps running with 8 you can use "javac PVA.java" and compile for the latest version. If you see error messages, use:
 
+```
 javac --release 8 PVA.java
+```
 
 move desktop/* to /usr/share/applications/
 
@@ -169,8 +176,11 @@ Check the processlist if a process "python3" appeared for pva.py. If not, the st
 In this case:
 
 switch to your desktop userid
+
+```
 cd /usr/share/pva
 ./pva 
+```
 
 If you did not install the german model file, you need to change the /etc/pva/conf.d/01-default.conf to your model name, by overwriting the config in a user.conf file:
 
@@ -180,14 +190,16 @@ In case it does not exist, the PVA start failed much earlier in the chain and yo
 
 To overwrite the config you create this:
 
+```
 mkdir -p ~/.config/pva/conf.d/
 echo 'vosk:"model","vosk-model-de-0.21"' > ~/.config/pva/conf.d/00-model-overwrite.conf
+```
 
-Of course you have to use the model name, you need, not this example ;) 
+Of course you have to use the model name you need, not this example ;) 
 
 Don't forget to update it everytime you update the model version. 
 
-O== Why is it in the config file and not defaulting to the symlink "model" from above?
+## Why is it in the config file and not defaulting to the symlink "model" from above?
 
 Because PVA can switch the model on a voice command :) It will be changed on the next app restart.
 
@@ -196,7 +208,7 @@ To add a model, just download and unpack it there.
 
 Example:
 
-$ ll /usr/share/pva/
+$ ls -l /usr/share/pva/
 insgesamt 244
 -rw-r--r--. 1 root root   478 26. Jan 10:50  AppResult.class
 drwxrwxr-x. 3 root root  4096 30. Dez 2020   com
@@ -234,9 +246,9 @@ In case your desired app does not have the same functionality as the default app
 
 SETUP:
 
-You noticed the "pva.conf.default" file? It's now completly useless, but may give some impression on how to configure it.
+You noticed the "pva.conf.default" file? It's now completely useless, but may give some impression on how to configure it.
 
-To start visit /etc/pva/conf.d/  and check the german numbers file. It's the equivilant to a "locale" file. It container numbers, monthnames and weekdaynames etc. Clone it as 10-<yourlanguage>-numbers.conf and change the content accordingly. Most languages of the western world will match the format used. Numbers from 0-19 differently but from 20+ calculateable, 7 days a week etc. If you need to use a none romanic based language, PVA may needs to be rewritten and for this we surely need to your help with examples, rulesets etc. 
+To start, visit /etc/pva/conf.d/  and check the german numbers file. It's the equivilant to a "locale" file. It container numbers, monthnames and weekdaynames etc. Clone it as 10-<yourlanguage>-numbers.conf and change the content accordingly. Most languages of the western world will match the format used. Numbers from 0-19 differently but from 20+ calculateable, 7 days a week etc. If you need to use a none romanic based language, PVA may needs to be rewritten and for this we surely need to your help with examples, rulesets etc. 
 
 There are two ways to handle changes: 
 
