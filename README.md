@@ -250,7 +250,7 @@ SETUP:
 
 You noticed the `pva.conf.default` file? It's now completely useless, but may give some impression on how to configure it.
 
-To start, visit /etc/pva/conf.d/  and check the german numbers file. It's the equivilant to a "locale" file. It container numbers, monthnames and weekdaynames etc. Clone it as 10-<yourlanguage>-numbers.conf and change the content accordingly. Most languages of the western world will match the format used. Numbers from 0-19 differently but from 20+ calculateable, 7 days a week etc. If you need to use a none romanic based language, PVA may needs to be rewritten and for this we surely need to your help with examples, rulesets etc. 
+To start, visit `/etc/pva/conf.d/`  and check the german numbers file. It's the equivilant to a `locale` file. It container numbers, monthnames and weekdaynames etc. Clone it as `10-<yourlanguage>-numbers.conf` and change the content accordingly. Most languages of the western world will match the format used. Numbers from 0-19 differently but from 20+ calculateable, 7 days a week etc. If you need to use a none romanic based language, PVA may needs to be rewritten and for this we surely need to your help with examples, rulesets etc. 
 
 There are two ways to handle changes: 
 
@@ -299,7 +299,7 @@ There are two places configs are found:
 ~/.config/pva/conf.d/00-test.conf
 ```
 
-The actual config "./pva.conf" is always loaded as the last config file, to overwrite existing, alternative settings . I.E. if you changed the searchengine via "use duckduckgo as searchengine" and you had google before, you need to save this up. The file is found in $HOME/.config/pva/ .
+The actual config `./pva.conf` is always loaded as the last config file, to overwrite existing, alternative settings . I.E. if you changed the searchengine via "use duckduckgo as searchengine" and you had google before, you need to save this up. The file is found in $HOME/.config/pva/ .
 
 COMMANDS:
 
@@ -323,12 +323,12 @@ You need this to remove words, that shall not part of the search term.
 
 ## more advanced commands:
 
-There are two different ways to start playing music:  "PLAYAUDIO" and "PLAYMUSIC"
+There are two different ways to start playing music:  `PLAYAUDIO` and `PLAYMUSIC`
 
 They do the same thing, but sligtly different:
 
-PLAYAUDIO is a cmd to search for a song or artistname and adds all matches to a new playlist, afterwards the playback starts.
-If you use the PLAYAUDIO keywords and ADD the "PLAYMUSICRADD" keywords, the playlist is not cleared and all matches will be added to the list.
+`PLAYAUDIO` is a cmd to search for a song or artistname and adds all matches to a new playlist, afterwards the playback starts.
+If you use the PLAYAUDIO keywords and ADD the `PLAYMUSICRADD` keywords, the playlist is not cleared and all matches will be added to the list.
 
 PLAYMUSIC means, "start playback" whatever is in the list, from the actual position in the list. You can use this to restart a stopped playback. 
 But PLAYMUSIC can do more, it can randomly search the database and play a song. If you use PLAYMUSIC + PLAYMUSICRANDOM + PLAYMUSICRADD together, 
@@ -336,13 +336,13 @@ it adds those randomly loaded songs to the end of the current playlist.
 
 You find those keywords defined in the textsection:
 
-text:"de","PLAYMUSICRANDOM",".*(zufällig).*"
-text:"de","PLAYMUSICRADD",".*(noch|dazu).*"
+`text:"de","PLAYMUSICRANDOM",".*(zufällig).*"`
+`text:"de","PLAYMUSICRADD",".*(noch|dazu).*"`
 
 in english:
 
-text:"en","PLAYMUSICRANDOM",".*(random).*"
-text:"en","PLAYMUSICRADD",".*(add).*"
+`text:"en","PLAYMUSICRANDOM",".*(random).*"`
+`text:"en","PLAYMUSICRADD",".*(add).*"`
 
 As you see, it's a Regular Expression, which is a mighty tool to match patterns in texts. If you know how to use them, you can have a lot of fun here,
 BUT REMEMBER, all additional keywords need to be removed in the cmd section to they end up as parts of the searchterm!
