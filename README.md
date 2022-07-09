@@ -12,7 +12,7 @@ Hi,
 
 This project depends heavily on the AlphaCephei Software VOSK, which can be found here:
 
-https://alphacephei.com/vosk/
+https://alphacephei.com/vosk/Why is there 
 
 Language models for 18 different languages can be found here: 
 
@@ -497,7 +497,7 @@ Keywords in Bot Reaction: " Keyword " + content
 "wiedergabe|starten
 "wiedergabe|fortsetzen
 
-"video stop"				-> stop videoplayck FULLY <- this is an important difference regarding PAUSE!
+"video stop"				-> stop videoplayback FULLY <- this is an important difference regarding PAUSE!
 "wiedergabe|stop
 
 "pausiere video"			-> pause videoplayback
