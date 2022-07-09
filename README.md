@@ -1,11 +1,11 @@
-/*
-
-PVA is coded by Marius Schwarz in 2021-2022
-
-This software is free. You can copy it, use it or modify it, as long as the result is also published on this condition.
-You only need to refer to this original version in your own readme / license file. 
-
-*/
+> /*
+>
+> PVA is coded by Marius Schwarz in 2021-2022
+>
+> This software is free. You can copy it, use it or modify it, as long as the result is also published on this condition.
+> You only need to refer to this original version in your own readme / license file. 
+>
+> */
 
 
 Hi,
@@ -20,6 +20,7 @@ https://alphacephei.com/vosk/models
 
 To run it, you need at least:
 
+```
     Python3
     pip3
     portaudio
@@ -27,33 +28,34 @@ To run it, you need at least:
     espeak
     vosk               (found on github)
     sox                (needed in case you wanne make use of GTTS)
+```
 
 # JAVA deps have been removed, to prepare for distro packaging
 
-O=== NEWS
+=== NEWS
 
 02.07.2022 Upcoming Dependency on javax.mail package.
 
-O=== How to install:
+=== How to install:
 
 We don't need fancy frameworks or complicated makefiles, so relax, it's just done in about 5 minutes :) The author uses Fedora as OS,
 so if you run Ubuntu or Arch, your install commands will vary a bit.
 
-O== if you want to use GTTS instead of espeak/mbrola
+== if you want to use GTTS instead of espeak/mbrola
 
-your need to checkout gsay, change your config to use gsay as "say" app and install gtts for your distro:
+You need to checkout gsay, change your config to use gsay as "say" app and install gtts for your distro:
 
-i.E. Fedora: dnf install gtts
+i.E. Fedora: `dnf install gtts`
 
 ## WARNING: 
-## your personal privacy is at risk, if you use gtts, as the text of the what PVA answeres ( which includes repeats of what you said ) 
-## is tranfsered to a Google server, for which you need an active internet connection too. 
+## Your personal privacy is at risk, if you use gtts, as the text of the what PVA answers ( which includes repeats of what you said ) 
+## is transfered to a Google server, for which you need an active internet connection too. 
 
-O== Espeak:
+== Espeak:
 
-sudo dnf  -y install espeak
+```sudo dnf -y install espeak```
 
-O== Mbrola: ( OPTIONAL, but than you have to live with espeak ;) 
+== Mbrola: ( OPTIONAL, but than you have to live with espeak ;) 
 
 # The say script now checks if mbrola is available. if it's not, it uses native espeak which sounds terrible ;)
 
@@ -64,22 +66,26 @@ https://github.com/numediart/MBROLA-voices
 
 Compile: ( needs gcc )
 
-cd MBROLA-master; make; cp Bin/mbrola /usr/local/sbin/“
+```
+cd MBROLA-master
+make
+cp Bin/mbrola /usr/local/sbin/“
+```
 
 experiment a bit with the best voice for you. You will find the "say" Bash script in this repo, but it will default to de5, as it's setuped for german.
 Just replace de5 with your prefered language and don't forget to translate the responses in PVA.java ;)
 
 If you need help with mbrola: https://marius.bloggt-in-braunschweig.de/2021/03/24/mbrola-etwas-bessere-sprachsynthese/
 
-O== Python3 + Pip3 + Portaudio:
+== Python3 + Pip3 + Portaudio:
 
-pip3 install sounddevice
+```pip3 install sounddevice```
 
 ATTN: do not install it as user, if you wanne install it systewide ( see below on "Installation" )
 
-sudo dnf install python3-pyaudio espeak
+```sudo dnf install python3-pyaudio espeak```
 
-O== Vosk:
+== Vosk:
 
 On your desktop you can directly install vosk :
 
