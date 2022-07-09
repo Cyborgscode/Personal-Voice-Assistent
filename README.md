@@ -48,7 +48,7 @@ You need to checkout gsay, change your config to use gsay as "say" app and insta
 i.E. Fedora: `dnf install gtts`
 
 ## WARNING: 
-## Your personal privacy is at risk, if you use gtts, as the text of the what PVA answers ( which includes repeats of what you said ) is transferred to a Google server, for which you need an active internet connection too. 
+### Your personal privacy is at risk if you use gtts, as the text of the what PVA answers ( which includes repeats of what you said ) is transferred to a Google server, for which you need an active internet connection too. 
 
 ## Espeak:
 
@@ -56,7 +56,7 @@ i.E. Fedora: `dnf install gtts`
 
 ## Mbrola: ( OPTIONAL, but than you have to live with espeak ;) ) 
 
-# The say script now checks if mbrola is available. if it's not, it uses native espeak which sounds terrible ;)
+The say script now checks if mbrola is available. if it's not, it uses native espeak which sounds terrible ;)
 
 Download:
 
@@ -71,7 +71,7 @@ make
 cp Bin/mbrola /usr/local/sbin/“
 ```
 
-experiment a bit with the best voice for you. You will find the "say" Bash script in this repo, but it will default to de5, as it's setuped for german.
+Experiment a bit with the best voice for you. You will find the `say` Bash script in this repo, but it will default to de5, as it's setuped for german.
 Just replace de5 with your prefered language and don't forget to translate the responses in PVA.java ;)
 
 If you need help with mbrola: https://marius.bloggt-in-braunschweig.de/2021/03/24/mbrola-etwas-bessere-sprachsynthese/
@@ -80,7 +80,7 @@ If you need help with mbrola: https://marius.bloggt-in-braunschweig.de/2021/03/2
 
 ```pip3 install sounddevice```
 
-ATTN: do not install it as user, if you wanne install it systewide ( see below on "Installation" )
+ATTN: do not install it as user, if you wanne install it systemwide ( see below on "Installation" )
 
 ```sudo dnf install python3-pyaudio espeak```
 
@@ -90,9 +90,9 @@ On your desktop you can directly install vosk :
 
 ```pip3 install vosk```
 
-ATTN: do not install it as user, if you wanne install it systewide ( see below on "Installation" )
+ATTN: do not install it as user, if you wanna install it systewide ( see below on "Installation" )
 
-If you wanne run this on a Pinephone, as recently demonstrated, you need atleast this BETA version:
+If you wanna run this on a Pinephone, as recently demonstrated, you need atleast this BETA version:
 
 ```pip3 install https://github.com/alphacep/vosk-api/releases/download/v0.3.30/vosk-0.3.30-py3-none-linux_aarch64.whl```
 
