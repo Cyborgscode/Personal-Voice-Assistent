@@ -12,7 +12,8 @@ You only need to refer to this original version in your own readme / license fil
 
 package data;
 
-import java.util.*;
+import java.util.Enumeration;
+
 import hash.*;
 
 

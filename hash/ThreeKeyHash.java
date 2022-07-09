@@ -13,12 +13,10 @@ package hash;
 
 import java.util.Hashtable;
 import java.util.Enumeration;
-import hash.StringHash;
-import hash.TwoKeyHash;
 
 public class ThreeKeyHash {
 
-        private Hashtable root = new Hashtable();
+        private Hashtable<String, Object> root = new Hashtable<String, Object>();
 
         public void put(String key,String key2,String key3,String value) {
 
@@ -56,7 +54,7 @@ public class ThreeKeyHash {
                 return null;
         }
 
-        public Enumeration keys() {
+        public Enumeration<String> keys() {
                 return root.keys();
         }
 

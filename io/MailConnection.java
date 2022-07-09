@@ -7,7 +7,6 @@ import javax.mail.*;
 import javax.mail.Flags;
 import javax.mail.search.*;
 import java.util.Properties;
-import hash.*;
 
 public class MailConnection {
 

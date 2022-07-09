@@ -42,12 +42,12 @@ public class NumericTreeSort {
                 counter ++;
 
                 if ( key == null  ) {
-                        key = new Long( s );
+                        key = Long.valueOf(s);
                         value = v;
                         return;
                 }
 
-                if ( key.compareTo(new Long(s) )> 0) {
+                if ( key.compareTo(Long.valueOf(s) )> 0) {
                         if ( links == null ) links = new NumericTreeSort();
                         links.add(s,v);
                 } else  {
@@ -95,9 +95,10 @@ public class NumericTreeSort {
                 if ( links!=null ) links.reset();
                 if ( rechts!=null ) rechts.reset();
                 counter = 0;
-                key = null;String v="";
+                key = null;
                 links = null;
                 rechts = null;
+                value="";
         }
 
 

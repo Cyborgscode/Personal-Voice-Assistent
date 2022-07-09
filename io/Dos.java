@@ -189,13 +189,11 @@ public class Dos {
 
             try{
                     File file = new File(filename);
-                    if ( file != null ) {
 	                    DataInputStream in = new DataInputStream(new FileInputStream(filename));
 	                    byte[] b = new byte[(int) file.length()];
 	                    in.read(b);
 	                    in.close();
 	                    return new String(b);
-	             } else System.out.println("FileNotFoundError: " + filename);
             } catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
             }
