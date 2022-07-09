@@ -29,10 +29,12 @@ public class PVA {
 	static Vector<Reaction> reactions = new Vector<Reaction>();
 	static Vector<Command> commands   = new Vector<Command>();
 	static Vector<Contact> contacts   = new Vector<Contact>();
+	static Vector<MailboxData> mailboxes  = new Vector<MailboxData>();
 	static StringHash timers	  = new StringHash();
 
 	static String text = "";
 	static String text_raw = "";
+	static int mbxid = 1;
 	static boolean reaction = false;
 	static Dos dos = new Dos();
 	static String[] za = null;
@@ -176,7 +178,7 @@ public class PVA {
 		String rpl = "";
 		String srx = zwischen( term, "{","}");
 		if ( srx != null && srx.length() > 0 ) {
-			// log( srx );
+//			log( srx );
 
 			String[] rargs = srx.split(":");
 			// we need at least 3 Arguments to this or it won't work  
@@ -192,13 +194,12 @@ public class PVA {
 										
 //				log("replacement: |"+ rpl +"|" );
 
-
-					
+		
 			} else rpl = ""; // avoid unsolvable loop-of-death 
 								
 		} else rpl = ""; // avoid unsolvable loop-of-death 
 
-		term = term.replace("{"+srx+"}",rpl);
+		term = term.replace("{"+srx+"}",rpl.replace("%VOICE", config.get("conf","lang_short")) );
 								
 //		log( term );
 						
@@ -994,7 +995,7 @@ static private class AnalyseMP3 extends Thread {
 					conflines = dos.readFile(conffile).split("\n");
 				} else  conflines = dos.readFile("./pva.conf.default").split("\n");
 				
-				// our config is a three dimentional array 
+				// our config is a two dimentional array 
 				// in PHP this would look like $config[$key1][$key2] = $value
 
 				for(String line : conflines) {
@@ -1055,6 +1056,21 @@ static private class AnalyseMP3 extends Thread {
 									commands.add( new Command( level2[0].trim() , level2[1].trim() , level2[2].trim(), "" ) );
 								} else  commands.add( new Command( level2[0].trim() , level2[1].trim() , "" , "") );
 	
+							} else if ( level1[0].trim().equals("mailbox") ) {
+							
+								if ( level2.length == 8 ) {
+									mailboxes.add( 
+										new MailboxData( mbxid++, level2[0].trim(),
+											     level2[1].trim(),
+											     level2[2].trim(),
+											     level2[3].trim(),
+											     Boolean.parseBoolean(level2[4].trim()),Integer.parseInt(level2[5].trim()),
+											     Boolean.parseBoolean(level2[6].trim()),Integer.parseInt(level2[7].trim()) )
+									);
+								} else {
+									log("ERROR:syntaxerror:config:"+line);
+								}
+							
 							} else { 
 									
 								if ( level2.length == 2 ) {
@@ -1108,6 +1124,19 @@ static private class AnalyseMP3 extends Thread {
 			} else {
 				// defaulttext for debugreasons
 				// text = keyword +" ich möchte queen hören";
+	
+				if ( mailboxes.size() > 0 ) {
+					// don't load, if not needed
+					String mailtext = "";
+					MailConnection mc = new MailConnection();
+					for(int i=0; i < mailboxes.size(); i++)	{
+						MailboxData m = mailboxes.get(i);
+						mailtext += mc.checkmail(m);
+					}
+					if ( !mailtext.isEmpty() ) {
+						say(mailtext,true);
+					}
+				}
 	
 				long now = new Date().getTime();	
 				boolean update = false;			
@@ -1243,7 +1272,7 @@ static private class AnalyseMP3 extends Thread {
 			for(int i=0; i < reactions.size(); i++)	{
 
 				Reaction r = (Reaction)reactions.get(i);
-		
+			
 				if ( und( r.positives ) && ( r.negatives.isEmpty() || !und( r.negatives ) ) ) {
 					
 					temp.add( r );
@@ -1280,7 +1309,7 @@ static private class AnalyseMP3 extends Thread {
 						}
 					}
 				}
-
+				
 				if ( ! dos.readPipe( "pgrep -f "+ config.get("audioplayer","pname").replaceAll( config.get("conf","splitter")," ") ).trim().isEmpty()  && !config.get("audioplayer","status").isEmpty() ) {
 
 					String[] result = dos.readPipe( config.get("audioplayer","status").replaceAll(config.get("conf","splitter")," "),true).split("\n");
@@ -1355,7 +1384,7 @@ static private class AnalyseMP3 extends Thread {
 						
 						// log( term );
 						
-						exec( term.split(config.get("conf","splitter")));
+						exec( term.split(config.get("conf","splitter")),true);
 				
 					} else {
 						say( texte.get( config.get("conf","lang_short"), "SYNTAXERROR") );
@@ -1754,13 +1783,13 @@ static private class AnalyseMP3 extends Thread {
 									     ) 
 									   ) {
 										if ( !stop ) {
-											exec( (config.get("app","phone")+"x:xtel:"+ parts[1]).split(config.get("conf","splitter")));
+											exec( (config.get("app","phone")+ parts[1]).split(config.get("conf","splitter")));
 											stop = true;
 										}
 										
 									} else say( texte.get( config.get("conf","lang_short"), "CANTDECIDEWHOMTOCALL") );
 								} else {
-									exec( (config.get("app","phone")+"x:xtel:"+ parts[1] ).split(config.get("conf","splitter")));
+									exec( (config.get("app","phone")+ parts[1] ).split(config.get("conf","splitter")));
 								}
 							} else log("keine telefonapp konfiguriert");
 						}
@@ -2008,7 +2037,8 @@ static private class AnalyseMP3 extends Thread {
 							String[] searchargs = subtext.split(" ");
 		                       			String pattern = ".*";
 		                       			for( String arg : searchargs ) {
-								pattern += arg.trim() +".*";
+		                       				if ( !arg.trim().isEmpty() ) 
+									pattern += arg.trim() +".*";
 							}
 							if ( debug > 4 ) log("searchpattern = "+pattern );
 							suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), pattern, ".mp3|.aac" );
@@ -2019,8 +2049,10 @@ static private class AnalyseMP3 extends Thread {
 		                       			String pattern = "(";
 		                       			int pc = 0;
 		                       			for( String arg : searchargs ) {
-								pattern += arg.trim() +"|";
-								pc++;
+	                       					if ( !arg.trim().isEmpty() ) {
+									pattern += arg.trim() +"|";
+									pc++;
+								}
 							}
 							if ( pattern.endsWith("|") ) pattern = pattern.substring(0,pattern.length()-1);
 							pattern += "){1,}.*";
@@ -2034,7 +2066,8 @@ static private class AnalyseMP3 extends Thread {
 							String[] searchargs = subtext.split(" ");
 		                       			String pattern = ".*(";
 		                       			for( String arg : searchargs ) {
-								pattern += arg.trim() +"|";
+		                       				if ( !arg.trim().isEmpty() ) 
+									pattern += arg.trim() +"|";
 							}
 							if ( pattern.endsWith("|") ) pattern = pattern.substring(0,pattern.length()-1);
 							pattern += ").*";
