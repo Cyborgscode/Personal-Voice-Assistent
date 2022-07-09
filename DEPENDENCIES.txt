@@ -8,5 +8,11 @@ javax.activation package from https://search.maven.org/artifact/com.sun.activati
 Compile instructions change to :
 
 cd /usr/share/pva
-javac --release 8 PVA.java -cp "./javax.mail-1.6.2.jar:./javax.activation.jar:."
 
+CP=""
+for file in lib/*;do  CP="$CP:./$file"; done 
+javac PVA.java -cp "$CP:."
+
+for special releases:
+
+javac --release 8 PVA.java -cp "$CP:."
