@@ -321,16 +321,16 @@ it also matches: "I want to listen to queen it" and removes the "it", because it
 
 You need this to remove words, that shall not part of the search term.
 
-## more advanced commands:
+## More advanced commands:
 
 There are two different ways to start playing music:  `PLAYAUDIO` and `PLAYMUSIC`
 
 They do the same thing, but sligtly different:
 
 `PLAYAUDIO` is a cmd to search for a song or artistname and adds all matches to a new playlist, afterwards the playback starts.
-If you use the PLAYAUDIO keywords and ADD the `PLAYMUSICRADD` keywords, the playlist is not cleared and all matches will be added to the list.
+If you use the `PLAYAUDIO` keywords and ADD the `PLAYMUSICRADD` keywords, the playlist is not cleared and all matches will be added to the list.
 
-PLAYMUSIC means, "start playback" whatever is in the list, from the actual position in the list. You can use this to restart a stopped playback. 
+`PLAYMUSIC` means, "start playback" whatever is in the list, from the actual position in the list. You can use this to restart a stopped playback. 
 But PLAYMUSIC can do more, it can randomly search the database and play a song. If you use PLAYMUSIC + PLAYMUSICRANDOM + PLAYMUSICRADD together, 
 it adds those randomly loaded songs to the end of the current playlist. 
 
@@ -347,9 +347,9 @@ in english:
 As you see, it's a Regular Expression, which is a mighty tool to match patterns in texts. If you know how to use them, you can have a lot of fun here,
 BUT REMEMBER, all additional keywords need to be removed in the cmd section to they end up as parts of the searchterm!
 
-There are some commands that have optional parameters. The easiest way to spot them is to check the source OR to search for the keyword in conjunction with the "text:" definition ( i.e. PLAYMUSIC -> PLAYMUSICRANDOM )
+There are some commands that have optional parameters. The easiest way to spot them is to check the source OR to search for the keyword in conjunction with the "text:" definition ( i.e. `PLAYMUSIC` -> `PLAYMUSICRANDOM` )
 
-A third cmd, "ADDTITLES" adds a number of randomly selected songs to the playlist.
+A third cmd, `ADDTITLES` adds a number of randomly selected songs to the playlist.
 
 
 {TERM} mandatory infos needed to perform task
