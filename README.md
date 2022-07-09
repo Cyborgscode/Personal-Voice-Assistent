@@ -30,7 +30,7 @@ vosk               (found on github)
 sox                (needed in case you wanne make use of GTTS)
 ```
 
-# JAVA deps have been removed, to prepare for distro packaging
+# JAVA deps have been removed to prepare for distro packaging
 
 ### NEWS
 
@@ -112,17 +112,17 @@ There are small models, with a smaller stock of words, but it may already be eno
 ATTN: previouse installation procedures focused on a private, one user only installation. We now focus on a MULTI-USER systemwide installation.
 ####
 
-PVA is now fully aware of systemd --user actions and freedesktop directorystructures
+PVA is now fully aware of `systemd --user` actions and freedesktop directorystructures
 
-O== Installation: 
+## Installation: 
 
 (replace the modelfile with your filename! )
 
-become root, sudo alone is not enough!
+Become root, sudo alone is not enough!
 
-use "sudo -i" or "sudo su" or just "su" if you still have a root password.
+use `sudo -i` or `sudo su` or just `su` if you still have a root password.
 
-pip3 install sounddevice vosk
+```pip3 install sounddevice vosk```
 
 # NOTE: If you wanna do development work on this, your repo should be located somewhere else, as you will move files out of the repo directories and git won't like that ;)
 
@@ -135,7 +135,7 @@ copy the relevant zip content here (means, do not include "master" or something 
 mv etc/pva /etc/
 ```
 
-# NOTE: You don't need to "move" files into place, you can of course copy them i.e. with cp or "tar c etc | tar x -C /"
+# NOTE: You don't need to "move" files into place, you can of course copy them i.e. with `cp` or `tar c etc | tar x -C /`
 
 Example on the modelfile:
 
@@ -240,7 +240,7 @@ it does detect small and large model files, but don't use both per language.
 <== Carola, a PVA ==>
 
 
-Carola is the keyword I use to address the pva. You can change this in an overwrite file in ~/.config/pva/conf.d/00-keyword-overwrite.conf you need to create.
+Carola is the keyword I use to address the pva. You can change this in an overwrite file in `~/.config/pva/conf.d/00-keyword-overwrite.conf` you need to create.
 
 HINT:
 
@@ -254,8 +254,8 @@ To start, visit /etc/pva/conf.d/  and check the german numbers file. It's the eq
 
 There are two ways to handle changes: 
 
-You can do them for YOUR useraccount only by placing the configfiles into ~/.config/pva/conf.d/  OR
-You can write new configfiles with higher startnumbers in /etc/pva/conf.d/ like 10-defaults-english.conf and just rewrite and slightly adapt the texts used in the german default file. 
+You can do them for YOUR useraccount only by placing the configfiles into `~/.config/pva/conf.d/`  OR
+You can write new configfiles with higher startnumbers in `/etc/pva/conf.d/` like `10-defaults-english.conf` and just rewrite and slightly adapt the texts used in the german default file. 
 
 The higher number ( 10 ) means, this configfile is read later, which means, it's content is overwriting stuff the is unique. 
 
@@ -266,17 +266,19 @@ command:"erzeuge|metadata","MAKEMETACACHE",""
 
 Of course you do not overwrite the german "text" base, instead you change it like this:
 
+```
 conf:"lang_short","en"
 conf:"lang","en_EN"
 
 text:"en","KEYWORD","your version in english"
 command:"create|metadata","MAKEMETACACHE",""
+```
 
 The "command" line does not overwrite the german command, it adds it to the command hashtable. You ask why: because an english model won't recognize german words anyway and vice versa, and so we don't need to overwrite those texts. You can just add as may lines in as many languages as you like and give them the ACTIONKEYWORD it needs.
 
-For the "text" section, you can't do this simple way, we need those texts distinguished per as tripple-pairs of Language+Keyword+Text. 
+For the `text` section, you can't do this simple way, we need those texts distinguished per as tripple-pairs of Language+Keyword+Text. 
 
-The "conf" entry overwrites the german default setting, as you can only have one language per user. 
+The `conf` entry overwrites the german default setting, as you can only have one language per user. 
 
 If you don't have the apps  in there, just install them. 
 
@@ -286,14 +288,16 @@ Jitsi will be the bridge to your SIP provider, which can be your dsl or cable mo
 
 A online CardDAV addressbook (with content) is required for some functions like sending email or calling someone. If you find a way to get those infos from the desktop contact app, please send a pull request. CardDAV has the advantage of also working in Thunderbird, which gives you a nice UI to enter your data. Also Thunderbird is the main MailAPP.
 
-The pva.conf file is self explaning.
+The `pva.conf` file is self explaning.
 
 ## Since commit #2c74e1d (16.12.2021) you can have multiply config files. 
 
 There are two places configs are found:
 
+```
 /etc/pva/conf.d/00-test.conf
 ~/.config/pva/conf.d/00-test.conf
+```
 
 The actual config "./pva.conf" is always loaded as the last config file, to overwrite existing, alternative settings . I.E. if you changed the searchengine via "use duckduckgo as searchengine" and you had google before, you need to save this up. The file is found in $HOME/.config/pva/ .
 
