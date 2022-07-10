@@ -1482,7 +1482,7 @@ static private class AnalyseMP3 extends Thread {
 							}
 							if ( cmd.equals("compile") ) {
 								say( texte.get( config.get("conf","lang_short"), "RECOMPILING") );	
-								System.out.println( dos.readPipe("javac --release 8 PVA.java") );
+								System.out.println( dos.readPipe("compile.sh") );
 							}
 							return;
 						} else if ( wort( config.get("code","beta")) ) {
