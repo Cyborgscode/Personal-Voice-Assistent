@@ -2955,5 +2955,4 @@ class AppResult {
 		this.keywordrelevance = kr;
 
 	}
-	
 }
