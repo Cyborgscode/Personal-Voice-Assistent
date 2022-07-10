@@ -701,42 +701,7 @@ static private class AnalyseMP3 extends Thread {
 //	log(suchwort);
                 if ( entries != null ) {     
                         for(int i =0; i < entries.length; i++ ) {
-                        	// System.out.println("processing file "+ entrie					// check if mediaplayers are running, to avoid interruption
-					
-					if ( !config.get("mediaplayer","status").isEmpty() ) {
-
-						String allplayerservices = dos.readPipe( config.get("mediaplayer","find").replaceAll(config.get("conf","splitter")," ") );
-						if ( ! allplayerservices.isEmpty() ) {
-							String[] lines = allplayerservices.split("\n");
-							for(String service : lines ) {
-								
-								if ( service.contains("org.mpris.MediaPlayer2") ) {
-									
-									String 	vplayer = dos.readPipe( config.get("mediaplayer","status")
-												      .replaceAll("<TARGET>", 
-													zwischen( service, "\"","\"") ).replaceAll( config.get("conf","splitter")," ") );
-
-									if ( ! vplayer.trim().isEmpty() && vplayer.trim().contains("Playing") ) {
-										playing = false; // because a player is running.
-									}
-								}
-							}
-						}
-					}
-					
-					if ( ! dos.readPipe( "pgrep -f "+ config.get("audioplayer","pname").replaceAll( config.get("conf","splitter")," ") ).trim().isEmpty()  && !config.get("audioplayer","status").isEmpty() ) {
-	
-						String[] result = dos.readPipe( config.get("audioplayer","status").replaceAll(config.get("conf","splitter")," "),true).split("\n");
-						for(String x : result ) {
-							if ( x.contains("[paused]") ) break;
-							if ( x.contains("TITLE") ) {
-								playing = false; // because a player is running.
-							}
-						}
-					}
-					
-					
-					if ( !mailtext.isEmpty() && ( playing || config.get("conf","donotdisturb").equals("overwrite") ) ) {s[i].toString() +" matches ("+type+")$ ??? "+  entries[i].toString().matches(".*("+type+")$") +" searchterm="+ suchwort );
+                        	// System.out.println("processing file "+ entries[i].toString() +" matches ("+type+")$ ??? "+  entries[i].toString().matches(".*("+type+")$") +" searchterm="+ suchwort );
 
                         	try {
 	                        	if ( entries[i].isDirectory() && !entries[i].getName().startsWith(".") ) {
@@ -1168,6 +1133,7 @@ static private class AnalyseMP3 extends Thread {
 						MailboxData m = mailboxes.get(i);
 						mailtext += mc.checkmail(m);
 					}
+					
 					boolean playing = true;
 
 					// check if mediaplayers are running, to avoid interruption
