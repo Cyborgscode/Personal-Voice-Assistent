@@ -13,7 +13,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import hash.StringHash;
 
-
 public class Dos {
 
         private String zwischen(String buffer,String vor,String nach) {
@@ -30,7 +29,7 @@ public class Dos {
                 return null;
         }
 
-       public boolean exec(String s) {
+        public boolean exec(String s) {
                    try {
                           Process p = java.lang.Runtime.getRuntime().exec(s);
                           if ( p != null ) {
@@ -44,21 +43,21 @@ public class Dos {
                         		  "\n"+e.toString());
                           return false;
                    }
-       }
+        }
 
-       public boolean createRUNFile(String id) {
+        public boolean createRUNFile(String id) {
     	   
     	   	if ( fileExists(id+".run" ) ) return false;
     	   	return writeFile(id+".run","processrunning");
-       }
+        }
        
-       public void deleteRUNFile(String id) {
+        public void deleteRUNFile(String id) {
     	   
     	   if ( fileExists(id+".run") ) {
     		   File temp = new File( id+".run" );
     		   temp.delete();
     	   }
-       }
+        }
        
         public String readPipe(String s) {
                 return readPipe(s,null);
@@ -71,7 +70,6 @@ public class Dos {
         public String readPipe(String s,String stdin) {
                 return readPipe(s,stdin,false);
         }
-
 
         public String readPipe(String s,String stdin, boolean regExOverride) {
 
@@ -189,7 +187,7 @@ public class Dos {
     public String readFile(String filename) {
 
             File file = new File(filename);
-	    if ( file != null ) { // dont access file with length() of "file" is not initialized
+	    if ( file != null ) { // dont access file with length() if "file" is not initialized
 	            try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
         	            byte[] b = new byte[(int) file.length()];
                 	    in.read(b);
@@ -234,7 +232,6 @@ public class Dos {
               return true;
         }
     }
-
 
     public byte[] readFileRaw(String filename) {
 
