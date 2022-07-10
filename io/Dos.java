@@ -6,6 +6,7 @@ import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -187,15 +188,14 @@ public class Dos {
 
     public String readFile(String filename) {
 
-            try{
-                    File file = new File(filename);
-                    if ( file != null ) {
-	                    DataInputStream in = new DataInputStream(new FileInputStream(filename));
-	                    byte[] b = new byte[(int) file.length()];
-	                    in.read(b);
-	                    in.close();
-	                    return new String(b);
-	             } else System.out.println("FileNotFoundError: " + filename);
+            File file = new File(filename);
+            try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
+                    byte[] b = new byte[(int) file.length()];
+                    in.read(b);
+                    in.close();
+                    return new String(b);
+            } catch (FileNotFoundException e) {
+                    System.out.println("FileNotFoundError: " + filename);
             } catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
             }
