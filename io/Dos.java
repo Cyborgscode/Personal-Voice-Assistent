@@ -189,17 +189,18 @@ public class Dos {
     public String readFile(String filename) {
 
             File file = new File(filename);
-            try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
-                    byte[] b = new byte[(int) file.length()];
-                    in.read(b);
-                    in.close();
-                    return new String(b);
-            } catch (FileNotFoundException e) {
-                    System.out.println("FileNotFoundError: " + filename);
-            } catch (Exception e) {
-                    System.out.println("Error: " + e.getMessage());
-            }
-
+	    if ( file != null ) { // dont access file with length() of "file" is not initialized
+	            try (DataInputStream in = new DataInputStream(new FileInputStream(filename))) {
+        	            byte[] b = new byte[(int) file.length()];
+                	    in.read(b);
+                    	    in.close();
+	                    return new String(b);
+        	    } catch (FileNotFoundException e) {
+	                    System.out.println("FileNotFoundError: " + filename);
+        	    } catch (Exception e) {
+	                    System.out.println("Error: " + e.getMessage());
+        	    }
+	    } else System.out.println("Error on FileObject: " + filename);
             return "";
     }
     
