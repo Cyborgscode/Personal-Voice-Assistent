@@ -36,7 +36,7 @@ def start(_):
   os.system("/usr/share/pva/pva &");
 
 def kill(_):
-  os.system("killall -9 python3")
+  os.system("/usr/share/pva/shutdown.sh")
 
 def quit(_):
   gtk.main_quit()
