@@ -109,7 +109,15 @@ public class Server {
 						}
 
 					} while ( len > 0 );
-
+						
+					try {
+							
+						if ( !socket.isClosed() ) socket.close();
+						
+					} catch (Exception e) { 
+						// Nothing to do
+					}
+						
 					if ( !text.equals("") ) pva.handleInput(text.toString());
 					
 // 					in.close();
@@ -122,5 +130,3 @@ public class Server {
                         }
         }
 }
-
-
