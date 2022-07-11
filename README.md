@@ -28,6 +28,7 @@ mbrola             (found on github)
 espeak
 vosk               (found on github)
 sox                (needed in case you wanne make use of GTTS)
+openssl 1.x+       (used to communicate with the PVA TLS Server)
 ```
 
 # JAVA deps have been removed to prepare for distro packaging
