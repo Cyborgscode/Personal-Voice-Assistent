@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# This Script is modified for PVA usage
-# it's originally shipped by the VOSK package from Alpha Cephi itself.
-
-
 import argparse
 import os
 import queue
@@ -72,9 +68,10 @@ try:
             while True:
                 data = q.get()
                 if rec.AcceptWaveform(data):
-                    # print(rec.Result() // instead of printing the final sentence, we give it to pva as JSON
+                    # print(rec.Result()
                     str = rec.Result();
-                    os.system( "java PVA '"+ str.replace("'","")  +"'");
+#                    os.system( "java PVA '"+ str.replace("'","")  +"'");
+                    os.system( "echo '"+ str.replace("'","") +"' | openssl s_client -connect 127.0.0.1:39999 -nbio 1>/dev/null 2>/dev/null");
 
 except KeyboardInterrupt:
     print('\nDone')
