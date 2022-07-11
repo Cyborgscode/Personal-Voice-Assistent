@@ -39,24 +39,36 @@ if [ ! -e $HOME/.var/log ]; then
 
 fi
 
-if [ ! -e $HOME/.config/systemd/user/pvatimer.service ]; then
+if [ -e $HOME/.config/systemd/user/pvatimer.service ]; then
 
-	mkdir -p $HOME/.config/systemd/user/
-	cp systemd/pvatimer.service $HOME/.config/systemd/user/pvatimer.service
+#	WE DON'T NEED THIS ANYMORE
+#
+#	mkdir -p $HOME/.config/systemd/user/
+#	cp systemd/pvatimer.service $HOME/.config/systemd/user/pvatimer.service
+
+	rm -f $HOME/.config/systemd/user/pvatimer.service
 	
 fi 
 
-if [ ! -e $HOME/.config/systemd/user/pvatimer.timer ]; then
+if [ -e $HOME/.config/systemd/user/pvatimer.timer ]; then
 
-	mkdir -p $HOME/.config/systemd/user/
-	cp systemd/pvatimer.timer $HOME/.config/systemd/user/pvatimer.timer
-	systemctl --user enable --now pvatimer.timer
+#	WE DON'T NEED THIS ANYMORE
+#
+#	mkdir -p $HOME/.config/systemd/user/
+#	cp systemd/pvatimer.timer $HOME/.config/systemd/user/pvatimer.timer
+
+	systemctl --user disable pvatimer.timer
+
+	rm -f  $HOME/.config/systemd/user/pvatimer.timer
+
 fi
+
+
 if [ ! -e $HOME/.config/pva/kspass.txt ]; then
 
         echo "$RANDOMkeystore$RANDOM" | /usr/bin/sha256sum | sed -e "s/ *-.*$//" > $HOME/.config/pva/kspass.txt
         
-fi
+ fi
 
 if [ ! -e $HOME/.config/pva/.keystore ]; then
         
@@ -84,6 +96,7 @@ DE
 Yes" | LANG=C /usr/bin/keytool -genkey -alias PVA -keyalg RSA -validity 3650 -storepass "$storepass" -storetype pkcs12 -keystore $HOME/.config/pva/.keystore 2>/dev/null
 
         fi
+
 fi
 
 MLANG=$(grep "^conf:.*lang_short" /etc/pva/conf.d/* $HOME/.config/pva/conf.d/* $HOME/.config/pva/pva.conf | tail -n 1 | sed -e "s/^.*,//g" -e "s/\"//g")
