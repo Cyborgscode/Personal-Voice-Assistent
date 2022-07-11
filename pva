@@ -111,4 +111,6 @@ if [ "$ICON" -eq 0 ]; then
 	fi
 fi 
 
+./start.sh &
+
 ./pva.py -m $MODEL >> $HOME/.var/log/pva.log
