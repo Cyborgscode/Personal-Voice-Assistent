@@ -33,18 +33,13 @@ public class Server {
                 try {
                 
                 	String p = dos.readFile(System.getenv("HOME").trim()+"/.config/pva/kspass.txt").trim();
-//                	log("p= |"+ p +"|");
   
   			// for some reason, toCharArray() didn't work, so we do it manually:
                 
                         char[] password = new char[p.length()];
                         for(int i=0;i<p.length();i++) password[i] = p.charAt(i); 
 
-//			log("|PASSWORD| = |"+ password[10] +"|");
-
                         sslContext = SSLContext.getInstance("TLS");
-
-//                        TrustManager[] myTMs = new TrustManager [] { new MyX509TrustManager() };
 
                         KeyStore ks = KeyStore.getInstance("JKS");
                         FileInputStream fis = null;
@@ -60,7 +55,6 @@ public class Server {
 
 
                         sslContext.init(kmf.getKeyManagers(), 
-  //                                      myTMs, 
   					null,
                                         new java.security.SecureRandom() );
 
@@ -85,27 +79,17 @@ public class Server {
 
                 ich = Thread.currentThread();
 
-//                System.out.println("serverprocessid "+ich);
-
                         while ( true ) {
                                 if ( Thread.currentThread().isInterrupted() ) {
                                         log("Exiting");
                                         return;
                                 }
-//                                 log("ready");
                                 try {
 					
 					Socket socket = server.accept();
 			                socket.setKeepAlive(true);
         
-//			                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-//			                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-        
-//			                ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
-
-					ObjectOutputStream out = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
 					DataInputStream in = new DataInputStream(socket.getInputStream());
-
 
 					StringBuffer text = new StringBuffer(50000);
 					String part = "";
@@ -125,8 +109,6 @@ public class Server {
 						}
 
 					} while ( len > 0 );
-						
-	                       		// log("text="+ text.toString() );
 
 					if ( !text.equals("") ) pva.handleInput(text.toString());
 					
@@ -139,8 +121,6 @@ public class Server {
                                 }
                         }
         }
-
-
 }
 
 
