@@ -18,6 +18,7 @@ import java.nio.file.*;
 import java.util.regex.*;
 import com.mpatric.mp3agic.*;
 import server.Server;
+import utils.Tools;
 
 public class PVA {
 
@@ -35,8 +36,8 @@ public class PVA {
 	static Vector<Contact> contacts   = new Vector<Contact>();
 	static Vector<MailboxData> mailboxes  = new Vector<MailboxData>();
 	static StringHash timers	  = new StringHash();
-
-
+	static TimerTask tt;
+	
 	static String text = "";
 	static String text_raw = "";
 	static int mbxid = 1;
@@ -166,25 +167,11 @@ public class PVA {
 		return true;
 	}
 
-	static String zwischen(String buffer,String vor,String nach) {
-
-                int i1 = buffer.indexOf(vor)+vor.length();
-                int i2 = buffer.indexOf(nach,i1);
-
-                if ( i1 >= 0 && i2 > i1 ) {
-
-                        return buffer.substring(i1,i2);
-
-                }
-
-                return null;
-        }
-
 	static String replaceVariables(String term) {
 
 //		log("LOOP-Start: "+ term );
 		String rpl = "";
-		String srx = zwischen( term, "{","}");
+		String srx = Tools.zwischen( term, "{","}");
 		if ( srx != null && srx.length() > 0 ) {
 //			log( srx );
 
@@ -835,6 +822,7 @@ static private class AnalyseMP3 extends Thread {
 		return dos.writeFile( getHome()+"/.config/pva/pva.conf", sb.toString() );
 	}
 
+/*
 	static boolean saveTimers() {
 
 		StringBuffer sb = new StringBuffer(50000); // yes, we think big ;)
@@ -848,6 +836,7 @@ static private class AnalyseMP3 extends Thread {
 
 		return dos.writeFile( getHome()+"/.config/pva/timers.conf", sb.toString() );
 	}
+*/
 
 	static private Command parseCommand(String textToParse) {
 
@@ -1117,98 +1106,13 @@ static private class AnalyseMP3 extends Thread {
 			// for speed resons, we got often used content in variables.
 			keyword = config.get("conf","keyword");
 
-			// JSON Object is given by vosk, but the org.json package can't be shipped with distros, so we need to do it ourself, so .. don't wonder ;)
-			
-			// Format to parse "{text:"spoken text"}"
-
-			// now the part that extracts the text spoken from the JSON Object given to us.
-			if ( args.length > 0 ) {
-			
-/*				text = zwischen(args[0].split(":")[1],"\"","\"");
-				if ( text == null ) text = "";
-*/
-
-			} else {
-				// defaulttext for debugreasons
-				// text = keyword +" ich möchte queen hören";
-	
-				if ( mailboxes.size() > 0 ) {
-					// don't load, if not needed
-					String mailtext = "";
-					MailConnection mc = new MailConnection();
-					for(int i=0; i < mailboxes.size(); i++)	{
-						MailboxData m = mailboxes.get(i);
-						mailtext += mc.checkmail(m);
-					}
-					
-					boolean playing = true;
-
-					// check if mediaplayers are running, to avoid interruption
-					
-					if ( !config.get("mediaplayer","status").isEmpty() ) {
-
-						String allplayerservices = dos.readPipe( config.get("mediaplayer","find").replaceAll(config.get("conf","splitter")," ") );
-						if ( ! allplayerservices.isEmpty() ) {
-							String[] lines = allplayerservices.split("\n");
-							for(String service : lines ) {
-								
-								if ( service.contains("org.mpris.MediaPlayer2") ) {
-									
-									String 	vplayer = dos.readPipe( config.get("mediaplayer","status")
-												      .replaceAll("<TARGET>", 
-													zwischen( service, "\"","\"") ).replaceAll( config.get("conf","splitter")," ") );
-
-									if ( ! vplayer.trim().isEmpty() && vplayer.trim().contains("Playing") ) {
-										playing = false; // because a player is running.
-									}
-								}
-							}
-						}
-					}
-					
-					if ( ! dos.readPipe( "pgrep -f "+ config.get("audioplayer","pname").replaceAll( config.get("conf","splitter")," ") ).trim().isEmpty()  && !config.get("audioplayer","status").isEmpty() ) {
-	
-						String[] result = dos.readPipe( config.get("audioplayer","status").replaceAll(config.get("conf","splitter")," "),true).split("\n");
-						for(String x : result ) {
-							if ( x.contains("[paused]") ) break;
-							if ( x.contains("TITLE") ) {
-								playing = false; // because a player is running.
-							}
-						}
-					}
-					
-					// voice notification should be played only if: no mediaplayer has status play OR DND mode shall be interrupted.
-					
-					if ( !mailtext.isEmpty() && ( playing || config.get("conf","donotdisturb").equals("overwrite") ) ) {
-						say(mailtext,true);
-					}
-				}
-	
-				long now = new Date().getTime();	
-				boolean update = false;			
-				for(String data: timedata) {
-					if ( !data.trim().isEmpty() ) {
-						String[] x = data.split(":");
-						
-						log("now="+ now +" timer="+ (new Date( Long.parseLong(x[0] ) ) ).toString() );
-						
-						if ( Long.parseLong(x[0]) < now ) {
-							timers.remove(x[0]);
-							String text = texte.get( config.get("conf","lang_short"), "MAKETIMERRESPONSE") .replaceAll("<TERM>", x[1]);
-							log( text );
-							say( text , true );
-						 	update = true;
-						}
-					}
-				}
-				if ( update ) saveTimers();
-				return;			
-			}
-
 			// here MAIN really starts
 
 			PVA pva = new PVA();
 			
+			tt = new TimerTask(pva);
+			tt.run();
+						
 	                Server server = new Server( 39999, pva );
 	                server.startServing();
 
@@ -1227,11 +1131,15 @@ static private class AnalyseMP3 extends Thread {
 	}
 
 	public void handleInput(String extText) throws IOException,InterruptedException  {
+
+			// JSON Object is given by vosk, but the org.json package can't be shipped with distros, so we need to do it ourself, so .. don't wonder ;)
+			
+			// Format to parse "{text:"spoken text"}"
 		
 //			log("handleInput: text="+ extText);
 		
 			if ( extText.contains(":") ) {
-				text = zwischen( extText.split(":")[1],"\"","\"");
+				text = Tools.zwischen( extText.split(":")[1],"\"","\"");
 				if ( text == null ) text = "";
 			} else {
 				text = extText;
@@ -1290,7 +1198,7 @@ static private class AnalyseMP3 extends Thread {
 						
 							if ( line.contains("vcf\"><img") ) {
 								log("import Eintrag "+ c +"/"+gesamt);
-								String href = zwischen(line,"href=\"","\"");
+								String href = Tools.zwischen(line,"href=\"","\"");
 								String[] vcard = dos.readPipe("curl "+  basedomain+href +" --anyauth -u \""+ value +"\" 2>/dev/null").split("\n");
 								Contact vcf = new Contact();
 								for(String vline : vcard ) {
@@ -1380,7 +1288,7 @@ static private class AnalyseMP3 extends Thread {
 								
 								String 	vplayer = dos.readPipe( config.get("mediaplayer","status")
 												      .replaceAll("<TARGET>", 
-												zwischen( service, "\"","\"") ).replaceAll( config.get("conf","splitter")," ") );
+												Tools.zwischen( service, "\"","\"") ).replaceAll( config.get("conf","splitter")," ") );
 
 								if ( ! vplayer.trim().isEmpty() && vplayer.trim().contains("Playing") ) {
 									playing = false; // because a player is running.
@@ -1620,7 +1528,7 @@ static private class AnalyseMP3 extends Thread {
 							
 							log ( rightNow.getTime().toString() );
 							timers.put( ""+rightNow.getTimeInMillis(), subject );
-							saveTimers();
+							tt.saveTimers();
 						}
 					}
 	
@@ -1671,7 +1579,7 @@ static private class AnalyseMP3 extends Thread {
 
 								log ( rightNow.getTime().toString() );
 								timers.put( ""+rightNow.getTimeInMillis(), subject );
-								saveTimers();
+								tt.saveTimers();
 								timer = true;
 							}
 						}
@@ -2819,7 +2727,7 @@ static private class AnalyseMP3 extends Thread {
 						for(String service : lines ) {
 						
 							if ( service.contains("org.mpris.MediaPlayer2") ) {
-								handleMediaplayer( zwischen( service, "\"","\""),  cf.command ) ;
+								handleMediaplayer( Tools.zwischen( service, "\"","\""),  cf.command ) ;
 							}
 						}
 					}
@@ -2872,9 +2780,7 @@ static private class AnalyseMP3 extends Thread {
 						say( texte.get( config.get("conf","lang_short"), "MAKEMETACACHEERROR") );
 					
 					}
-					
 				}
-				
 
 				if ( !reaction ) {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
@@ -2900,7 +2806,6 @@ static private class AnalyseMP3 extends Thread {
 				log("Nicht für mich gedacht:" + text);
 			}
 	}
-
 }
 
 
@@ -2927,8 +2832,7 @@ class Command {
 		if ( t != null ) {
 			this.terms = t;
 		} else	this.terms = new Vector();
-	}
-	
+	}	
 }
 
 class Reaction {
@@ -2958,7 +2862,5 @@ class AppResult {
 		this.keywordmatches = k;
 		this.keywordrelevance = kr;
 
-	}
-	
+	}	
 }
-
