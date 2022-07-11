@@ -16,3 +16,6 @@ PID=$(/usr/bin/pgrep -f ./pva.py)
 
 kill -9 $PID
 
+PID=$(/usr/bin/pgrep -f server.PVA)
+
+kill -9 $PID
