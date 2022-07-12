@@ -87,8 +87,10 @@ public class PVA {
 		int modulo = number.length()%3;
 		if ( modulo != 0 ) {
 			b = number.substring(0, modulo)+ b;
-		} else  b = b.substring(1);
-	
+		} else if ( b.length() > 0 ) {
+			b = b.substring(1);
+		} else  b = number;
+		
 		return b;
 	}
 
