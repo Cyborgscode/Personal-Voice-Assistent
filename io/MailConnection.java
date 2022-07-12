@@ -82,7 +82,11 @@ public class MailConnection {
 			
 			dos.writeFile("/tmp/.pva."+m.id+".lastmsg",lastseen);
 			
-			if ( inbox.getUnreadMessageCount() > 0) return text;
+			if ( inbox.getUnreadMessageCount() > 0) {
+				store.close();
+				return text;
+			}
+			store.close();
 		} catch (NoSuchProviderException e){
 			e.printStackTrace();
 		}
