@@ -1111,7 +1111,7 @@ static private class AnalyseMP3 extends Thread {
 			PVA pva = new PVA();
 			
 			tt = new TimerTask(pva);
-			tt.run();
+			tt.start();
 						
 	                Server server = new Server( 39999, pva );
 	                server.startServing();
