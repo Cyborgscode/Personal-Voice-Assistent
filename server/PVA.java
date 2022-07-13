@@ -1075,7 +1075,11 @@ public class PVA {
 	}
 
 	public void handleInput(String extText) throws IOException,InterruptedException  {
-
+			
+			// reset reaction flag on each new incoming command
+		
+			reaction = false;
+		
 			// JSON Object is given by vosk, but the org.json package can't be shipped with distros, so we need to do it ourself, so .. don't wonder ;)
 			
 			// Format to parse "{text:"spoken text"}"
