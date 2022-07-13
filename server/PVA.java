@@ -44,7 +44,7 @@ public class PVA {
 	static boolean reaction = false;
 	static Dos dos = new Dos();
 	static String[] za = null;
-
+	static int c = 0;
 	static String metadata_enabled  = "";
 
 	static void log(String x) { System.out.println(x); }
@@ -55,7 +55,8 @@ public class PVA {
 		Calendar d = Calendar.getInstance();
 		d.setTime( new Date(time) );
 
-                String[] months = config.get("conf","months").split(":");
+                String[] months = config.get("conf","months").split(":");			log("start TimerTask");
+
                 
                 String minutes = ""+d.get(Calendar.MINUTE);
                 if ( minutes.length()==1 ) minutes = "0"+minutes;
@@ -203,7 +204,6 @@ public class PVA {
 	 	return term;
 	 }
 	 
-
 	static void handleMediaplayer(String servicename, String cmd) {
 
 		try {
@@ -341,8 +341,6 @@ public class PVA {
 			
 	}
 
-
-
 static private class AnalyseMP3 extends Thread {
 
         private StringBuffer data;
@@ -444,7 +442,6 @@ static private class AnalyseMP3 extends Thread {
 		
 		return data.toString();
 	}
-
 
 	static String[] buildFileArray(String str,String rpl) {
 
@@ -688,7 +685,6 @@ static private class AnalyseMP3 extends Thread {
 		return filename;
 	}
 
-
 	static String _suche(String start,String suchwort,String type) {
 		File file = new File(start);
                 File[] entries = file.listFiles();
@@ -799,7 +795,6 @@ static private class AnalyseMP3 extends Thread {
 		return x;
 	}
 
-
 	static boolean saveConfig() {
 
 		StringBuffer sb = new StringBuffer(50000); // yes, we think big ;)
@@ -823,22 +818,6 @@ static private class AnalyseMP3 extends Thread {
 
 		return dos.writeFile( getHome()+"/.config/pva/pva.conf", sb.toString() );
 	}
-
-/*
-	static boolean saveTimers() {
-
-		StringBuffer sb = new StringBuffer(50000); // yes, we think big ;)
-	
-		Enumeration en1 = timers.keys();
-		while ( en1.hasMoreElements() ) {
-			String key = (String)en1.nextElement();
-			String val = timers.get( key );
-			sb.append(  key +":"+ val +"\n" );
-		}
-
-		return dos.writeFile( getHome()+"/.config/pva/timers.conf", sb.toString() );
-	}
-*/
 
 	static private Command parseCommand(String textToParse) {
 
@@ -1112,9 +1091,13 @@ static private class AnalyseMP3 extends Thread {
 
 			PVA pva = new PVA();
 			
+			log("start TimerTask");
+
 			tt = new TimerTask(pva);
 			tt.start();
-						
+
+			log("start server");
+			
 	                Server server = new Server( Integer.parseInt( config.get("network","port") ) , pva );
 	                server.startServing();
 
