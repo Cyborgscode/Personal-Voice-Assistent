@@ -6,6 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import javax.net.*;
 import javax.net.ssl.*;
+import java.net.InetAddress;
 import java.security.*;
 import java.security.cert.*;
 import io.Dos;
@@ -25,14 +26,19 @@ public class Server {
         
         	this.pva = pva;
                 server = makeSSLSocket(port);
-//                server.setNeedClientAuth(true);
+//                server.setNeedClientAuth(true); // in case you wanne build a trustchain for your clients, you need special signed clientcerts from your servercert && a working trustmanager.
         } 
 
-        private SSLServerSocket makeSSLSocket(int port) {
+        public Server( PVA pva ) throws IOException {
+        
+        	this.pva = pva;
+                server = makeSSLSocket(pva);
+        } 
 
-                try {
-                
-                	String p = dos.readFile(System.getenv("HOME").trim()+"/.config/pva/kspass.txt").trim();
+	private ServerSocketFactory getFactory() {
+	
+		try {
+		       	String p = dos.readFile(System.getenv("HOME").trim()+"/.config/pva/kspass.txt").trim();
   
   			// for some reason, toCharArray() didn't work, so we do it manually:
                 
@@ -53,13 +59,22 @@ public class Server {
                         KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509", "SunJSSE");
                         kmf.init(ks,password); 
 
-
                         sslContext.init(kmf.getKeyManagers(), 
   					null,
                                         new java.security.SecureRandom() );
 
-                        ServerSocketFactory ssocketFactory = sslContext.getServerSocketFactory();
+			return sslContext.getServerSocketFactory();
+                       
+		} catch (Exception e) {
+			// nothing we can do about this
+			return null;
+		}
+	}
+	
+        private SSLServerSocket makeSSLSocket(int port) {
 
+                try {
+                	ServerSocketFactory ssocketFactory = getFactory();
                         SSLServerSocket socket = (SSLServerSocket) ssocketFactory.createServerSocket(port);     
                         return socket;
 
@@ -68,7 +83,24 @@ public class Server {
                         e.printStackTrace();
                 }
                 return null;
+        }
 
+        private SSLServerSocket makeSSLSocket(PVA pva) {
+
+                try {
+                	ServerSocketFactory ssocketFactory = getFactory();
+                	
+                	int port = Integer.parseInt( pva.config.get("network","port") );
+                	int backlog = 200;
+                	
+                        SSLServerSocket socket = (SSLServerSocket) ssocketFactory.createServerSocket(port, backlog, InetAddress.getByName( pva.config.get("network","bindaddress") ) );
+                        return socket;
+
+                } catch (Exception e) {
+                        System.out.println(e);
+                        e.printStackTrace();
+                }
+                return null;
         }
 
         public void log(String x) {
@@ -130,3 +162,4 @@ public class Server {
                         }
         }
 }
+
