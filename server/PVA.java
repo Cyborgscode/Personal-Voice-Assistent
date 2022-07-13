@@ -1141,12 +1141,23 @@ static private class AnalyseMP3 extends Thread {
 //			log("handleInput: text="+ extText);
 		
 			if ( extText.contains(":") ) {
-				text = Tools.zwischen( extText.split(":")[1],"\"","\"");
-				if ( text == null ) text = "";
+				if ( extText.split(":").length > 1 ) {
+					text = Tools.zwischen( extText.split(":")[1],"\"","\"");
+					if ( text == null ) text = "";
+				} else text = "";
 			} else {
 				text = extText;
 			}
 		
+			// REJECT ANY attempt to inject Code
+			// 
+			// no regex check here, as someone could try to trick this with escapes 
+
+			if ( text.contains(";") || text.contains("|") || text.contains("'") || text.contains("\"") ) {
+				log("Exploit detected on input: "+ text);
+				return;
+			}
+
 //			log("handleInput: text="+ text );
 		
 			// RAW Copy of what has been spoken. This is needed in case a filter is applied, but we need some of the filtered words to make decisions.
