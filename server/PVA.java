@@ -1599,6 +1599,10 @@ public class PVA {
 					
 						config.put("conf", "keyword", subtext );
 
+						// as it's now static server, we need to overwrite all changes
+						
+						keyword = subtext;
+
 						say( texte.get( config.get("conf","lang_short"), cf.command+"RESPONSE").replaceAll("<TERM1>", subtext ) );
 
 						saveConfig();
