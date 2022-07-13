@@ -2761,7 +2761,6 @@ public class PVA {
 				log("Nicht für mich gedacht:" + text);
 			}
 	}
-}
 
 static private class AnalyseMP3 extends Thread {
 
@@ -2802,6 +2801,7 @@ static private class AnalyseMP3 extends Thread {
 		tk.put( "proc","counter", ""+ ( Integer.parseInt( tk.get("proc","counter") ) - 1 ) );
 		tk.put( "files", filename, "1" );
 	}
+}
 }
 
 class Command {
