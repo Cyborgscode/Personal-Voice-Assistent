@@ -1057,7 +1057,7 @@ public class PVA {
 
 			log("start server");
 			
-	                Server server = new Server( Integer.parseInt( config.get("network","port") ) , pva );
+	                Server server = new Server( pva );
 	                server.startServing();
 
 			// Wait until be receive ctrl+c or the EXIT command is given
