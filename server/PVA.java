@@ -341,47 +341,6 @@ public class PVA {
 			
 	}
 
-static private class AnalyseMP3 extends Thread {
-
-        private StringBuffer data;
-        private String filename;
-        private TwoKeyHash tk;
-        
-        public AnalyseMP3(StringBuffer data,String filename,TwoKeyHash tk) {
-                this.data = data;
-                this.filename = filename;
-                this.tk = tk;
-        }
-
-        public void run() {
-		tk.put( "proc","counter", ""+ ( Integer.parseInt( tk.get("proc","counter") ) +1 ) );
-		tk.put( "files", filename, "0" );
-//        	if ( debug > 4 ) log("["+ tk.get("proc","counter") +"] Analyse mp3 ... "+ filename );
-        				try {
-						Mp3File mp3file = new Mp3File( filename, false );
-						if (mp3file.hasId3v1Tag()) {
-							ID3v1 id3v1Tag = mp3file.getId3v1Tag();
-							if ( id3v1Tag != null ) 
-								data.append( formatMetadata( filename, id3v1Tag ) );
-						}
-
-						if (mp3file.hasId3v2Tag()) {
-							ID3v2 id3v2Tag = mp3file.getId3v2Tag();
-							if ( id3v2Tag != null ) 
-								data.append( formatMetadata( filename, id3v2Tag ) );
-						}
-					} catch (UnsupportedTagException e) {
-						// Silently ignore faulty files
-					} catch (InvalidDataException e) {
-						// Silently ignore faulty files
-					} catch (IOException e) {
-						// Silently ignore faulty files
-					}
-		tk.put( "proc","counter", ""+ ( Integer.parseInt( tk.get("proc","counter") ) - 1 ) );
-		tk.put( "files", filename, "1" );
-	}
-}
-
 	static String createMetadata(String start) {
 
 		String[] files = start.split(config.get("conf","splitter"));
@@ -2804,6 +2763,46 @@ static private class AnalyseMP3 extends Thread {
 	}
 }
 
+static private class AnalyseMP3 extends Thread {
+
+        private StringBuffer data;
+        private String filename;
+        private TwoKeyHash tk;
+        
+        public AnalyseMP3(StringBuffer data,String filename,TwoKeyHash tk) {
+                this.data = data;
+                this.filename = filename;
+                this.tk = tk;
+        }
+
+        public void run() {
+		tk.put( "proc","counter", ""+ ( Integer.parseInt( tk.get("proc","counter") ) +1 ) );
+		tk.put( "files", filename, "0" );
+//        	if ( debug > 4 ) log("["+ tk.get("proc","counter") +"] Analyse mp3 ... "+ filename );
+        				try {
+						Mp3File mp3file = new Mp3File( filename, false );
+						if (mp3file.hasId3v1Tag()) {
+							ID3v1 id3v1Tag = mp3file.getId3v1Tag();
+							if ( id3v1Tag != null ) 
+								data.append( formatMetadata( filename, id3v1Tag ) );
+						}
+
+						if (mp3file.hasId3v2Tag()) {
+							ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+							if ( id3v2Tag != null ) 
+								data.append( formatMetadata( filename, id3v2Tag ) );
+						}
+					} catch (UnsupportedTagException e) {
+						// Silently ignore faulty files
+					} catch (InvalidDataException e) {
+						// Silently ignore faulty files
+					} catch (IOException e) {
+						// Silently ignore faulty files
+					}
+		tk.put( "proc","counter", ""+ ( Integer.parseInt( tk.get("proc","counter") ) - 1 ) );
+		tk.put( "files", filename, "1" );
+	}
+}
 
 class Command {
 
