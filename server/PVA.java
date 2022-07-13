@@ -1115,7 +1115,7 @@ static private class AnalyseMP3 extends Thread {
 			tt = new TimerTask(pva);
 			tt.start();
 						
-	                Server server = new Server( 39999, pva );
+	                Server server = new Server( Integer.parseInt( config.get("network","port") ) , pva );
 	                server.startServing();
 
 			// Wait until be receive ctrl+c or the EXIT command is given
