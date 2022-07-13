@@ -1,3 +1,7 @@
+
+Status: ARCHIVED
+
+
 Component that will handle incoming SSL protected text representations of voice commands.
 
 Some toughts:
@@ -14,10 +18,7 @@ So we will need to escape those or as best solution reject ANY attempt to use th
 
 Rule #1 : if ( json.getSring("text").contains("('|\"|;|-)" ) { System.err.println("Exploit rejected"); break }
 
-**DONE** 
-
-
-b) we need for example:
+b) **DONE**  we need for example:
 
 Localhost: (default)
 
