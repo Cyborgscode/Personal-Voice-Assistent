@@ -35,6 +35,30 @@ openssl 1.x+       (used to communicate with the PVA TLS Server)
 
 ### How to install:
 
+Via RPM REPO:
+
+create /etc/yum.repos.de/pva with this cvontent:
+
+[pva]
+name=PVA $releasever - $basearch
+baseurl=http://repo.linux-am-dienstag.de:80/$basearch/fedora/$releasever/
+enabled=1
+metadata_expire=1d
+#repo_gpgcheck=1
+type=rpm
+gpgcheck=1
+gpgkey=http://repo.linux-am-dienstag.de:80/RPM-GPG-KEY-fedora-$releasever-$basearch
+
+Execute the following commands as root:
+
+dnf makecache --repo=pva
+dnf install pva-base pva-vosk-model-de-small
+
+for german speaking persons: that's it. 
+All non german users need to a) install a different language model b) translate the configs to theire language first, otherwise it won't work.
+
+Manual installation via Github:
+
 We don't need fancy frameworks or complicated makefiles, so relax, it's just done in about 5 minutes :) The author uses Fedora as OS,
 so if you run Ubuntu or Arch, your install commands will vary a bit.
 
