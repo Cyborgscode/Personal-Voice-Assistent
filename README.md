@@ -37,7 +37,7 @@ openssl 1.x+       (used to communicate with the PVA TLS Server)
 
 Via RPM REPO:
 
-create /etc/yum.repos.de/pva with this cvontent:
+create /etc/yum.repos.de/pva with this content:
 
 ```
 [pva]
