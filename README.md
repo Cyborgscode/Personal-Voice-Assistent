@@ -53,8 +53,10 @@ gpgkey=http://repo.linux-am-dienstag.de:80/RPM-GPG-KEY-fedora-$releasever-$basea
 
 Execute the following commands as root:
 
+```
 dnf makecache --repo=pva
 dnf install pva-base pva-vosk-model-de-small
+```
 
 for german speaking persons: that's it. 
 All non german users need to a) install a different language model b) translate the configs to theire language first, otherwise it won't work.
