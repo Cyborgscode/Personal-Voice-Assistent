@@ -39,6 +39,7 @@ Via RPM REPO:
 
 create /etc/yum.repos.de/pva with this cvontent:
 
+```
 [pva]
 name=PVA $releasever - $basearch
 baseurl=http://repo.linux-am-dienstag.de:80/$basearch/fedora/$releasever/
@@ -48,6 +49,7 @@ metadata_expire=1d
 type=rpm
 gpgcheck=1
 gpgkey=http://repo.linux-am-dienstag.de:80/RPM-GPG-KEY-fedora-$releasever-$basearch
+```
 
 Execute the following commands as root:
 
