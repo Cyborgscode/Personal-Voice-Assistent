@@ -6,6 +6,8 @@ import queue
 import sounddevice as sd
 import vosk
 import sys
+#import socket
+#import ssl
 
 q = queue.Queue()
 
@@ -72,6 +74,23 @@ try:
                     str = rec.Result();
 #                    os.system( "java PVA '"+ str.replace("'","")  +"'");
                     os.system( "echo '"+ str.replace("'","") +"' | openssl s_client -connect 127.0.0.1:39999 -nbio 1>/dev/null 2>/dev/null");
+# in case anyone is interessted in a python solo solution, this is the way to go, if you want to not have a reliable ssl channel
+#                   context = ssl.create_default_context()
+#                   with socket.create_connection(("127.0.0.1", 39999)) as sock:
+#                   	context.check_hostname = False;
+#                   	context.verify_mode = False;
+#                   	with context.wrap_socket(sock, server_side=False, server_hostname=None) as ssock:
+#                   		print(ssock.version())
+#                   		ssock.send(str.encode('utf-8'))
+#                   		ssock.close()
+#                   	sock.close()
+#
+# because this is what happens:
+# working - Nicht für mich gedacht:test test
+# not working - Thu Jul 14 13:30:43 CEST 2022: Server: javax.net.ssl.SSLException: Connection reset
+# not working - Thu Jul 14 13:30:46 CEST 2022: Server: javax.net.ssl.SSLException: Connection reset
+# not working - Thu Jul 14 13:30:53 CEST 2022: Server: javax.net.ssl.SSLException: Connection reset
+# 3 / 4 of all TLS connects to the java server fail with python.
 
 except KeyboardInterrupt:
     print('\nDone')
