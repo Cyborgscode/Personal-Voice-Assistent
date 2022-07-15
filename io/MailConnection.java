@@ -27,7 +27,7 @@ public class MailConnection {
 			} else  props.setProperty("mail.store.protocol", "imap");
 
 			Session session = Session.getInstance(props, null);
-			Store store = session.getStore("imap");
+			Store store = session.getStore();
 			store.connect(m.servername, m.username, m.password);
 
 			Folder inbox = store.getFolder("Inbox");
