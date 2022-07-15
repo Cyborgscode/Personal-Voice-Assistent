@@ -769,7 +769,7 @@ public class PVA {
 					String v = sub.get( k );
 					if ( key.equals("app") )
 						sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
-					if ( key.equals("conf") && ( k.equals("lang_short") || k.equals("lang") || k.equals("keyword") ) )
+					if ( key.equals("conf") && ( k.equals("lang_short") || k.equals("lang") || k.equals("keyword") || k.equals("hibernate") ) )
 						sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
 
 				}
