@@ -12,7 +12,7 @@ Hi,
 
 This project depends heavily on the AlphaCephei Software VOSK, which can be found here:
 
-https://alphacephei.com/vosk/Why is there 
+https://alphacephei.com/vosk/
 
 Language models for 18 different languages can be found here: 
 
@@ -21,14 +21,14 @@ https://alphacephei.com/vosk/models
 To run it, you need at least:
 
 ```
-Python3
+python3
 pip3
 portaudio
 mbrola             (found on github)
 espeak
 vosk               (found on github)
-sox                (needed in case you wanne make use of GTTS)
-openssl 1.x+       (used to communicate with the PVA TLS Server)
+sox                (needed in case you want to make use of GTTS)
+openssl 1.x+       (used to communicate with the PVA TLS server)
 ```
 
 # JAVA deps have been removed to prepare for distro packaging
@@ -58,8 +58,10 @@ dnf makecache --repo=pva
 dnf install pva-base pva-vosk-model-de-small
 ```
 
-for german speaking persons: that's it. 
-All non german users need to a) install a different language model b) translate the configs to theire language first, otherwise it won't work.
+for german speaking people: that's it. 
+All non german users need to:
+1. Install a different language model
+2. Translate the configs to their language first, otherwise it won't work.
 
 Manual installation via Github:
 
@@ -70,10 +72,10 @@ so if you run Ubuntu or Arch, your install commands will vary a bit.
 
 You need to checkout gsay, change your config to use gsay as "say" app and install gtts for your distro:
 
-i.E. Fedora: `dnf install gtts`
+i.e. Fedora: `dnf install gtts`
 
 ## WARNING: 
-### Your personal privacy is at risk if you use gtts, as the text of the what PVA answers ( which includes repeats of what you said ) is transferred to a Google server, for which you need an active internet connection too. 
+### Your personal privacy is at risk if you use gtts, as the text of the PVA answers (which includes repeats of what you said) is transferred to a Google server, for which you need an active internet connection too. 
 
 ## Espeak:
 
