@@ -18,7 +18,7 @@ public class MailConnection {
 		try{
 			String text = "";
 
-			String lastseen = dos.readFile("/tmp/.pva."+m.id+".lastmsg");
+			String lastseen = dos.readFile( System.getenv("HOME").trim()+  "/.cache/pva/.pva."+m.id+".lastmsg");
 			if ( lastseen.trim().isEmpty() ) lastseen = "0";
 
 			Properties props = System.getProperties();
