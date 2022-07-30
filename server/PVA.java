@@ -37,7 +37,8 @@ public class PVA {
 	static Vector<MailboxData> mailboxes  = new Vector<MailboxData>();
 	static StringHash timers	  = new StringHash();
 	static TimerTask tt;
-	
+	static IMAPTask it;
+
 	static String text = "";
 	static String text_raw = "";
 	static int mbxid = 1;
@@ -1054,6 +1055,11 @@ public class PVA {
 
 			tt = new TimerTask(pva);
 			tt.start();
+
+			log("start IMAPTask");
+			
+			it = new IMAPTask(pva);
+			it.start();
 
 			log("start server");
 			
