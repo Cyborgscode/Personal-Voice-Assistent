@@ -80,7 +80,7 @@ public class MailConnection {
 				inbox.close();
 			}
 			
-			dos.writeFile("/tmp/.pva."+m.id+".lastmsg",lastseen);
+			dos.writeFile(System.getenv("HOME").trim()+  "/.cache/pva/.pva."+m.id+".lastmsg",lastseen);
 			
 			if ( inbox.getUnreadMessageCount() > 0) {
 				store.close();
