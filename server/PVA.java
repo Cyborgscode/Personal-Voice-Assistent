@@ -38,7 +38,7 @@ public class PVA {
 	static StringHash timers	  = new StringHash();
 	static TimerTask tt;
 	static IMAPTask it;
-
+	
 	static String text = "";
 	static String text_raw = "";
 	static int mbxid = 1;
@@ -56,8 +56,7 @@ public class PVA {
 		Calendar d = Calendar.getInstance();
 		d.setTime( new Date(time) );
 
-                String[] months = config.get("conf","months").split(":");			log("start TimerTask");
-
+                String[] months = config.get("conf","months").split(":");
                 
                 String minutes = ""+d.get(Calendar.MINUTE);
                 if ( minutes.length()==1 ) minutes = "0"+minutes;
@@ -91,8 +90,8 @@ public class PVA {
 			b = number.substring(0, modulo)+ b;
 		} else if ( b.length() > 0 ) {
 			b = b.substring(1);
-		} else  b = number;
-		
+		} else b = number;
+	
 		return b;
 	}
 
@@ -997,6 +996,9 @@ public class PVA {
 							} else if ( level1[0].trim().equals("mailbox") ) {
 							
 								if ( level2.length == 8 ) {
+								
+									// log("mailbox.username="+ level2[1].trim() +" mailbox.secure = "+ level2[4].trim() );
+								
 									mailboxes.add( 
 										new MailboxData( mbxid++, level2[0].trim(),
 											     level2[1].trim(),
@@ -1050,20 +1052,20 @@ public class PVA {
 			// here MAIN really starts
 
 			PVA pva = new PVA();
-			
-			log("start TimerTask");
 
+			log("start TimerTask");
+			
 			tt = new TimerTask(pva);
 			tt.start();
-
+			
 			log("start IMAPTask");
 			
 			it = new IMAPTask(pva);
 			it.start();
 
 			log("start server");
-			
-	                Server server = new Server( pva );
+						
+	                Server server = new Server( Integer.parseInt( config.get("network","port") ) , pva );
 	                server.startServing();
 
 			// Wait until be receive ctrl+c or the EXIT command is given
@@ -1081,11 +1083,9 @@ public class PVA {
 	}
 
 	public void handleInput(String extText) throws IOException,InterruptedException  {
-			
-			// reset reaction flag on each new incoming command
-		
+
 			reaction = false;
-		
+
 			// JSON Object is given by vosk, but the org.json package can't be shipped with distros, so we need to do it ourself, so .. don't wonder ;)
 			
 			// Format to parse "{text:"spoken text"}"
@@ -1100,7 +1100,7 @@ public class PVA {
 			} else {
 				text = extText;
 			}
-		
+			
 			// REJECT ANY attempt to inject Code
 			// 
 			// no regex check here, as someone could try to trick this with escapes 
@@ -1109,7 +1109,7 @@ public class PVA {
 				log("Exploit detected on input: "+ text);
 				return;
 			}
-
+		
 //			log("handleInput: text="+ text );
 		
 			// RAW Copy of what has been spoken. This is needed in case a filter is applied, but we need some of the filtered words to make decisions.
@@ -1305,6 +1305,8 @@ public class PVA {
 				log(text);
 
 				// parse commands from config
+				
+				text = text.trim();
 				
 				Command cf = parseCommand( text );
 				
@@ -1591,7 +1593,7 @@ public class PVA {
 				
 				if ( cf.command.equals("RECREATECACHE") ) {
 		
-					dos.writeFile( getHome()+"/.cache/pva/cache.musik", suche( config.get("path","music"), "*",".mp3|.aac" ) );
+					dos.writeFile( getHome()+"/.cache/pva/cache.musik", suche( config.get("path","music"), "*",config.get("conf","musicfilepattern") ) );
 					
 					say( texte.get( config.get("conf","lang_short"), cf.command) );
 
@@ -1604,11 +1606,11 @@ public class PVA {
 					if ( subtext.length() > 5 ) {
 					
 						config.put("conf", "keyword", subtext );
-
+						
 						// as it's now static server, we need to overwrite all changes
 						
 						keyword = subtext;
-
+						
 						say( texte.get( config.get("conf","lang_short"), cf.command+"RESPONSE").replaceAll("<TERM1>", subtext ) );
 
 						saveConfig();
@@ -1990,7 +1992,7 @@ public class PVA {
 					String suchergebnis = "";
 					if ( !subtext.trim().isEmpty() && dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
 						log("Suche im Cache");
-						suchergebnis = cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), ".*"+subtext+".*", ".mp3|.aac" );
+						suchergebnis = cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), ".*"+subtext+".*", config.get("conf","musicfilepattern") );
 						if ( suchergebnis.isEmpty() ) {
 							uncertainresult = true;
 							String[] searchargs = subtext.split(" ");
@@ -2000,7 +2002,7 @@ public class PVA {
 									pattern += arg.trim() +".*";
 							}
 							if ( debug > 4 ) log("searchpattern = "+pattern );
-							suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), pattern, ".mp3|.aac" );
+							suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), pattern, config.get("conf","musicfilepattern") );
 						}
 						if ( suchergebnis.isEmpty() ) {
 							uncertainresult = true;
@@ -2018,7 +2020,7 @@ public class PVA {
 							String arg = "";
 							for(int i=0;i<pc;i++) arg += pattern;
 							if ( debug > 4 ) log("searchpattern = .*"+arg );
-							suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), ".*"+ arg, ".mp3|.aac" );
+							suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), ".*"+ arg, config.get("conf","musicfilepattern") );
 						}
 						if ( suchergebnis.isEmpty() ) {
 							uncertainresult = true;
@@ -2031,19 +2033,19 @@ public class PVA {
 							if ( pattern.endsWith("|") ) pattern = pattern.substring(0,pattern.length()-1);
 							pattern += ").*";
 							if ( debug > 4 ) log("searchpattern = "+pattern );
-							suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), pattern, ".mp3|.aac" );
+							suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), pattern, config.get("conf","musicfilepattern") );
 						}
 		
 					} else {
 						log("Suche im Filesystem");
-						suchergebnis = suche( config.get("path","music"), subtext,".mp3|.aac" );
+						suchergebnis = suche( config.get("path","music"), subtext, config.get("conf","musicfilepattern") );
 					}
 
 					if (!suchergebnis.isEmpty() ) {	
 
 						dos.writeFile(getHome()+"/.cache/pva/search.music.cache",suchergebnis);
 
-						int c = 0;
+						c = 0;
 
 						TreeSort ts = new TreeSort();
 						StringHash d = new StringHash();
@@ -2418,7 +2420,7 @@ public class PVA {
 						if ( dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
 							suchergebnis = dos.readFile(getHome()+"/.cache/pva/cache.musik");
 						} else {
-							suchergebnis = suche( config.get("path","music"), "*",".mp3|.aac" );
+							suchergebnis = suche( config.get("path","music"), "*", config.get("conf","musicfilepattern") );
 							dos.writeFile(getHome()+"/.cache/pva/cache.musik", suchergebnis);
 						}
 						// System.out.println("suche: "+ suchergebnis );
@@ -2449,7 +2451,7 @@ public class PVA {
 					if ( dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
 						suchergebnis = dos.readFile(getHome()+"/.cache/pva/cache.musik");
 					} else {
-						suchergebnis = suche( config.get("path","music"), "*",".mp3|.aac" );
+						suchergebnis = suche( config.get("path","music"), "*", config.get("conf","musicfilepattern") );
 						dos.writeFile(getHome()+"/.cache/pva/cache.musik", suchergebnis);
 					}
 					// System.out.println("suche: "+ suchergebnis );
@@ -2464,7 +2466,7 @@ public class PVA {
 								for(int j=0;j<=i;j++ ) {
 													
 									int p = (int)( Math.random() * files.length);
-									dos.readPipe( config.get("audioplayer","enqueue").replaceAll( config.get("conf","splitter")," ") +" '"+ files[p].replaceAll("'","xx2xx") +"'",true);
+						 			dos.readPipe( config.get("audioplayer","enqueue").replaceAll( config.get("conf","splitter")," ") +" '"+ files[p].replaceAll("'","xx2xx") +"'",true);
 	
 								}
 						exec( config.get("audioplayer","playpl").split( config.get("conf","splitter") ));
@@ -2735,7 +2737,7 @@ public class PVA {
 					if ( dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
 						suchergebnis = dos.readFile(getHome()+"/.cache/pva/cache.musik");
 					} else {
-						suchergebnis = suche( config.get("path","music"), "*",".mp3|.aac" );
+						suchergebnis = suche( config.get("path","music"), "*", config.get("conf","musicfilepattern") );
 						dos.writeFile(getHome()+"/.cache/pva/cache.musik", suchergebnis);
 					}
 					// System.out.println("suche: "+ suchergebnis );
@@ -2749,8 +2751,9 @@ public class PVA {
 						say( texte.get( config.get("conf","lang_short"), "MAKEMETACACHEERROR") );
 					
 					}
+					
 				}
-
+				
 				if ( !reaction ) {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
 						log("Ich glaube, Du hast nichts gesagt!");
@@ -2816,7 +2819,9 @@ static private class AnalyseMP3 extends Thread {
 		tk.put( "files", filename, "1" );
 	}
 }
+
 }
+
 
 class Command {
 
@@ -2841,7 +2846,7 @@ class Command {
 		if ( t != null ) {
 			this.terms = t;
 		} else	this.terms = new Vector();
-	}	
+	}
 }
 
 class Reaction {
