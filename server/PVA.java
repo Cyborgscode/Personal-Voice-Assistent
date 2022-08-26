@@ -2740,9 +2740,16 @@ public class PVA {
 				
 				if ( cf.command.equals("MAKEMETACACHE") ) {
 				
-					mt = new MetacacheTask(new PVA());
-					mt.start();
-					if (mt != null ) reaction = true;
+					if ( mt == null || ! mt.isAlive() ) {
+				
+						mt = new MetacacheTask(new PVA());
+						mt.start();
+						if (mt != null ) {
+							reaction = true;
+						} else {
+							say( texte.get( config.get("conf","lang_short"), "SUBPROCESSNOTRUNNING" ) );
+						}
+					}
 				}
 				
 				if ( !reaction ) {
