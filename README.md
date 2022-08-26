@@ -95,11 +95,11 @@ Compile: ( needs gcc )
 ```
 cd MBROLA-master
 make
-cp Bin/mbrola /usr/local/sbin/“
+cp Bin/mbrola /usr/local/sbin/
 ```
 
 Experiment a bit with the best voice for you. You will find the `say` Bash script in this repo, but it will default to de5, as it's setuped for german.
-Just replace de5 with your prefered language and don't forget to translate the responses in PVA.java ;)
+Just replace de5 in "say" with your prefered language and don't forget to translate the responses in /ect/pva/conf.d/* ;)
 
 If you need help with mbrola: https://marius.bloggt-in-braunschweig.de/2021/03/24/mbrola-etwas-bessere-sprachsynthese/
 
@@ -139,7 +139,7 @@ There are small models, with a smaller stock of words, but it may already be eno
 ATTN: previouse installation procedures focused on a private, one user only installation. We now focus on a MULTI-USER systemwide installation.
 ####
 
-PVA is now fully aware of `systemd --user` actions and freedesktop directorystructures
+PVA is now fully aware of freedesktop directorystructures and makes use of it.
 
 ## Installation: 
 
@@ -176,17 +176,10 @@ cp usr/local/sbin/*say /usr/local/sbin
 
 # NOTE: alternative: `tar c usr |tar x -C /`
 
-now compile the JAVA Classes :
+now compile the JAVA Classes ( requires javac aka openjdk-devel packages ) :
 
 ```
-cd /usr/share/pva
-javac PVA.java
-```
-
-if you do not have other java apps running with 8 you can use "javac PVA.java" and compile for the latest version. If you see error messages, use:
-
-```
-javac --release 8 PVA.java
+/usr/share/pva/compile.sh
 ```
 
 move desktop/* to /usr/share/applications/
@@ -195,7 +188,7 @@ You should now find two PVA entries in your desktop app menu.
 
 You can now use your desktop specific autostarttool ( Startprogramme ) to add PVA to your desktop autostart.
 
-You should hear the default ( german ) startup greeting, next time your start your desktop session.
+You should hear the default ( german ) startup greeting, next time you start your desktop session.
 Of course, you can start PVA the first time manually from the app menu ;)
 
 Check the processlist if a process "python3" appeared for pva.py. If not, the startup did not work, something is wrong.
