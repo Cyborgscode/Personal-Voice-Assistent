@@ -38,6 +38,8 @@ public class PVA {
 	static StringHash timers	  = new StringHash();
 	static TimerTask tt;
 	static IMAPTask it;
+	static SearchTask st;
+	static MetacacheTask mt;
 	
 	static String text = "";
 	static String text_raw = "";
@@ -645,6 +647,11 @@ public class PVA {
 	}
 
 	static String _suche(String start,String suchwort,String type) {
+/*
+		if (isInterrupted()) 
+			return "";
+*/
+			
 		File file = new File(start);
                 File[] entries = file.listFiles();
 		String filename ="";
@@ -1593,9 +1600,9 @@ public class PVA {
 				
 				if ( cf.command.equals("RECREATECACHE") ) {
 		
-					dos.writeFile( getHome()+"/.cache/pva/cache.musik", suche( config.get("path","music"), "*",config.get("conf","musicfilepattern") ) );
-					
-					say( texte.get( config.get("conf","lang_short"), cf.command) );
+					st = new SearchTask(new PVA(),cf);
+					st.start();
+					if (st != null ) reaction = true;
 
 				}
 				
@@ -2732,26 +2739,10 @@ public class PVA {
 				}
 				
 				if ( cf.command.equals("MAKEMETACACHE") ) {
-					String suchergebnis = "";
-
-					if ( dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
-						suchergebnis = dos.readFile(getHome()+"/.cache/pva/cache.musik");
-					} else {
-						suchergebnis = suche( config.get("path","music"), "*", config.get("conf","musicfilepattern") );
-						dos.writeFile(getHome()+"/.cache/pva/cache.musik", suchergebnis);
-					}
-					// System.out.println("suche: "+ suchergebnis );
-					if (!suchergebnis.isEmpty() ) {
-						dos.writeFile( getHome()+"/.cache/pva/cache.metadata", createMetadata( suchergebnis ) );
-						say( texte.get( config.get("conf","lang_short"), "MAKEMETACACHE") );
-					
-					
-					} else {
 				
-						say( texte.get( config.get("conf","lang_short"), "MAKEMETACACHEERROR") );
-					
-					}
-					
+					mt = new MetacacheTask(new PVA());
+					mt.start();
+					if (mt != null ) reaction = true;
 				}
 				
 				if ( !reaction ) {
