@@ -1602,7 +1602,11 @@ public class PVA {
 		
 					st = new SearchTask(new PVA(),cf);
 					st.start();
-					if (st != null ) reaction = true;
+					if (st != null ) {
+						reaction = true;
+					} else {
+						say( texte.get( config.get("conf","lang_short"), "SUBPROCESSNOTRUNNING" ) );
+					}
 
 				}
 				
