@@ -1610,6 +1610,18 @@ public class PVA {
 
 				}
 				
+				if ( cf.command.equals("ABORTMETACACHE") ) {
+					if ( st == null || ! st.isAlive() ) {
+						say( texte.get( config.get("conf","lang_short"), "EVERYTHINGISOK" ) );
+
+					} else {
+						st.stop();
+						st = null;
+						say( texte.get( config.get("conf","lang_short"), "ABORTEDCREATIONOFMETADATA" ) );
+					}
+					
+				}	
+				
 				if ( cf.command.equals("SWAPNAME") ) {
 
 					String subtext = text.replaceAll(cf.filter,"").replaceAll(cf.words,"").trim();
