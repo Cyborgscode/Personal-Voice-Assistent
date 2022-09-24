@@ -2113,6 +2113,15 @@ public class PVA {
 						for( String filename : args) {
 								// log("Füge "+ filename +" hinzu ");
 								//log( dos.readPipe( config.get("audioplayer","enqueue").replaceAll(config.get("conf","splitter")," ") +" '"+ filename.replaceAll("'","xx2xx") +"'",true) );
+
+								// add filename to list of results searched for statistical analysis
+								// the "filename" is used as a key to the .cache/pva/cache.metadata db
+								// which is used to guess favorites of genres as "jazz" later 
+								
+								if ( c < 10 ) dos.writeFile(getHome()+"/.cache/pva/music.stats", 
+									       dos.readFile(getHome()+"/.cache/pva/music.stats"+ filename +"\n")
+									      );
+
 								dos.readPipe( config.get("audioplayer","enqueue").replaceAll(config.get("conf","splitter")," ") +" '"+ filename.replaceAll("'","xx2xx") +"'",true);
 						}
 
