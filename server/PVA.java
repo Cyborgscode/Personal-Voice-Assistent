@@ -328,7 +328,15 @@ public class PVA {
 	
 		if ( id3v1Tag != null ) {
 
-			return ( filename + config.get("conf","splitter") + id3v1Tag.getTrack() +config.get("conf","splitter") + id3v1Tag.getArtist() +config.get("conf","splitter") + id3v1Tag.getTitle() +config.get("conf","splitter") + id3v1Tag.getAlbum() +config.get("conf","splitter") + id3v1Tag.getYear() + config.get("conf","splitter") + id3v1Tag.getComment() ).replaceAll("(\n|\r)"," ") + "\n";
+			return ( filename 
+			+ config.get("conf","splitter") + id3v1Tag.getTrack() 
+			+ config.get("conf","splitter") + id3v1Tag.getArtist() 
+			+ config.get("conf","splitter") + id3v1Tag.getTitle() 
+			+ config.get("conf","splitter") + id3v1Tag.getAlbum() 
+			+ config.get("conf","splitter") + id3v1Tag.getYear() 
+			+ config.get("conf","splitter") + id3v1Tag.getGenre() 
+			+ config.get("conf","splitter") + id3v1Tag.getGenreDescription() 
+			+ config.get("conf","splitter")	+ id3v1Tag.getComment() ).replaceAll("(\n|\r)"," ") + "\n";
 			
 		} else return "";
 
@@ -337,7 +345,18 @@ public class PVA {
 	static String formatMetadata(String filename, ID3v2 id3v2Tag ) {
 	
 		if ( id3v2Tag != null ) {
-			return ( filename.replace("'","\'") + config.get("conf","splitter") + id3v2Tag.getTrack() +config.get("conf","splitter") + id3v2Tag.getArtist() +config.get("conf","splitter") + id3v2Tag.getTitle() +config.get("conf","splitter") + id3v2Tag.getAlbum() +config.get("conf","splitter") + id3v2Tag.getYear() + config.get("conf","splitter") + id3v2Tag.getComment() + config.get("conf","splitter") + id3v2Tag.getComposer() + config.get("conf","splitter") + id3v2Tag.getPublisher() + config.get("conf","splitter") + id3v2Tag.getOriginalArtist() ).replaceAll("(\n|\r)"," ") + "\n" ;
+			return ( filename.replace("'","\'") 
+			+ config.get("conf","splitter") + id3v2Tag.getTrack() 
+			+ config.get("conf","splitter") + id3v2Tag.getArtist() 
+			+ config.get("conf","splitter") + id3v2Tag.getTitle() 
+			+ config.get("conf","splitter") + id3v2Tag.getAlbum() 
+			+ config.get("conf","splitter") + id3v2Tag.getYear() 
+			+ config.get("conf","splitter") + id3v2Tag.getGenre() 
+			+ config.get("conf","splitter") + id3v2Tag.getGenreDescription()
+			+ config.get("conf","splitter") + id3v2Tag.getComment() 
+			+ config.get("conf","splitter") + id3v2Tag.getComposer() 
+			+ config.get("conf","splitter") + id3v2Tag.getPublisher() 
+			+ config.get("conf","splitter") + id3v2Tag.getOriginalArtist() ).replaceAll("(\n|\r)"," ") + "\n" ;
 
 		} else return "";
 			
