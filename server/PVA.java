@@ -2138,7 +2138,7 @@ public class PVA {
 								// which is used to guess favorites of genres as "jazz" later 
 								
 								if ( c < 10 ) dos.writeFile(getHome()+"/.cache/pva/music.stats", 
-									       dos.readFile(getHome()+"/.cache/pva/music.stats"+ filename +"\n")
+									       dos.readFile(getHome()+"/.cache/pva/music.stats")+ filename +"\n"
 									      );
 
 								dos.readPipe( config.get("audioplayer","enqueue").replaceAll(config.get("conf","splitter")," ") +" '"+ filename.replaceAll("'","xx2xx") +"'",true);
