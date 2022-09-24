@@ -323,7 +323,7 @@ The actual config `./pva.conf` is always loaded as the last config file, to over
 
 COMMANDS:
 
-You will find here the commands, PVA can undertand atm. You will see, they are in german, but explained in english.
+You will find here the commands, PVA can understand atm. You will see, they are in german, but explained in english.
 Thats because, it has been developed in german. Now any language can be supported, but someone still needs to write those commands and responses in theire native language and post them. If you wannte help out, get the /etc/pva/conf.d/ files and move them from 0x-.. to 1x-... then translate them. It may be easier for you to do that at $HOME/.config/pva/conf.d/ , because you don't need to be root to do it.
 
 Any time you see a "|" it seperates AND-connected keywords:
@@ -550,3 +550,24 @@ Keywords in Bot Reaction: " Keyword " + content
 
 "schalte X auf Y um" 	-> switches pulseaudio output device for process X to sink Y
 ```
+
+
+## How PVA detects your favorite music for a specific genre ?
+
+In case a metadatacache IS ENABLED AND exists AND you had searched for i.e.  a pop song in the past AND you had a MP3 tag set with that genre in that specific popsong mp3 AND you tell PVA that "you wanne listen to pop", the new algorithm calculates your favorite pop song (if you have one) and adds it/them to the searchresult instead of searching to the term "pop" in your musik-cache.
+
+This may get in the way of you searching a big database of soundtracks using the term "soundtrack" ;)
+
+### Step by Step 
+
+You will need a tagged mp3 library with genres set for this to work. I suggest to use "PICARD" for this task. 
+
+If you tell PVA to "listen to XXX ", PVA searches your music.cache for a matching file.
+If one or less that 25 are found in a search, they are added to the music.stats cachefile.
+
+If you are in a moud and want to listen to pop, classic etc. etc. you tell PVA "i want to listen to pop".
+While creating cache.metadata via the command MAKEMETACACHE, PVA can find mp3 files with genre data and these are stored and loaded on PVA startup, to have a valid list of genre names. Otherwise, PVA would not know what a genre is at all. 
+So, if "pop" is a genre in your cache.metadata file, PVA will load the favorites ( music.stats ), calculates how often you searched for a (or more) specific files, sorts the result top down and checks this list against the cache.metadata informations for the required genre.
+If one or more are found, they get added to the searchresult list and you will instantly hear them.
+
+This results in a minor problem if you really wanne search for all songs containing "pop" in the name: you can't anymore. If you need this, disable the metacache favorite search by replacing "true" with "false". 
