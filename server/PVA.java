@@ -36,6 +36,7 @@ public class PVA {
 	static Vector<Contact> contacts   = new Vector<Contact>();
 	static Vector<MailboxData> mailboxes  = new Vector<MailboxData>();
 	static StringHash timers	  = new StringHash();
+	static Vector<String> categories  = new Vector<String>();
 	static TimerTask tt;
 	static IMAPTask it;
 	static SearchTask st;
@@ -1072,6 +1073,31 @@ public class PVA {
 			
 			metadata_enabled = config.get("conf","metadatabase");
 
+			if ( metadata_enabled.equals("true") ) {
+				
+				if ( dos.fileExists( getHome()+"/.cache/pva/cache.metadata" ) ) {
+
+					StringHash unique = new StringHash();
+					String[] cachedata = dos.readFile( getHome()+"/.cache/pva/cache.metadata" ).trim().split("\n");
+					for(String line : cachedata ) {
+						String[] metacols = line.split( config.get("conf","splitter") );
+						
+						// log("found "+ metacols[7] );
+						
+						if ( metacols[7] != "null" && metacols[7] != "unknown" && metacols[7] != "Unknown" ) {
+							// add Genre to list 
+							
+							if ( unique.get( metacols[7] ).equals("") ) {
+								unique.put( metacols[7] , "1");
+								categories.add( metacols[7] );
+//								log( "add "+ metacols[7] );
+							}
+						}
+					}
+				}
+			
+			}
+
 			// for speed resons, we got often used content in variables.
 			keyword = config.get("conf","keyword");
 
@@ -1628,7 +1654,7 @@ public class PVA {
 					}
 
 				}
-				
+
 				if ( cf.command.equals("ABORTMETACACHE") ) {
 					if ( st == null || ! st.isAlive() ) {
 						say( texte.get( config.get("conf","lang_short"), "EVERYTHINGISOK" ) );
@@ -2015,8 +2041,6 @@ public class PVA {
 						} else  say( texte.get( config.get("conf","lang_short"), "STARTAPP-RESPONSE").replaceAll("<TERM1>", text) );
 						
 					} else 	say( texte.get( config.get("conf","lang_short"), "OPENAPP-RESPONSE-FAIL").replaceAll("<TERM1>", text) );
-			
-							
 										
 				}
 
@@ -2030,57 +2054,116 @@ public class PVA {
 					log("Ich suche nach Musik : "+ subtext);
 					
 					boolean uncertainresult = false;
-					
+
 					String suchergebnis = "";
-					if ( !subtext.trim().isEmpty() && dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
-						log("Suche im Cache");
-						suchergebnis = cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), ".*"+subtext+".*", config.get("conf","musicfilepattern") );
-						if ( suchergebnis.isEmpty() ) {
-							uncertainresult = true;
-							String[] searchargs = subtext.split(" ");
-		                       			String pattern = ".*";
-		                       			for( String arg : searchargs ) {
-		                       				if ( !arg.trim().isEmpty() ) 
-									pattern += arg.trim() +".*";
-							}
-							if ( debug > 4 ) log("searchpattern = "+pattern );
-							suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), pattern, config.get("conf","musicfilepattern") );
-						}
-						if ( suchergebnis.isEmpty() ) {
-							uncertainresult = true;
-							String[] searchargs = subtext.split(" ");
-		                       			String pattern = "(";
-		                       			int pc = 0;
-		                       			for( String arg : searchargs ) {
-	                       					if ( !arg.trim().isEmpty() ) {
-									pattern += arg.trim() +"|";
-									pc++;
+					
+					if (  metadata_enabled.equals("true")
+						&& dos.fileExists( getHome()+"/.cache/pva/cache.metadata" ) 
+						&& dos.fileExists( getHome()+"/.cache/pva/music.stats") ) 
+						
+						{
+						
+						for(int i=0; i < categories.size(); i++) {
+
+							// genres are unique in this vector, no performance issues expected
+							
+							String s = (String)categories.get(i);
+							if ( s.trim().toLowerCase().equals( subtext.toLowerCase() ) ) {
+							
+								// readin stats file
+							
+								HashMap<String, Long> sm = new HashMap<String, Long>();
+								String[] filenames = dos.readFile(getHome()+"/.cache/pva/music.stats").split("\n");
+								for(String filename : filenames ) {
+									if ( sm.get( filename ) != null ) {
+										sm.put(filename, new Long( sm.get(filename).longValue() +1 ) );
+									} else {
+										sm.put(filename, new Long(1) );
+									}
+								}
+
+								// sort it on occurance of a filename 
+								
+								NumericTreeSort ns = new NumericTreeSort();
+								for (String key : sm.keySet()) {
+									ns.add( sm.get( key ), key );
+								}
+								filenames = ns.getValues();		
+
+								// Load the Metacache into memory
+				
+								StringHash metacache = new StringHash();
+								String[] cachedata = dos.readFile( getHome()+"/.cache/pva/cache.metadata" ).trim().split("\n");
+								for(String line : cachedata ) {
+									String[] metacols = line.split( config.get("conf","splitter") );
+									metacache.put( metacols[0], metacols[7] );
+								}
+								
+								// now check if the filenames in the favoriteslist match the category, it's what we are looking for.
+									
+								for(String filename: filenames ) {
+									if ( metacache.get( filename ).trim().toLowerCase().equals( s.trim().toLowerCase() ) ) {
+										// MATCH .. play this file :D
+										suchergebnis += filename + config.get("conf","splitter");
+									}
 								}
 							}
-							if ( pattern.endsWith("|") ) pattern = pattern.substring(0,pattern.length()-1);
-							pattern += "){1,}.*";
-							String arg = "";
-							for(int i=0;i<pc;i++) arg += pattern;
-							if ( debug > 4 ) log("searchpattern = .*"+arg );
-							suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), ".*"+ arg, config.get("conf","musicfilepattern") );
 						}
-						if ( suchergebnis.isEmpty() ) {
-							uncertainresult = true;
-							String[] searchargs = subtext.split(" ");
-		                       			String pattern = ".*(";
-		                       			for( String arg : searchargs ) {
-		                       				if ( !arg.trim().isEmpty() ) 
-									pattern += arg.trim() +"|";
+					}
+
+					// keep searching with different methods ...
+
+					if ( suchergebnis.isEmpty() ) {
+						if ( !subtext.trim().isEmpty() && dos.fileExists(getHome()+"/.cache/pva/cache.musik") ) {
+							log("Suche im Cache");
+							suchergebnis = cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), ".*"+subtext+".*", config.get("conf","musicfilepattern") );
+							if ( suchergebnis.isEmpty() ) {
+								uncertainresult = true;
+								String[] searchargs = subtext.split(" ");
+			                       			String pattern = ".*";
+			                       			for( String arg : searchargs ) {
+			                       				if ( !arg.trim().isEmpty() ) 
+										pattern += arg.trim() +".*";
+								}
+								if ( debug > 4 ) log("searchpattern = "+pattern );
+								suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), pattern, config.get("conf","musicfilepattern") );
 							}
-							if ( pattern.endsWith("|") ) pattern = pattern.substring(0,pattern.length()-1);
-							pattern += ").*";
-							if ( debug > 4 ) log("searchpattern = "+pattern );
-							suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), pattern, config.get("conf","musicfilepattern") );
+							if ( suchergebnis.isEmpty() ) {
+								uncertainresult = true;
+								String[] searchargs = subtext.split(" ");
+			                       			String pattern = "(";
+			                       			int pc = 0;
+			                       			for( String arg : searchargs ) {
+		                       					if ( !arg.trim().isEmpty() ) {
+										pattern += arg.trim() +"|";
+										pc++;
+									}
+								}
+								if ( pattern.endsWith("|") ) pattern = pattern.substring(0,pattern.length()-1);
+								pattern += "){1,}.*";
+								String arg = "";
+								for(int i=0;i<pc;i++) arg += pattern;
+								if ( debug > 4 ) log("searchpattern = .*"+arg );
+								suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), ".*"+ arg, config.get("conf","musicfilepattern") );
+							}
+							if ( suchergebnis.isEmpty() ) {
+								uncertainresult = true;
+								String[] searchargs = subtext.split(" ");
+			                       			String pattern = ".*(";
+			                       			for( String arg : searchargs ) {
+			                       				if ( !arg.trim().isEmpty() ) 
+										pattern += arg.trim() +"|";
+								}
+								if ( pattern.endsWith("|") ) pattern = pattern.substring(0,pattern.length()-1);
+								pattern += ").*";
+								if ( debug > 4 ) log("searchpattern = "+pattern );
+								suchergebnis += cacheSuche( dos.readFile(getHome()+"/.cache/pva/cache.musik"), pattern, config.get("conf","musicfilepattern") );
+							}
+			
+						} else {
+							log("Suche im Filesystem");
+							suchergebnis = suche( config.get("path","music"), subtext, config.get("conf","musicfilepattern") );
 						}
-		
-					} else {
-						log("Suche im Filesystem");
-						suchergebnis = suche( config.get("path","music"), subtext, config.get("conf","musicfilepattern") );
 					}
 
 					if (!suchergebnis.isEmpty() ) {	
@@ -2132,15 +2215,15 @@ public class PVA {
 						for( String filename : args) {
 								// log("Füge "+ filename +" hinzu ");
 								//log( dos.readPipe( config.get("audioplayer","enqueue").replaceAll(config.get("conf","splitter")," ") +" '"+ filename.replaceAll("'","xx2xx") +"'",true) );
-
+								
 								// add filename to list of results searched for statistical analysis
 								// the "filename" is used as a key to the .cache/pva/cache.metadata db
 								// which is used to guess favorites of genres as "jazz" later 
 								
-								if ( c < 10 ) dos.writeFile(getHome()+"/.cache/pva/music.stats", 
-									       dos.readFile(getHome()+"/.cache/pva/music.stats")+ filename +"\n"
+								if ( c < 25 ) dos.writeFile(getHome()+"/.cache/pva/music.stats", 
+									       dos.readFile(getHome()+"/.cache/pva/music.stats") + filename +"\n"
 									      );
-
+								
 								dos.readPipe( config.get("audioplayer","enqueue").replaceAll(config.get("conf","splitter")," ") +" '"+ filename.replaceAll("'","xx2xx") +"'",true);
 						}
 
