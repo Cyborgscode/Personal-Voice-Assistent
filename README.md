@@ -29,6 +29,7 @@ espeak
 vosk               (found on github)
 sox                (needed in case you want to make use of GTTS)
 openssl 1.x+       (used to communicate with the PVA TLS server)
+dbus-tools
 ```
 
 # JAVA deps have been removed to prepare for distro packaging
