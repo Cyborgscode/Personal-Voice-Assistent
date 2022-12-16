@@ -39,6 +39,7 @@ public class PVA {
 	static Vector<String> categories  = new Vector<String>();
 	static TimerTask tt;
 	static IMAPTask it;
+	static LoadTask lt;
 	static SearchTask st;
 	static MetacacheTask mt;
 	
@@ -1114,6 +1115,11 @@ public class PVA {
 			
 			it = new IMAPTask(pva);
 			it.start();
+
+			log("start LoadTask");
+			
+			lt = new LoadTask(pva);
+			lt.start();
 
 			log("start server");
 						
