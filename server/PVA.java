@@ -18,6 +18,7 @@ import java.nio.file.*;
 import java.util.regex.*;
 import com.mpatric.mp3agic.*;
 import server.Server;
+import plugins.Plugins;
 import utils.Tools;
 
 public class PVA {
@@ -27,9 +28,9 @@ public class PVA {
 	static long debug = 0;
 	static boolean doexit = false;
 
-	static TwoKeyHash config          = new TwoKeyHash();
+	static public TwoKeyHash config          = new TwoKeyHash();
 	static TwoKeyHash alternatives    = new TwoKeyHash();
-	static TwoKeyHash texte           = new TwoKeyHash();
+	static public TwoKeyHash texte           = new TwoKeyHash();
 	static TwoKeyHash context         = new TwoKeyHash();
 	static Vector<Reaction> reactions = new Vector<Reaction>();
 	static Vector<Command> commands   = new Vector<Command>();
@@ -39,9 +40,9 @@ public class PVA {
 	static Vector<String> categories  = new Vector<String>();
 	static TimerTask tt;
 	static IMAPTask it;
-	static LoadTask lt;
 	static SearchTask st;
 	static MetacacheTask mt;
+	static Plugins pls;
 	
 	static String text = "";
 	static String text_raw = "";
@@ -115,7 +116,6 @@ public class PVA {
 		}
 		reaction = true;
 	}
-
 
 	static void exec(String[] cmds) throws IOException {
 		exec( cmds, false );
@@ -597,8 +597,6 @@ public class PVA {
 		
 		}
 		return "";
-	
-	
 	}
 	
 	static String getDesktop() {
@@ -1116,11 +1114,10 @@ public class PVA {
 			it = new IMAPTask(pva);
 			it.start();
 
-			log("start LoadTask");
+			log("start PluginLoader");
 			
-			lt = new LoadTask(pva);
-			lt.start();
-
+			pls = new Plugins(pva);
+			
 			log("start server");
 						
 	                Server server = new Server( Integer.parseInt( config.get("network","port") ) , pva );
@@ -2884,7 +2881,14 @@ public class PVA {
 						}
 					}
 				}
-				
+
+				if ( !reaction ) {
+					
+					log("no internal reaction yet, lets test plugins to handle it.");	
+					
+					reaction = pls.handlePluginAction(cf.command, text_raw);
+				}
+
 				if ( !reaction ) {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
 						log("Ich glaube, Du hast nichts gesagt!");
