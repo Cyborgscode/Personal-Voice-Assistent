@@ -1,0 +1,36 @@
+#!/bin/bash
+
+# too find valid names use:
+# pactl list sources | grep Name
+# pactl list sinks | grep Name
+
+export LANG=C 
+
+if [ -n "${1}" ] && [ -n "${2}" ]; then
+  #CLI: $0 processname output
+
+  app=$(echo $1 | sed -e "s/\\[/\\\[/g" -e  "s/\\]/\\\]/g")
+  out=$2
+  appstream=$(echo $(pactl list source-outputs | grep -e "Source\ Output" -e "node.name") | grep -i -o "Source\ Output\ #[0-9]*\ node\.name\ =\ \"$app\"" | sed -e 's/^.*#//' -e 's/\ .*//')
+
+case "$out" in
+  default|speakers|system|pa)
+    output="alsa_input.pci-0000_0a_00.4.analog-stereo"
+  ;;
+  hdmimonitor)
+    output="alsa_output.pci-0000_04_00.1.hdmi-stereo-extra1.monitor"
+  ;;
+  defaultmonitor)
+    output="alsa_output.pci-0000_0a_00.4.analog-stereo.monitor"
+  ;;
+  usb)
+    output="alsa_input.usb-046d_Logitech_Webcam_C925e_F4C01DCF-02.analog-stereo"
+  ;;
+esac
+
+[[ $output ]] && for i in $appstream; do \
+  pactl move-source-output $i $output; done
+
+else
+	say "Aufruf: prozessname sourcename"
+fi
