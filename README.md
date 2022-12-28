@@ -18,7 +18,7 @@ It's also not language depended, which means, YOU can modify the scripts and con
 
 Feel free to adopt it to your perfect assistent or your best friend, as there is next to no limit. 
 
-PVA is capable of reading emails, making calls, answering phone calls, plays music & videos, searches for documents and media files, does a personal TOP list of favorite music ( requires genere metadata in your mp3 files -> Picard if your friend ), survails your pc for you or writes email if needed.
+PVA is capable of reading emails, making calls, answering phone calls, plays music & videos, searches for documents and media files, does a personal TOP list of favorite music ( requires genre metadata in your mp3 files -> Picard if your friend ), survails your pc for you or writes email if needed.
 
 Nothing of this requires any AI. 
 
