@@ -1,0 +1,32 @@
+#!/bin/bash
+
+export LANG=C 
+
+if [ -n "${1}" ] && [ -n "${2}" ]; then
+  #CLI: $0 processname output
+
+  app=$(echo $1 | sed -e "s/\\[/\\\[/g" -e  "s/\\]/\\\]/g")
+  out=$2
+  appstream=$(echo $(pactl list sink-inputs | grep -e "Sink\ Input" -e "node.name") | grep -i -o "Sink\ Input\ #[0-9]*\ node\.name\ =\ \"$app\"" | sed -e 's/^.*#//' -e 's/\ .*//')
+else
+  #hotkey+pointer interface (xprop, zenity): Click window, choose output
+
+  app=$(xprop | grep _NET_WM_PID | grep -o [0-9]*)
+  out=$(zenity --list --radiolist --text "Set audio output for window:" --column "Select" --column "Output" FALSE "Lautsprecher" FALSE "HDMI" FALSE "Kopfhörer" )
+  appstream=$(echo $(pactl list sink-inputs | grep -e "Sink\ Input" -e "node.name") | grep -i -o "Sink\ Input\ #[0-9]*\ node\.name\ =\ \"$app\"" | sed -e 's/^.*#//' -e 's/\ .*//')
+fi
+
+case "$out" in
+  default|speakers|system|pa|surround|5.1)
+    output="alsa_output.pci-0000_0a_00.4.analog-stereo"
+  ;;
+  hdmi|Kopfhörer)
+    output="alsa_output.pci-0000_04_00.1.hdmi-stereo-extra1"
+  ;;
+  headset|DR-BT101|dr-bt101|drbt101)
+    output="bluez_sink.00_1F_82_28_93_51.a2dp_sink"
+  ;;
+esac
+
+[[ $output ]] && for i in $appstream; do \
+  pactl move-sink-input $i $output; done
