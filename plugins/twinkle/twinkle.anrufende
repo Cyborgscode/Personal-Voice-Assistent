@@ -1,8 +1,0 @@
-#!/bin/bash
-
-
-pulse.in "PipeWire ALSA [python3.10]" usb
-pulse.in "PipeWire ALSA [twinkle]" usb
-pulse.out "PipeWire ALSA [twinkle]" default
-
-echo "action=end"
