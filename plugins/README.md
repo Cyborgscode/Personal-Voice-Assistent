@@ -1,7 +1,7 @@
 **HOW TO WRITE A PLUGIN**
 
-Hint: as plugins are loaded on startup and keep theire memory of the runtime of PVA, you can store runtime infos in your plugin.
-But as soon as you want to store it permanently, you need to save it to disk yourself. You can only do this in user home, so get 
+Hint: as plugins are loaded on startup and keep theire memory over the runtime of PVA, you can store runtime infos in your plugin.
+But as soon as you want to store it permanently, you need to save it to disk yourself. You can only do this in the user's home, so get 
 yourself informed what ~/.config, ~/.cache, ~/.local, ~/.var are. 
 
 A) Place your classfile into the plugins/files/ directory.
