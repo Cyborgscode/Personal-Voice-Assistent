@@ -10,6 +10,23 @@
 
 Hi,
 
+"What is PVA" you may ask. PVA is an Open Source Voice Assistent for Linux/Unix, which runs 100% lokal if you install it.
+As it's java and python based, you will find a lot of people who can supply code or do code audits and improvements.
+
+PVA listens to a Keyword, which you can redefine on the fly if needed.
+It's also not language depended, which means, YOU can modify the scripts and configs to reflect any language VOSK supports. See next chapter.
+
+Feel free to adopt it to your perfect assistent or your best friend, as there is next to no limit. 
+
+PVA is capable of reading emails, making calls, answering phone calls, plays music & videos, searches for documents and media files, does a personal TOP list of favorite music ( requires genere metadata in your mp3 files -> Picard if your friend ), survails your pc for you or writes email if needed.
+
+Nothing of this requires any AI. 
+
+If used in default mode, it won't rat your personal data out to a company, except for the weatherreport, which you can disable.
+
+**On what it depends** 
+
+
 This project depends heavily on the AlphaCephei Software VOSK, which can be found here:
 
 https://alphacephei.com/vosk/
