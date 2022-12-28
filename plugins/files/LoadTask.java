@@ -81,8 +81,6 @@ public class LoadTask extends Plugin {
 		} else ...
 		
 		*/
-	
-	
 	};
 
 	Float lastState = Float.parseFloat("0");
@@ -97,8 +95,6 @@ public class LoadTask extends Plugin {
 				if (isInterrupted()) {
 					return;
 				}
-			
-				
 
 				Float f = Float.parseFloat( dos.readPipe("cat /proc/loadavg").split(" ")[0].trim() );
 				long  c = Long.parseLong( dos.readPipe("grep -c processor /proc/cpuinfo").trim() );
