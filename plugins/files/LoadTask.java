@@ -45,10 +45,27 @@ public class LoadTask extends Plugin {
 	
 	// getActionCodes() should return an empty String[], if we do not handle Actions
 
-	public String[] getActionCodes() {  return "SILENCELOADWARNING:UNSILENCELOADWARNING".split(":"); };
+	public String[] getActionCodes() {  return "HEALTHREPORT:SILENCELOADWARNING:UNSILENCELOADWARNING".split(":"); };
 	public boolean execute(String actioncode, String rawtext) { 
 		try {
-			if ( actioncode.equals("SILENCELOADWARNING") ) {
+			if ( actioncode.equals("HEALTHREPORT") ) {
+				
+				// selfstatusreport
+				
+				Float f = Float.parseFloat( dos.readPipe("cat /proc/loadavg").split(" ")[0].trim() );
+				long  c = Long.parseLong( dos.readPipe("grep -c processor /proc/cpuinfo").trim() );
+					
+				if ( f < 1 ) {
+						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSENOTHINGTODO") );
+				} else if ( f > c ) {
+						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSEHELPHELP") );
+				} else if ( f > ( c/2 ) ) {
+						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSESOLALA") );
+				} else {
+						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSENORMAL") );
+				}	
+			
+			} else if ( actioncode.equals("SILENCELOADWARNING") ) {
 				log("schalte warnung aus");
 				setVar("silence","yes");
 				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSETURNEDOFF") );
