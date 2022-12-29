@@ -1614,24 +1614,6 @@ public class PVA {
 				
 				}
 
-				// selfstatusreport
-				
-				if ( cf.command.equals("HEALTHREPORT") ) {
-				
-					Float f = Float.parseFloat( dos.readPipe("cat /proc/loadavg").split(" ")[0].trim() );
-					long  c = Long.parseLong( dos.readPipe("grep -c processor /proc/cpuinfo").trim() );
-					
-					if ( f < 1 ) {
-							say( texte.get( config.get("conf","lang_short"), "HEALTHRESPONSENOTHINGTODO") );
-					} else if ( f > c ) {
-							say( texte.get( config.get("conf","lang_short"), "HEALTHRESPONSEHELPHELP") );
-					} else if ( f > ( c/2 ) ) {
-							say( texte.get( config.get("conf","lang_short"), "HEALTHRESPONSESOLALA") );
-					} else {
-							say( texte.get( config.get("conf","lang_short"), "HEALTHRESPONSENORMAL") );
-					}	
-				}				
-				
 				// repeat last cmd.. 
 
 				boolean writeLastArg = true;
