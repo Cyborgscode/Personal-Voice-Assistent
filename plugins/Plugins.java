@@ -43,7 +43,7 @@ public class Plugins {
                 if ( entries != null ) {
                         for(int i =0; i < entries.length; i++ )
                                 if ( entries[i].toString().endsWith(".class") && !entries[i].toString().contains("$") && pluginsfound < 1000 ) {
-					System.out.println(" filename raw = "+ entries[i].getAbsolutePath() );
+//                                      System.out.println(" filename raw = "+ entries[i].getAbsolutePath() );
 
                                         String name = entries[i].getAbsolutePath().
                                                                  replaceAll("^.*plugins/files/","plugins/files/").
@@ -51,7 +51,7 @@ public class Plugins {
                                                                  replaceAll("/",".");
 
                                         try {
-                                        	System.out.println("Plugins:loadClasses:name = "+ name);
+//                                        	System.out.println("Plugins:loadClasses:name = "+ name);
                                         
                                                 Plugin r = (Plugin)loader.loadClass( name ) .newInstance();
 
@@ -62,7 +62,7 @@ public class Plugins {
                                                         r.init(pva);
                                                         
                                                         if ( r.getPluginInfo().get("hasThread").equals("yes") ) {
-								System.out.println("Plugins:loadClasses: running now "+ name);
+//								System.out.println("Plugins:loadClasses: running now "+ name);
                                                         	r.start();
                                                         }
                                                         
