@@ -91,23 +91,23 @@ public class Plugins {
 			if ( info.get("hasCodes").equals("yes") ) {
 				String[] ac = p.getActionCodes();
 				if ( ac.length == 0 ) {
-					System.out.println("handle Plugin "+ info.get("name") + " has no action codes -> ignored");
+//					System.out.println("handle Plugin "+ info.get("name") + " has no action codes -> ignored");
 				} else if ( ac.length > 0 ) {
-					System.out.print("handle Plugin "+ info.get("name") + " can handle ... ");
+//					System.out.print("handle Plugin "+ info.get("name") + " can handle ... ");
 					for(String x : ac ) {
-						System.out.print(" "+ x +" : ");
+//						System.out.print(" "+ x +" : ");
 						if ( x.equals(command) ) wehandleit = true;
 					}
-					System.out.println("");
+//					System.out.println("");
 					
 					if ( wehandleit ) {
-						System.out.println("Plugin "+ info.get("name") + " called => execute("+command+","+ textraw +")");
+//						System.out.println("Plugin "+ info.get("name") + " called => execute("+command+","+ textraw +")");
 						boolean rc = p.execute( command, textraw );
 						if ( rc ) {
-							System.out.println("Plugin "+ info.get("name") + " handled it ");
+//							System.out.println("Plugin "+ info.get("name") + " handled it ");
 							return rc;
 						} else {
-							System.out.println("Plugin "+ info.get("name") + " DID NOT handle it, proceeding to next plugin ");
+//							System.out.println("Plugin "+ info.get("name") + " DID NOT handle it, proceeding to next plugin ");
 						}
 					}
 				}
