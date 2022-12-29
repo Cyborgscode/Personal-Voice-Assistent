@@ -2884,7 +2884,7 @@ public class PVA {
 
 				if ( !reaction ) {
 					
-					log("no internal reaction yet, lets test plugins to handle it.");	
+//					log("no internal reaction yet, lets test plugins to handle it.");	
 					
 					reaction = pls.handlePluginAction(cf.command, text_raw);
 				}
