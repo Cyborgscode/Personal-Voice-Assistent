@@ -28,6 +28,10 @@ class TimerTask extends Thread {
 			sb.append(  key +":"+ val +"\n" );
 		}
 
+		// Update maintask's second database
+
+                pva.timedata = sb.toString().split("\n");
+		
 		return dos.writeFile( System.getenv("HOME").trim()+"/.config/pva/timers.conf", sb.toString() );
 	}
 
