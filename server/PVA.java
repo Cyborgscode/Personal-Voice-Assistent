@@ -1590,7 +1590,7 @@ public class PVA {
 							}
 
 							for(int i=0;i<za.length;i++) 
-								if ( text_raw.matches( ".* "+za[i]+" .*" ) ) 
+								if ( text_raw.matches( ".* "+za[i]+" .*" ) || text_raw.contains(" "+za[i]+" ") ) 
 									when = i+1;
 							
 							if ( when > 0 ) {	
