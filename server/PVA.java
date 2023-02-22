@@ -70,7 +70,8 @@ public class PVA {
         }
 
 	static void say(String text, boolean wait) throws IOException {
-		exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
+		if ( !config.get("conf","cantalk" ).equals("no") ) 
+			exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
 	}
 
         static void say(String text) throws IOException {
