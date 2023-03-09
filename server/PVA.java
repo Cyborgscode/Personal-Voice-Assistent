@@ -921,7 +921,7 @@ public class PVA {
 	       	        if ( entries != null ) {     
         	                for(int i =0; i < entries.length; i++ ) {
         	                        if ( !entries[i].isDirectory() && !entries[i].getName().startsWith(".") && entries[i].getName().endsWith(".conf") ) {
-        	                        	if ( entries[i].getName().startsWith("[0-9]+-") ) {
+        	                        	if ( entries[i].getName().matches("^[0-9]+-.*") ) {
 							ss.add( Long.parseLong(entries[i].getName().split("-")[0]), entries[i].getAbsolutePath() );
 						} else  ss.add( 0, entries[i].getAbsolutePath() );
 					}
@@ -938,7 +938,7 @@ public class PVA {
 	       	        if ( entries != null ) {     
         	                for(int i =0; i < entries.length; i++ ) {
         	                        if ( !entries[i].isDirectory() && !entries[i].getName().startsWith(".") && entries[i].getName().endsWith(".conf") ) {
-        	                        	if ( entries[i].getName().startsWith("[0-9]+-") ) {
+        	                        	if ( entries[i].getName().matches("^[0-9]+-.*") ) {
 							ss.add( Long.parseLong(entries[i].getName().split("-")[0]), entries[i].getAbsolutePath() );
 						} else  ss.add( 0, entries[i].getAbsolutePath() );
 					}
