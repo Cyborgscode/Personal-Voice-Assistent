@@ -77,16 +77,15 @@ public class Netflix extends Plugin {
 
 				}
 			
-			} else	if ( actioncode.equals("NETFLIXMYLIST") ) {
+			} else if ( actioncode.equals("NETFLIXMYLIST") ) {
 				log("Netflix: activate MY LIST");
 				
 				if ( vars.get("playing").equals("no") ) {
 				
-					log( "DEBUG: "+ pva.config.get("netflix","windowactivate").replaceAll(pva.config.get("conf","splitter")," ") );
-
-				
 					// activate Netflix browser window and be sure to be on top
 					pva.exec( pva.config.get("netflix","windowactivate").split(pva.config.get("conf","splitter")), wait);
+					pva.exec( pva.config.get("netflix","pageup").split(pva.config.get("conf","splitter")), wait);
+					pva.exec( pva.config.get("netflix","pageup").split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","pageup").split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","pageup").split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","pageup").split(pva.config.get("conf","splitter")), wait);
@@ -94,6 +93,29 @@ public class Netflix extends Plugin {
 					// now execute the real sequence
 				
 					pos.parse( "pos_mylist");
+					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+
+					log( "DEBUG: "+ pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).replaceAll(pva.config.get("conf","splitter")," ") );
+					log( "DEBUG: "+ pva.config.get("netflix","clickLMB").replaceAll(pva.config.get("conf","splitter")," ") );
+				}										
+
+			} else if ( actioncode.equals("NETFLIXHOME") ) {
+				log("Netflix: activate HOME");
+				
+				if ( vars.get("playing").equals("no") ) {
+				
+					// activate Netflix browser window and be sure to be on top
+					pva.exec( pva.config.get("netflix","windowactivate").split(pva.config.get("conf","splitter")), wait);
+					pva.exec( pva.config.get("netflix","pageup").split(pva.config.get("conf","splitter")), wait);
+					pva.exec( pva.config.get("netflix","pageup").split(pva.config.get("conf","splitter")), wait);
+					pva.exec( pva.config.get("netflix","pageup").split(pva.config.get("conf","splitter")), wait);
+					pva.exec( pva.config.get("netflix","pageup").split(pva.config.get("conf","splitter")), wait);
+					pva.exec( pva.config.get("netflix","pageup").split(pva.config.get("conf","splitter")), wait);
+					
+					// now execute the real sequence
+				
+					pos.parse( "pos_start");
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
 
