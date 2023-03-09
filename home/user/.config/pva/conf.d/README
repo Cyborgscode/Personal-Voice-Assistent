@@ -8,4 +8,4 @@ In Example:
 
 02-paths.conf : your personal paths to your files storage
 03-dav.conf   : your personal calendar and adressbooks
-20-imap.conf  : your personal mail config.
+11-imap.conf  : your personal mail config.
