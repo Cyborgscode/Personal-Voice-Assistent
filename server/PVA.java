@@ -122,7 +122,7 @@ public class PVA {
 		exec( cmds, false );
 	}
 
-	static void exec(String[] cmds, boolean wait ) throws IOException {
+	static public void exec(String[] cmds, boolean wait ) throws IOException {
 		if ( cmds == null || cmds.length == 0 ) {
 			log("EMPTY Command given to Exec()");
 			return;
