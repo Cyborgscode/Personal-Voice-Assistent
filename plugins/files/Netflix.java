@@ -72,7 +72,7 @@ public class Netflix extends Plugin {
 	
 	final boolean wait = true;
 	
-	public String[] getActionCodes() {  return "NETFLIXHOME:NETFLIXMYLIST:NETFLIXSEARCH:NETFLIXRETURN:NETFLIXPAUSE:NETFLIXFORWARD:NETFLIXBACKWARDS:NETFLIXFULLSCREEN".split(":"); };
+	public String[] getActionCodes() {  return "NETFLIXHOME:NETFLIXMYLIST:NETFLIXSEARCH:NETFLIXRETURN:NETFLIXPAUSE:NETFLIXFORWARD:NETFLIXBACKWARDS:NETFLIXFULLSCREEN:NETFLIXSKIPINTRO".split(":"); };
 	public boolean execute(String actioncode, String rawtext) { 
 		try {
 			if ( actioncode.equals("NETFLIXFULLSCREEN") ) {
@@ -120,6 +120,20 @@ public class Netflix extends Plugin {
 					// now execute the real sequence
 				
 					pos.parse( "pos_start");
+					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+				}										
+
+			} else if ( actioncode.equals("NETFLIXSKIPINTRO") ) {
+				log("Netflix: activate SKIPINTRO");
+				
+				if ( vars.get("playing").equals("yes") ) {
+
+					activateNetflixWindow();
+					
+					// now execute the real sequence
+				
+					pos.parse( "pos_skipintro");
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
 				}										
@@ -175,6 +189,9 @@ public class Netflix extends Plugin {
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
 
+					pos.parse( "pos_emptyspace");
+					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+
 				}										
 
 			} else if ( actioncode.equals("NETFLIXBACKWARDS") ) {
@@ -190,6 +207,8 @@ public class Netflix extends Plugin {
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
 
+					pos.parse( "pos_emptyspace");
+					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 				}										
 
 			} else if ( actioncode.equals("NETFLIXSEARCH") ) {
@@ -209,10 +228,12 @@ public class Netflix extends Plugin {
 				
 					String searchterm = rawtext.trim();
 
+/*
 					if ( pva.config.get("conf","lang_short").equals("de") ) {
 						// if we run i.e. german Y & Z need to be exchanged as xdotool does not honor $LANG :/
 						searchterm = searchterm.replaceAll("y",":&:").replaceAll("z","y").replaceAll(":&:","z");
 					}
+*/
 
 					log("search "+ searchterm);
 
