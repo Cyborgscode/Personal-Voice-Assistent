@@ -227,7 +227,7 @@ public class Netflix extends Plugin {
 					pos.parse( "pos_search");
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
-					Thread.sleep(1000L);
+					Thread.sleep(700L);
 					pva.exec( pva.config.get("netflix","type").replaceAll("<TERM1>", searchterm+"\n") .split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","linefeed").split(pva.config.get("conf","splitter")), wait);
 					pos.parse( "pos_firstentry");
@@ -257,7 +257,6 @@ public class Netflix extends Plugin {
 	public void run() {
 		log("Netflix Dummy run()");
 	}
-}
 
 class Position {
 
@@ -286,5 +285,7 @@ class Position {
 	
 	}
 		
+}
+
 }
 
