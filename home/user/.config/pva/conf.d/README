@@ -1,3 +1,11 @@
+
+# Private / Custom Configs for your Home directory
+
 All Files you will find in here, are userbased files.  
 Use them as an example, how to customize your pva setup.
 
+In Example:
+
+02-paths.conf : your personal paths to your files storage
+03-dav.conf   : your personal calendar and adressbooks
+20-imap.conf  : your personal mail config.
