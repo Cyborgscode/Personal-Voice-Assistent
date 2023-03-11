@@ -19,13 +19,18 @@ public class Netflix extends Plugin {
 	}
 	
 	Position pos;
+	boolean kiosk = false;
 	
 	public void init(PVA pva) {
 		this.pva = pva;
 		
 		// init Plugin
 		pos = new Position(vars,pva);
-		pos.offset = Long.parseLong( pva.config.get("netflix","offset") );
+		if ( !pva.config.get("netflix","offset").isEmpty() ) 
+			pos.offset = Long.parseLong( pva.config.get("netflix","offset") );
+
+		if ( !pva.config.get("netflix","kiosk").isEmpty() ) 
+			kiosk = Boolean.parseBoolean( pva.config.get("netflix","kiosk") );
 		
 		info.put("hasThread","no"); 
 		info.put("hasCodes","yes");  
@@ -72,7 +77,7 @@ public class Netflix extends Plugin {
 	
 	final boolean wait = true;
 	
-	public String[] getActionCodes() {  return "NETFLIXHOME:NETFLIXMYLIST:NETFLIXSEARCH:NETFLIXRETURN:NETFLIXPAUSE:NETFLIXFORWARD:NETFLIXBACKWARDS:NETFLIXFULLSCREEN:NETFLIXSKIPINTRO".split(":"); };
+	public String[] getActionCodes() {  return "NETFLIXHOME:NETFLIXMYLIST:NETFLIXSEARCH:NETFLIXRETURN:NETFLIXPAUSE:NETFLIXFORWARD:NETFLIXBACKWARDS:NETFLIXFULLSCREEN:NETFLIXSKIPINTRO:NETFLIXPLAY".split(":"); };
 	public boolean execute(String actioncode, String rawtext) { 
 		try {
 			if ( actioncode.equals("NETFLIXFULLSCREEN") ) {
@@ -98,7 +103,7 @@ public class Netflix extends Plugin {
 			} else if ( actioncode.equals("NETFLIXMYLIST") ) {
 				log("Netflix: activate MY LIST");
 				
-				if ( vars.get("playing").equals("no") ) {
+				if ( vars.get("playing").equals("no") || kiosk ) {
 				
 					activateNetflixWindow();
 					 
@@ -113,7 +118,7 @@ public class Netflix extends Plugin {
 			} else if ( actioncode.equals("NETFLIXHOME") ) {
 				log("Netflix: activate HOME");
 				
-				if ( vars.get("playing").equals("no") ) {
+				if ( vars.get("playing").equals("no") || kiosk ) {
 
 					activateNetflixWindow();
 					
@@ -127,7 +132,7 @@ public class Netflix extends Plugin {
 			} else if ( actioncode.equals("NETFLIXSKIPINTRO") ) {
 				log("Netflix: activate SKIPINTRO");
 				
-				if ( vars.get("playing").equals("yes") ) {
+				if ( vars.get("playing").equals("yes") || kiosk ) {
 
 					activateNetflixWindow();
 					
@@ -141,7 +146,7 @@ public class Netflix extends Plugin {
 			} else if ( actioncode.equals("NETFLIXRETURN") ) {
 				log("Netflix: activate RETURN");
 				
-				if ( vars.get("playing").equals("yes") ) {
+				if ( vars.get("playing").equals("yes") || kiosk ) {
 
 					activateNetflixWindow();
 					
@@ -155,10 +160,25 @@ public class Netflix extends Plugin {
 
 				}										
 
-			} else if ( actioncode.equals("NETFLIXPAUSE") ) {
+			} else if ( actioncode.equals("NETFLIXNEXT") ) {
+                                log("Netflix: activate NEXT");
+
+                                if ( vars.get("playing").equals("yes") || kiosk ) {
+
+                                        activateNetflixWindow();
+
+                                        // now execute the real sequence
+
+                                        pos.parse( "pos_next");
+                                        pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+                                        pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+
+                                }
+
+                        } else if ( actioncode.equals("NETFLIXPAUSE") || actioncode.equals("NEXTFLIXPLAY") ) {
 				log("Netflix: activate PAUSE/PLAY");
 
-				if ( vars.get("playing").equals("yes") ) {
+				if ( vars.get("playing").equals("yes") || kiosk) {
 
 					activateNetflixWindow();
 					
@@ -167,6 +187,11 @@ public class Netflix extends Plugin {
 					pos.parse( "pos_play");
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+
+					if ( actioncode.equals("NEXTFLIXPLAY") ) {
+						pos.parse( "pos_emptyspace");
+						pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+					}
 
 					if ( vars.get("paused").equals("no") ) {
 						vars.put("paused","yes");
@@ -179,7 +204,7 @@ public class Netflix extends Plugin {
 			} else if ( actioncode.equals("NETFLIXFORWARD") ) {
 				log("Netflix: activate FORWARD");
 				
-				if ( vars.get("playing").equals("yes") ) {
+				if ( vars.get("playing").equals("yes") || kiosk ) {
 
 					activateNetflixWindow();
 					
@@ -197,7 +222,7 @@ public class Netflix extends Plugin {
 			} else if ( actioncode.equals("NETFLIXBACKWARDS") ) {
 				log("Netflix: activate BACKWARDS");
 				
-				if ( vars.get("playing").equals("yes") ) {
+				if ( vars.get("playing").equals("yes") || kiosk ) {
 
 					activateNetflixWindow();
 					
@@ -214,8 +239,12 @@ public class Netflix extends Plugin {
 			} else if ( actioncode.equals("NETFLIXSEARCH") ) {
 				log("Netflix: activate SEARCH");
 
+				activateNetflixWindow();
+
+				// if we are in playmode, we need to end it.
+
 				if ( vars.get("playing").equals("yes") ) {
-					activateNetflixWindow();
+				
 					pos.parse( "pos_back");
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
@@ -223,10 +252,10 @@ public class Netflix extends Plugin {
 					vars.put("playing","no");
 					vars.put("paused","no");
 				}
-				
-				if ( vars.get("playing").equals("no") ) {
-				
-					String searchterm = rawtext.trim();
+
+				// we are back on the main ui in an unkown state
+
+				String searchterm = rawtext.trim();
 
 /*
 					if ( pva.config.get("conf","lang_short").equals("de") ) {
@@ -235,34 +264,88 @@ public class Netflix extends Plugin {
 					}
 */
 
-					log("search "+ searchterm);
+				log("search "+ searchterm);
+				
+				// in case we have an overlay open
+				pva.exec( pva.config.get("netflix","escape").split(pva.config.get("conf","splitter")), wait);
 
-					activateNetflixWindow();
+				// we need a defined state, so we open the startpage
+				
+				pos.parse( "pos_start");
+				pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+				pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+				Thread.sleep(1000L);
 
-					// now execute the real sequence
-					pva.exec( pva.config.get("netflix","escape").split(pva.config.get("conf","splitter")), wait);
-					pos.parse( "pos_start");
-					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
-					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
-					Thread.sleep(1000L);
-					pos.parse( "pos_search");
-					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
-					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
-					Thread.sleep(700L);
-					pva.exec( pva.config.get("netflix","type").replaceAll("<TERM1>", searchterm+"\n") .split(pva.config.get("conf","splitter")), wait);
-					pva.exec( pva.config.get("netflix","linefeed").split(pva.config.get("conf","splitter")), wait);
-					pos.parse( "pos_firstentry");
+				// now we have the main ui up, so we can use the search function
+
+				pos.parse( "pos_search");
+				pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+				pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+				Thread.sleep(700L);
+				pva.exec( pva.config.get("netflix","type").replaceAll("<TERM1>", searchterm+"\n") .split(pva.config.get("conf","splitter")), wait);
+				pva.exec( pva.config.get("netflix","linefeed").split(pva.config.get("conf","splitter")), wait);
+
+				vars.put("playing","no");
+
+
+			} else if ( actioncode.equals("NETFLIXPLAYMOVIE") ) {
+				log("Netflix: activate PLAYMOVIE");
+
+				activateNetflixWindow();
+
+				// if we are in playmode, we need to end it.
+
+				if ( vars.get("playing").equals("yes") ) {
+				
+					pos.parse( "pos_back");
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
 					Thread.sleep(2000L);
-					pos.parse( "pos_miniplay");
-					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
-					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+					vars.put("playing","no");
+					vars.put("paused","no");
+				}
 
-					vars.put("playing","yes");
+				// we are back on the main ui in an unkown state
 
-					
-				}										
+				String searchterm = rawtext.trim();
+
+				log("play movie: "+ searchterm);
+				
+				// in case we have an overlay open
+				pva.exec( pva.config.get("netflix","escape").split(pva.config.get("conf","splitter")), wait);
+
+				// we need a defined state, so we open the startpage
+				
+				pos.parse( "pos_start");
+				pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+				pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+				Thread.sleep(1000L);
+
+				// now we have the main ui up, so we can use the search function
+
+				pos.parse( "pos_search");
+				pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+				pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+				Thread.sleep(700L);
+				pva.exec( pva.config.get("netflix","type").replaceAll("<TERM1>", searchterm+"\n") .split(pva.config.get("conf","splitter")), wait);
+				pva.exec( pva.config.get("netflix","linefeed").split(pva.config.get("conf","splitter")), wait);
+
+				// open the movie short info overlay
+
+				pos.parse( "pos_firstentry");
+				pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+				pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+				Thread.sleep(2000L);
+
+				// a click on that overlay starts the movie 
+				// ATTN: the first version aimed at the "mini" PLAY button inside that overlay, but it's much easier to hit the overlay itself.
+
+				pos.parse( "pos_miniplay");
+				pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
+				pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
+
+				vars.put("playing","yes");
+
 
 			} else return false;
 
@@ -294,7 +377,7 @@ class Position {
 	
 	public void parse(String button) {
 	
-		String[] args = pva.config.get("netflix",button).split(",");
+		String[] args = pva.config.get("netflix",button).sp lit(",");
 		if ( args.length != 2 ) {
 			System.out.println("position "+button+" invalid!");
 			return;
@@ -309,4 +392,3 @@ class Position {
 }
 
 }
-
