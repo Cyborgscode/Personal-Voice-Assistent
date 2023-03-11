@@ -1967,7 +1967,9 @@ public class PVA {
 					text = text.toLowerCase().trim();
 					if ( text_raw.contains(  with_key ) ) {
 						with = text.substring( text.indexOf( with_key )+ with_key.length() ).trim();
-						text = text.substring( 0, text.indexOf( with_key ) );
+						if ( text.indexOf( with_key ) > 0 ) {
+							text = text.substring( 0, text.indexOf( with_key ) );
+						}
 					}
 						
 					// in case our keywords are the first argument, we need to swap text+with : "öffne bilder mit gimp" which is more human like
