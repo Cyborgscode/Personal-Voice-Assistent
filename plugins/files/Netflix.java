@@ -377,7 +377,7 @@ class Position {
 	
 	public void parse(String button) {
 	
-		String[] args = pva.config.get("netflix",button).sp lit(",");
+		String[] args = pva.config.get("netflix",button).split(",");
 		if ( args.length != 2 ) {
 			System.out.println("position "+button+" invalid!");
 			return;
