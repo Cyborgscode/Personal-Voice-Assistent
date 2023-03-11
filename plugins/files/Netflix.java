@@ -77,7 +77,7 @@ public class Netflix extends Plugin {
 	
 	final boolean wait = true;
 	
-	public String[] getActionCodes() {  return "NETFLIXHOME:NETFLIXMYLIST:NETFLIXSEARCH:NETFLIXRETURN:NETFLIXPAUSE:NETFLIXFORWARD:NETFLIXBACKWARDS:NETFLIXFULLSCREEN:NETFLIXSKIPINTRO:NETFLIXPLAY".split(":"); };
+	public String[] getActionCodes() {  return "NETFLIXHOME:NETFLIXMYLIST:NETFLIXSEARCH:NETFLIXRETURN:NETFLIXPAUSE:NETFLIXFORWARD:NETFLIXBACKWARDS:NETFLIXFULLSCREEN:NETFLIXSKIPINTRO:NETFLIXPLAYMOVIE:NETFLIXPLAY".split(":"); };
 	public boolean execute(String actioncode, String rawtext) { 
 		try {
 			if ( actioncode.equals("NETFLIXFULLSCREEN") ) {
