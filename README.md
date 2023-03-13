@@ -592,7 +592,7 @@ This results in a minor problem if you really wanne search for all songs contain
 
 ### Cluster Setup
 
-With the Cluster Plugin, you can have satelite clients. Between the configured client, **which need to run pipewire-pulse & wireplumber** tcp-tunnels are created to cluster the speakers and microphones. So, yes, you are now able to roll out a bunch of raspis with USB soundbars or additional pcs in your home, and  play musik on all of them. There is no latency control, so do not put them to near together ;) Also you can give commands to your PVA via each of those microphones. 
+With the Cluster Plugin, you can have satelite clients. Between the configured client, **which need to run pipewire-pulse & wireplumber** tcp-tunnels are created to cluster the speakers and microphones. So, yes, you are now able to roll out a bunch of raspis with USB soundbars or additional pcs in your home, and  play musik on all of them. There is no latency control, so do not put them too near together ;) Also you can give commands to your PVA via each of those microphones. 
 
 SSH-SETUP:
 
