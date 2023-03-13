@@ -589,3 +589,32 @@ So, if "pop" is a genre in your cache.metadata file, PVA will load the favorites
 If one or more are found, they get added to the searchresult list and you will instantly hear them.
 
 This results in a minor problem if you really wanne search for all songs containing "pop" in the name: you can't anymore. If you need this, disable the metacache favorite search by replacing "true" with "false". 
+
+### Cluster Setup
+
+With the Cluster Plugin, you can have satelite clients. Between the configured client, **which need to run pipewire-pulse & wireplumber** tcp-tunnels are created to cluster the speakers and microphones. So, yes, you are now able to roll out a bunch of raspis with USB soundbars or additional pcs in your home, and  play musik on all of them. There is no latency control, so do not put them to near together ;) Also you can give commands to your PVA via each of those microphones. 
+
+SSH-SETUP:
+
+You need to be able to access the clients via ssh. You can create keys for each client, or use a default key. It's up to you.
+
+If you enter "ssh desktopuser@192.168.178.2" or "ssh -i ~/.ssh/key.for.ip.2.rsa desktopuser@192.168.178.2"  and you can login without a password,
+your good to go. Key passwords are handled by your ssh-agent i.e. the gnome-keyring-daemon. Don't ask for password support, you won't get it. 
+
+Features:
+
+PVA-Cluster detects the presence or absence of configured clients automatically and setups or destroys the tunnel on the fly. You do not need to restart PVA to make this work. 
+
+Two new sinks are available ALLTUNNEL and ALLMICS. All clients are auto-linked to these two sinks. ALLMICS is linked to the PVA Inputnode und ALLTUNNEL is connected to any outgoing tunnel speaker and the default speaker you configured. 
+
+All you need to do is open PAVU Control or ANY OTHER Pipewire Alternative App i.e. QPWGRAPH and transfer the output of you app to the ALLTUNNEL sink.
+
+PVA won't do this for you, as there are a lot of possible configurations imageinable that would be sabotaged by automatic linakge. I.E. if you run EASYEFFECTS and have taken control of your musicapp, you select ALLTUNNEL in the pipewire tab of EASYEFFECTs and enjoy it's benefits. If PVA would interfere here, you audiosetup could break a bit, and thats not PVAs intend. So, YOU choose, where your apps shall output its sound to, PVA just setups the cluster for you. 
+
+"Computer restart client <NAME>" => restarts the tunnel to that client. From time to time the sound starts to crackle a bit, a known problem of those pulse tunnels. If it happens, just tell your PVA to restart the client and it will rewire the tunnel. The crackling will stop.
+
+If your sound starts stuttering, your client device is poorly connected to the net or setuped in some unusally way. From observation: Pinephones have issues in the first 1-2 minutes after the tunnel started, but catch up later. A wild guess here: could be wlan/wifi throtteling. 
+
+A working conncection takes around 200kB/s per client. Even with 2,4GHz wifi you can run a couple of clients, but remember: If someone on your channel sends MB/s traffic, your available bandwith can be shorten to a point, where the clients stutter. It will autocorrect itself with enough bandwith available.
+
+
