@@ -10,7 +10,7 @@
 
 Hi,
 
-"What is PVA" you may ask. PVA is an Open Source Voice Assistent for Linux/Unix, which runs 100% lokal if you install it.
+"What is PVA" you may ask. PVA is an Open Source Voice Assistent for Linux/Unix, which runs 100% local if you install it.
 As it's java and python based, you will find a lot of people who can supply code or do code audits and improvements.
 
 PVA listens to a Keyword, which you can redefine on the fly if needed.
