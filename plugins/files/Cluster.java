@@ -37,14 +37,16 @@ public class Cluster extends Plugin {
 		cmds.put("unload_micro",      "pactl unload-module <mid>");
 		cmds.put("unload_speaker",    "pactl unload-module <sid>");
 		cmds.put("detect_tunnel",     "pactl list short modules");
-		cmds.put("remote_speaker",    "pactl load-module module-native-protocol-tcp port=4656 listen=<ip>" );
-		cmds.put("remote_micro",      "pactl load-module module-native-protocol-tcp port=4657 listen=<ip>" );
-		cmds.put("tunnel_speaker",    "pactl load-module module-tunnel-sink server=tcp:<ip>:4656 sink_name=<name>");
-		cmds.put("tunnel_micro",      "pactl load-module module-tunnel-source server=tcp:<ip>:4657 source_name=<name>");
+		cmds.put("remote_speaker",    "pactl load-module module-native-protocol-tcp port=<sport> listen=<ip>" );
+		cmds.put("remote_micro",      "pactl load-module module-native-protocol-tcp port=<mport> listen=<ip>" );
+		cmds.put("tunnel_speaker",    "pactl load-module module-tunnel-sink server=tcp:<ip>:<sport> sink_name=<name>");
+		cmds.put("tunnel_micro",      "pactl load-module module-tunnel-source server=tcp:<ip>:<mport> source_name=<name>");
 		cmds.put("create_all_sink",   "pactl load-module module-null-sink sink_name=ALLTUNNEL");
 		cmds.put("create_all_source", "pactl load-module module-null-sink sink_name=ALLMICS");
 		cmds.put("list_sinks",        "pactl list short sinks");
 		cmds.put("list_sources",      "pactl list short sources");
+
+		// LINK commands should be executed for 2 times, as it happens to be that links sometimes do not work on the first try
 
 		cmds.put("link_speaker_left",  "pw-link ALLTUNNEL:monitor_FL \"<name>:playback_FL\"");
 		cmds.put("link_speaker_right", "pw-link ALLTUNNEL:monitor_FR \"<name>:playback_FR\"");
@@ -74,6 +76,10 @@ public class Cluster extends Plugin {
 		while ( en.hasMoreElements() ) {
 			String key = (String)en.nextElement();
 			if ( !key.startsWith("internal_") ) {
+			
+				cluster.put(key, "sport", "4656");
+				cluster.put(key, "mport", "4657");
+			
 				String[] args = config.get( key ).split(";");
 				for(String x : args) {
 					String[] opts = x.split("=");
@@ -91,6 +97,7 @@ public class Cluster extends Plugin {
 				cluster.put( key, "tsid", "0"); // tsid = tunnel_speakerID
 				cluster.put( key, "asid", asid);
 				cluster.put( key, "amid", amid);
+				
 
 				// check if client host is up
 				
@@ -112,20 +119,20 @@ public class Cluster extends Plugin {
 
 					// Ok, we could reach it.
 				
-					if ( r.contains( "port=4656 ") ) {
+					if ( r.contains( "port="+ cluster.get(key,"sport")+" ") ) {
 						String[] lines = r.split("\n");
 						for(String line : lines ) {
-							if ( line.contains("port=4656 ") ) {
+							if ( line.contains("port="+ cluster.get(key,"sport")+" ") ) {
 								String[] opts = line.split("[\\s\t]");
 								rsid = opts[0];
 							}
 						}
 					} else rsid = remote( cluster.get(key), "remote_speaker");  // load tunnel module on remoteside
 					
-					if ( r.contains( "port=4657 ") ) {
+					if ( r.contains( "port="+ cluster.get(key,"mport")+" ") ) {
 						String[] lines = r.split("\n");
 						for(String line : lines ) {
-							if ( line.contains( "port=4657 ") ) {
+							if ( line.contains( "port="+ cluster.get(key,"mport")+" ") ) {
 								String[] opts = line.split("[\\s\t]");
 								rmid = opts[0];
 							}
@@ -140,7 +147,7 @@ public class Cluster extends Plugin {
 					
 						// check if our module list contains  the destination clients tunnel
 					
-						if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":4656 sink_name="+ cluster.get( key, "name") ) ) {
+						if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":"+ cluster.get(key,"sport")+" sink_name="+ cluster.get( key, "name") ) ) {
 
 							// it does not, so we create it.
 					
@@ -151,7 +158,7 @@ public class Cluster extends Plugin {
 					
 							String[] lines = r.split("\n");
 							for(String line : lines ) {
-								if ( line.contains("server=tcp:"+ cluster.get( key, "ip") +":4656 sink_name="+ cluster.get( key, "name") ) ) {
+								if ( line.contains("server=tcp:"+ cluster.get( key, "ip") +":"+ cluster.get(key,"sport")+" sink_name="+ cluster.get( key, "name") ) ) {
 									String[] opts = line.split("[\\s\t]");
 									cluster.put( key, "tsid", opts[0] );
 								}
@@ -162,6 +169,9 @@ public class Cluster extends Plugin {
 					
 						execute( cluster.get(key), "link_speaker_left" );
 						execute( cluster.get(key), "link_speaker_right" );
+						execute( cluster.get(key), "link_speaker_left" );
+						execute( cluster.get(key), "link_speaker_right" );
+
 					}
 				
 					if (rmid.trim().matches("^[0-9]+$") ) {
@@ -169,7 +179,7 @@ public class Cluster extends Plugin {
 						
 						// check if our module list contains  the destination clients tunnel
 						
-						if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":4657 source_name="+ cluster.get( key, "name") ) ) {
+						if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":"+ cluster.get(key,"mport")+" source_name="+ cluster.get( key, "name") ) ) {
 	
 							// it does not, so we create it.
 							cluster.put( key, "tmid", execute( cluster.get(key), "tunnel_micro").trim() );
@@ -179,7 +189,7 @@ public class Cluster extends Plugin {
 						
 							String[] lines = r.split("\n");
 							for(String line : lines ) {
-								if ( line.contains("server=tcp:"+ cluster.get( key, "ip") +":4657 source_name="+ cluster.get( key, "name") ) ) {
+								if ( line.contains("server=tcp:"+ cluster.get( key, "ip") +":"+ cluster.get(key,"mport")+" source_name="+ cluster.get( key, "name") ) ) {
 									String[] opts = line.split("[\\s\t]");
 									cluster.put( key, "tmid", opts[0] );
 								}
@@ -188,6 +198,8 @@ public class Cluster extends Plugin {
 						
 						// Now we LINK the tunnel with the ALLMICS node
 											
+						execute( cluster.get(key), "link_micro_left" );
+						execute( cluster.get(key), "link_micro_right" );
 						execute( cluster.get(key), "link_micro_left" );
 						execute( cluster.get(key), "link_micro_right" );
 					}
@@ -217,6 +229,11 @@ public class Cluster extends Plugin {
 		dos.readPipe("pw-link ALLTUNNEL:monitor_FL \""+ config.get("internal_speaker") +":playback_FL\"");
 		dos.readPipe("pw-link ALLTUNNEL:monitor_FR \""+ config.get("internal_speaker") +":playback_FR\"");
 
+		dos.readPipe("pw-link ALLMICS:monitor_FL \""+ config.get("internal_pvasink") +":input_FL\"");
+		dos.readPipe("pw-link ALLMICS:monitor_FR \""+ config.get("internal_pvasink") +":input_FR\"");
+		
+		dos.readPipe("pw-link ALLTUNNEL:monitor_FL \""+ config.get("internal_speaker") +":playback_FL\"");
+		dos.readPipe("pw-link ALLTUNNEL:monitor_FR \""+ config.get("internal_speaker") +":playback_FR\"");
 	}
 	
 	public StringHash getPluginInfo() {
@@ -260,15 +277,18 @@ public class Cluster extends Plugin {
 		}
 		return "";
 	}
-	
 	private String execute(StringHash infos, String cmd) {
+		return execute(infos,cmd,0);
+	}
+	
+	private String execute(StringHash infos, String cmd,int log) {
 		if ( infos != null ) {
 		
-			// System.out.println( replacePlaceHolders( infos, cmds.get( cmd ) ) );
+			if ( log>1 ) System.out.println( replacePlaceHolders( infos, cmds.get( cmd ) ) );
 			
 			String r = dos.readPipe( replacePlaceHolders( infos, cmds.get( cmd ) ) );
 			
-			// System.out.println( "returns "+r );
+			if ( log>0 ) System.out.println( "returns "+r );
 			
 			return r;
 		}
@@ -294,9 +314,21 @@ public class Cluster extends Plugin {
 					execute(infos,"unload_micro");
 					execute(infos,"unload_speaker");
 	
-					String r = execute( infos, "detect_tunnel" );
+					String r = remote(infos, "detect_tunnel");
 					
-					if ( !r.contains("server=tcp:"+ infos.get( "ip") +":4656 sink_name="+ infos.get("name") ) ) {
+					if ( !r.matches("port="+infos.get("sport")+".*listen="+ infos.get( "ip")+".*") ) {
+						
+						infos.put("rsid", remote( infos, "remote_speaker") );  // load tunnel module on remoteside
+					
+					}
+					if ( !r.matches("port="+infos.get("mport")+".*listen="+ infos.get( "ip")+".*") ) {
+						
+						infos.put("rmid", remote( infos, "remote_micro") );  // load tunnel module on remoteside
+					
+					}
+					
+					r = execute( infos, "detect_tunnel" );
+					if ( !r.contains("server=tcp:"+ infos.get( "ip") +":"+infos.get("sport")+" sink_name="+ infos.get("name") ) ) {
 
 						// it does not, so we create it.
 					
@@ -307,7 +339,7 @@ public class Cluster extends Plugin {
 					
 						String[] lines = r.split("\n");
 						for(String line : lines ) {
-							if ( line.contains("server=tcp:"+ infos.get("ip") +":4656 sink_name="+ infos.get("name") ) ) {
+							if ( line.contains("server=tcp:"+ infos.get("ip") +":"+infos.get("sport")+" sink_name="+ infos.get("name") ) ) {
 								String[] opts = line.split("[\\s\t]");
 								infos.put( "tsid", opts[0] );
 							}
@@ -318,8 +350,10 @@ public class Cluster extends Plugin {
 					
 					execute( infos, "link_speaker_left" );
 					execute( infos, "link_speaker_right" );
+					execute( infos, "link_speaker_left" );
+					execute( infos, "link_speaker_right" );
 				
-					if ( !r.contains("server=tcp:"+ infos.get("ip") +":4657 source_name="+ infos.get("name") ) ) {
+					if ( !r.contains("server=tcp:"+ infos.get("ip") +":"+infos.get("mport")+" source_name="+ infos.get("name") ) ) {
 	
 						// it does not, so we create it.
 						infos.put("tmid", execute( infos, "tunnel_micro").trim() );
@@ -329,7 +363,7 @@ public class Cluster extends Plugin {
 						
 						String[] lines = r.split("\n");
 						for(String line : lines ) {
-							if ( line.contains("server=tcp:"+ infos.get("ip") +":4657 source_name="+ infos.get("name") ) ) {
+							if ( line.contains("server=tcp:"+ infos.get("ip") +":"+infos.get("mport")+" source_name="+ infos.get("name") ) ) {
 								String[] opts = line.split("[\\s\t]");
 								infos.put("tmid", opts[0] );
 							}
@@ -338,6 +372,8 @@ public class Cluster extends Plugin {
 						
 					// Now we LINK the tunnel with the ALLMICS node
 										
+					execute( infos, "link_micro_left" );
+					execute( infos, "link_micro_right" );
 					execute( infos, "link_micro_left" );
 					execute( infos, "link_micro_right" );
 					
@@ -389,7 +425,7 @@ public class Cluster extends Plugin {
 						String r = dos.readPipe("ping -c 1 -W 1 -n "+ cluster.get(key,"ip") );
 						if ( !r.contains( " 0% packet loss" ) ) {
 							// we could not ping it, so we don't have SSH access..
-							// remove local tunnel modules in case it was already connected. This is vital if the client return later
+							// remove local tunnel modules in case it was already connected. This is vital if the client returns later
 							if ( !cluster.get(key,"sid").equals("0") || !cluster.get(key,"mid").equals("0") ) {
 								log("Cluster:run: host down for client "+key+" detected ... removing connection");
 								// we need to remove the tunnel module
@@ -414,20 +450,20 @@ public class Cluster extends Plugin {
 							String rmid = "";
 							r = remote( cluster.get(key), "detect_tunnel");
 							if ( r.contains("libpipewire") ) {
-								if ( r.contains( "port=4656 ") ) {
+								if ( r.contains( "port="+cluster.get(key,"sport")+" ") ) {
 									String[] lines = r.split("\n");
 									for(String line : lines ) {
-										if ( line.contains( "port=4656 ") ) {
+										if ( line.contains( "port="+cluster.get(key,"sport")+" ") ) {
 											String[] opts = line.split("[\\s\t]");
 											rsid = opts[0];
 										}
 									}
 								} else rsid = remote( cluster.get(key), "remote_speaker");  // load tunnel module on remoteside
 						
-								if ( r.contains("port=4657 ") ) {
+								if ( r.contains("port="+cluster.get(key,"mport")+" ") ) {
 									String[] lines = r.split("\n");
 									for(String line : lines ) {
-										if ( line.contains( "port=4657 ") ) {
+										if ( line.contains( "port="+cluster.get(key,"mport")+" ") ) {
 											String[] opts = line.split("[\\s\t]");
 											rmid = opts[0];
 										}
@@ -437,12 +473,12 @@ public class Cluster extends Plugin {
 								r = execute( cluster.get(key), "detect_tunnel" );
 								if ( rsid.trim().matches("^[0-9]+$") ) {
 									cluster.put( key, "sid", rsid );
-									if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":4656 sink_name="+ cluster.get( key, "name") ) ) {
+									if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":"+cluster.get(key,"sport")+" sink_name="+ cluster.get( key, "name") ) ) {
 										cluster.put( key, "tsid", execute( cluster.get(key), "tunnel_speaker").trim() );
 									} else {
 										String[] lines = r.split("\n");
 										for(String line : lines ) {
-											if ( line.contains("server=tcp:"+ cluster.get( key, "ip") +":4656 sink_name="+ cluster.get( key, "name") ) ) {
+											if ( line.contains("server=tcp:"+ cluster.get( key, "ip") +":"+cluster.get(key,"sport")+" sink_name="+ cluster.get( key, "name") ) ) {
 												String[] opts = line.split("[\\s\t]");
 												cluster.put( key, "tsid", opts[0] );
 											}
@@ -450,21 +486,25 @@ public class Cluster extends Plugin {
 									}
 									execute( cluster.get(key), "link_speaker_left" );
 									execute( cluster.get(key), "link_speaker_right" );
+									execute( cluster.get(key), "link_speaker_left" );
+									execute( cluster.get(key), "link_speaker_right" );
 								}
 							
 								if (rmid.trim().matches("^[0-9]+$") ) {
 									cluster.put( key, "mid", rmid );
-									if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":4657 source_name="+ cluster.get( key, "name") ) ) {
+									if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":"+cluster.get(key,"mport")+" source_name="+ cluster.get( key, "name") ) ) {
 										cluster.put( key, "tmid", execute( cluster.get(key), "tunnel_micro").trim() );
 									} else {
 										String[] lines = r.split("\n");
 										for(String line : lines ) {
-											if ( line.contains("server=tcp:"+ cluster.get( key, "ip") +":4657 source_name="+ cluster.get( key, "name") ) ) {
+											if ( line.contains("server=tcp:"+ cluster.get( key, "ip") +":"+cluster.get(key,"mport")+" source_name="+ cluster.get( key, "name") ) ) {
 												String[] opts = line.split("[\\s\t]");
 												cluster.put( key, "tmid", opts[0] );
 											}
 										}
 									}
+									execute( cluster.get(key), "link_micro_left" );
+									execute( cluster.get(key), "link_micro_right" );
 									execute( cluster.get(key), "link_micro_left" );
 									execute( cluster.get(key), "link_micro_right" );
 								}
