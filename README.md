@@ -27,7 +27,7 @@ If used in default mode, it won't rat your personal data out to a company, excep
 **On what it depends** 
 
 
-This project depends heavily on the AlphaCephei Software VOSK, which can be found here:
+This project depends on the AlphaCephei Software VOSK, which can be found here:
 
 https://alphacephei.com/vosk/
 
@@ -92,8 +92,37 @@ You need to checkout gsay, change your config to use gsay as "say" app and insta
 
 i.e. Fedora: `dnf install gtts`
 
+#gsay caches created phrases to minimize the contact to Googleservers, but at least once per sentence to speak, it will need to contact it. 
+
 ## WARNING: 
 ### Your personal privacy is at risk if you use gtts, as the text of the PVA answers (which includes repeats of what you said) is transferred to a Google server, for which you need an active internet connection too. 
+
+## Mimic3
+
+You can use mimic3, a local TTS system created by the MyCroft team. After installing it, you just need to add:
+
+alternatives:"mimic sprachausgabe","say","/usr/bin/mimic3x:x--voicex:x%VOICE"
+
+and than tell pva to use this alternative via the voice command. 
+
+If that does not work, if your pva config language differes from the scheme used by mycroft, just create a small script as /usr/local/sbin/mimic3say 
+
+```
+#!/bin/bash
+
+if [ "$VOICE" == "de" ]; then
+	VOICE="de_DE"
+fi
+
+... your block if-condition for language X...
+
+/usr/bin/mimic3 --voice $VOICE
+```
+use this:
+
+alternatives:"mimic sprachausgabe","say","envx:xVOICE=%VOICEx:x/usr/local/sbin/mimic3say"
+
+make sure, your voice package is installed and has the correct checksums. 
 
 ## Espeak:
 
