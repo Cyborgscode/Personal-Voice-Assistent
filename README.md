@@ -609,7 +609,7 @@ Two new sinks are available ALLTUNNEL and ALLMICS. All clients are auto-linked t
 
 All you need to do is open PAVU Control or ANY OTHER Pipewire Alternative App i.e. QPWGRAPH and transfer the output of you app to the ALLTUNNEL sink.
 
-PVA won't do this for you, as there are a lot of possible configurations imageinable that would be sabotaged by automatic linakge. I.E. if you run EASYEFFECTS and have taken control of your musicapp, you select ALLTUNNEL in the pipewire tab of EASYEFFECTs and enjoy it's benefits. If PVA would interfere here, you audiosetup could break a bit, and thats not PVAs intend. So, YOU choose, where your apps shall output its sound to, PVA just setups the cluster for you. 
+PVA won't do this for you, as there are a lot of possible configurations imaginable that would be sabotaged by automatic linkage. I.E. if you run EASYEFFECTS and have taken control of your musicapp, you select ALLTUNNEL in the pipewire tab of EASYEFFECTs and enjoy it's benefits. If PVA would interfere here, you audiosetup could break a bit, and thats not PVAs intend. So, YOU choose, where your apps shall output its sound to, PVA just setups the cluster for you. 
 
 "Computer restart client <NAME>" => restarts the tunnel to that client. From time to time the sound starts to crackle a bit, a known problem of those pulse tunnels. If it happens, just tell your PVA to restart the client and it will rewire the tunnel. The crackling will stop.
 
@@ -617,4 +617,13 @@ If your sound starts stuttering, your client device is poorly connected to the n
 
 A working conncection takes around 200kB/s per client. Even with 2,4GHz wifi you can run a couple of clients, but remember: If someone on your channel sends MB/s traffic, your available bandwith can be shorten to a point, where the clients stutter. It will autocorrect itself with enough bandwith available.
 
+#Config-Options:
 
+ip:    client ip i.e. 192.168.178.3
+user:  desktopuser of the running session of the client. You need a running desktop session as you need a running pipewireserver
+key:   path/to/your/openssh.keyfile  or the word "default" for automatic key selection by ssh
+name:  A nice simple Name for your Device. One word is recommended. 
+sport: port for the speaker-tunnel. Default: 4656
+mport: port for the microphone-tunnel. Default: 4657
+
+It's possible to have more than one cluster control server running, if the local cluster configs use different ports to connect to. Depending on your usecase, this can become very handy.
