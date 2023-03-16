@@ -1,4 +1,8 @@
+package data;
+
 // Utility class for command handling
+
+import java.util.Vector;
 
 class Command {
 
