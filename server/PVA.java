@@ -876,16 +876,19 @@ public class PVA {
 					} else  parts = cf.words.split( Pattern.quote(" .* ") );
 					
 					for(String x: parts) {
-						rp = rp.replaceAll(x,"");
+						rp = rp.replaceAll(x,"x:x");
 //						log("replace "+x+" : result "+ rp);
 					}
+					
+					rp = rp.trim();
+					if ( rp.startsWith("x:x") ) rp = rp.substring(3);
 				
 					while ( rp.contains("  ") ) 
 						rp = rp.replaceAll("[  ]+"," ");
 				
 //					log(rp);
 				
-					String[] ra = rp.trim().split(" ");
+					String[] ra = rp.trim().split("x:x");
 					for(String x: ra) 
 						terms.add( x );
 				
