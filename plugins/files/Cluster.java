@@ -7,6 +7,7 @@ import server.PVA;
 import hash.StringHash;
 import hash.TwoKeyHash;
 import java.util.Enumeration;
+import data.Command;
 
 public class Cluster extends Plugin {
 
@@ -31,7 +32,7 @@ public class Cluster extends Plugin {
 	
 		this.pva = pva;
 		info.put("hasThread","yes"); // Tells the loader to run run() 
-		info.put("hasCodes","yes");  // Tells main task, that we take unhandled actioncodes
+		info.put("hasCodes","yes");  // Tells main task, that we take unhandled cf.commands
 		info.put("name","Cluster"); // be nice, create a unique name
 
 		cmds.put("unload_micro",      "pactl unload-module <mid>");
@@ -139,7 +140,7 @@ public class Cluster extends Plugin {
 						}
 					} else rmid = remote( cluster.get(key), "remote_micro");
 					
-					r = execute( cluster.get(key), "detect_tunnel" );
+					r = local( cluster.get(key), "detect_tunnel" );
 					
 					if ( rsid.trim().matches("^[0-9]+$") ) {
 				
@@ -151,7 +152,7 @@ public class Cluster extends Plugin {
 
 							// it does not, so we create it.
 					
-							cluster.put( key, "tsid", execute( cluster.get(key), "tunnel_speaker").trim() );
+							cluster.put( key, "tsid", local( cluster.get(key), "tunnel_speaker").trim() );
 						} else {
 						
 							// It does, so we get the id
@@ -167,10 +168,10 @@ public class Cluster extends Plugin {
 
 						// Now we LINK the tunnel with the ALLTUNNEL node
 					
-						execute( cluster.get(key), "link_speaker_left" );
-						execute( cluster.get(key), "link_speaker_right" );
-						execute( cluster.get(key), "link_speaker_left" );
-						execute( cluster.get(key), "link_speaker_right" );
+						local( cluster.get(key), "link_speaker_left" );
+						local( cluster.get(key), "link_speaker_right" );
+						local( cluster.get(key), "link_speaker_left" );
+						local( cluster.get(key), "link_speaker_right" );
 
 					}
 				
@@ -182,7 +183,7 @@ public class Cluster extends Plugin {
 						if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":"+ cluster.get(key,"mport")+" source_name="+ cluster.get( key, "name") ) ) {
 	
 							// it does not, so we create it.
-							cluster.put( key, "tmid", execute( cluster.get(key), "tunnel_micro").trim() );
+							cluster.put( key, "tmid", local( cluster.get(key), "tunnel_micro").trim() );
 						} else {
 						
 							// It does, so we get the id
@@ -198,10 +199,10 @@ public class Cluster extends Plugin {
 						
 						// Now we LINK the tunnel with the ALLMICS node
 											
-						execute( cluster.get(key), "link_micro_left" );
-						execute( cluster.get(key), "link_micro_right" );
-						execute( cluster.get(key), "link_micro_left" );
-						execute( cluster.get(key), "link_micro_right" );
+						local( cluster.get(key), "link_micro_left" );
+						local( cluster.get(key), "link_micro_right" );
+						local( cluster.get(key), "link_micro_left" );
+						local( cluster.get(key), "link_micro_right" );
 					}
 				} else {
 					log("Cluster:init: unable to connect to client "+ key +" / unable to detect pipewire environment");
@@ -277,11 +278,11 @@ public class Cluster extends Plugin {
 		}
 		return "";
 	}
-	private String execute(StringHash infos, String cmd) {
-		return execute(infos,cmd,0);
+	private String local(StringHash infos, String cmd) {
+		return local(infos,cmd,0);
 	}
 	
-	private String execute(StringHash infos, String cmd,int log) {
+	private String local(StringHash infos, String cmd,int log) {
 		if ( infos != null ) {
 		
 			if ( log>1 ) System.out.println( replacePlaceHolders( infos, cmds.get( cmd ) ) );
@@ -298,9 +299,10 @@ public class Cluster extends Plugin {
 	// getActionCodes() should return an empty String[], if we do not handle Actions
 
 	public String[] getActionCodes() {  return "CLUSTERRESTARTCLIENT".split(":"); };
-	public boolean execute(String actioncode, String rawtext) { 
+	public boolean execute(Command cf, String rawtext) { 
+
 		try {
-			if ( actioncode.equals("CLUSTERRESTARTCLIENT") ) {
+			if ( cf.command.equals("CLUSTERRESTARTCLIENT") ) {
 
 				donotdisturb = true;
 				
@@ -311,8 +313,8 @@ public class Cluster extends Plugin {
 					
 					log("client unload "+ text);
 					
-					execute(infos,"unload_micro");
-					execute(infos,"unload_speaker");
+					local(infos,"unload_micro");
+					local(infos,"unload_speaker");
 	
 					String r = remote(infos, "detect_tunnel");
 					
@@ -327,12 +329,12 @@ public class Cluster extends Plugin {
 					
 					}
 					
-					r = execute( infos, "detect_tunnel" );
+					r = local( infos, "detect_tunnel" );
 					if ( !r.contains("server=tcp:"+ infos.get( "ip") +":"+infos.get("sport")+" sink_name="+ infos.get("name") ) ) {
 
 						// it does not, so we create it.
 					
-						infos.put("tsid", execute( infos, "tunnel_speaker").trim() );
+						infos.put("tsid", local( infos, "tunnel_speaker").trim() );
 					} else {
 						
 						// It does, so we get the id
@@ -348,15 +350,15 @@ public class Cluster extends Plugin {
 
 					// Now we LINK the tunnel with the ALLTUNNEL node
 					
-					execute( infos, "link_speaker_left" );
-					execute( infos, "link_speaker_right" );
-					execute( infos, "link_speaker_left" );
-					execute( infos, "link_speaker_right" );
+					local( infos, "link_speaker_left" );
+					local( infos, "link_speaker_right" );
+					local( infos, "link_speaker_left" );
+					local( infos, "link_speaker_right" );
 				
 					if ( !r.contains("server=tcp:"+ infos.get("ip") +":"+infos.get("mport")+" source_name="+ infos.get("name") ) ) {
 	
 						// it does not, so we create it.
-						infos.put("tmid", execute( infos, "tunnel_micro").trim() );
+						infos.put("tmid", local( infos, "tunnel_micro").trim() );
 					} else {
 						
 						// It does, so we get the id
@@ -372,10 +374,10 @@ public class Cluster extends Plugin {
 						
 					// Now we LINK the tunnel with the ALLMICS node
 										
-					execute( infos, "link_micro_left" );
-					execute( infos, "link_micro_right" );
-					execute( infos, "link_micro_left" );
-					execute( infos, "link_micro_right" );
+					local( infos, "link_micro_left" );
+					local( infos, "link_micro_right" );
+					local( infos, "link_micro_left" );
+					local( infos, "link_micro_right" );
 					
 					if ( !infos.get("tsid").matches("^[0-9]+$") || !infos.get("tmid").matches("^[0-9]+$") ) {
 						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", text ) );
@@ -429,8 +431,8 @@ public class Cluster extends Plugin {
 							if ( !cluster.get(key,"sid").equals("0") || !cluster.get(key,"mid").equals("0") ) {
 								log("Cluster:run: host down for client "+key+" detected ... removing connection");
 								// we need to remove the tunnel module
-								execute( cluster.get(key), "unload_micro");
-								execute( cluster.get(key), "unload_speaker");
+								local( cluster.get(key), "unload_micro");
+								local( cluster.get(key), "unload_speaker");
 								cluster.put(key, "sid","0");
 								cluster.put(key, "mid","0");
 							}							
@@ -470,11 +472,11 @@ public class Cluster extends Plugin {
 									}
 								} else rmid = remote( cluster.get(key), "remote_micro");
 								
-								r = execute( cluster.get(key), "detect_tunnel" );
+								r = local( cluster.get(key), "detect_tunnel" );
 								if ( rsid.trim().matches("^[0-9]+$") ) {
 									cluster.put( key, "sid", rsid );
 									if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":"+cluster.get(key,"sport")+" sink_name="+ cluster.get( key, "name") ) ) {
-										cluster.put( key, "tsid", execute( cluster.get(key), "tunnel_speaker").trim() );
+										cluster.put( key, "tsid", local( cluster.get(key), "tunnel_speaker").trim() );
 									} else {
 										String[] lines = r.split("\n");
 										for(String line : lines ) {
@@ -484,16 +486,16 @@ public class Cluster extends Plugin {
 											}
 										}
 									}
-									execute( cluster.get(key), "link_speaker_left" );
-									execute( cluster.get(key), "link_speaker_right" );
-									execute( cluster.get(key), "link_speaker_left" );
-									execute( cluster.get(key), "link_speaker_right" );
+									local( cluster.get(key), "link_speaker_left" );
+									local( cluster.get(key), "link_speaker_right" );
+									local( cluster.get(key), "link_speaker_left" );
+									local( cluster.get(key), "link_speaker_right" );
 								}
 							
 								if (rmid.trim().matches("^[0-9]+$") ) {
 									cluster.put( key, "mid", rmid );
 									if ( !r.contains("server=tcp:"+ cluster.get( key, "ip") +":"+cluster.get(key,"mport")+" source_name="+ cluster.get( key, "name") ) ) {
-										cluster.put( key, "tmid", execute( cluster.get(key), "tunnel_micro").trim() );
+										cluster.put( key, "tmid", local( cluster.get(key), "tunnel_micro").trim() );
 									} else {
 										String[] lines = r.split("\n");
 										for(String line : lines ) {
@@ -503,10 +505,10 @@ public class Cluster extends Plugin {
 											}
 										}
 									}
-									execute( cluster.get(key), "link_micro_left" );
-									execute( cluster.get(key), "link_micro_right" );
-									execute( cluster.get(key), "link_micro_left" );
-									execute( cluster.get(key), "link_micro_right" );
+									local( cluster.get(key), "link_micro_left" );
+									local( cluster.get(key), "link_micro_right" );
+									local( cluster.get(key), "link_micro_left" );
+									local( cluster.get(key), "link_micro_right" );
 								}
 							} else {
 								log("Cluster:init: unable to connect to client "+ key +" / unable to detect pipewire environment");

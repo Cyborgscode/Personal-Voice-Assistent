@@ -6,7 +6,7 @@ import io.Dos;
 import server.PVA;
 import hash.StringHash;
 import hash.TwoKeyHash;
-
+import data.Command;
 /*
 
 	This plugin does not handle floppy size disks, we have 2022 
@@ -50,14 +50,14 @@ public class DiskFree extends Plugin {
 	}
 
 	public String[] getActionCodes() {  return "SILENCEDISKWARNING:UNSILENCEDISKWARNING".split(":"); };
-	public boolean execute(String actioncode, String rawtext) { 
+	public boolean execute(Command cf, String rawtext) { 
 		try {
-			if ( actioncode.equals("SILENCEDISKWARNING") ) {
+			if ( cf.command.equals("SILENCEDISKWARNING") ) {
 				log("schalte warnung aus");
 				setVar("silence","yes");
 				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "DISKRESPONSETURNEDOFF") );
 	
-			} else if ( actioncode.equals("UNSILENCEDISKWARNING") ) {
+			} else if ( cf.command.equals("UNSILENCEDISKWARNING") ) {
 	
 				log("schalte warnung ein");
 				setVar("silence","no");

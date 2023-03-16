@@ -7,12 +7,7 @@ import server.PVA;
 import hash.StringHash;
 import hash.TwoKeyHash;
 import java.util.Date;
-
-/*
-
-	This plugin does not handle floppy size disks, we have 2022 
-	
-*/
+import data.Command;
 
 public class SpeechGuard extends Plugin {
 
@@ -72,14 +67,14 @@ public class SpeechGuard extends Plugin {
 	private	long time = 0;
 
 	public String[] getActionCodes() {  return "SHUTUP:TALKTOME".split(":"); };
-	public boolean execute(String actioncode, String rawtext) { 
+	public boolean execute(Command cf, String rawtext) { 
 		try {
-			if ( actioncode.equals("SHUTUP") ) {
+			if ( cf.command.equals("SHUTUP") ) {
 				log("schalte sprache aus");
 				pva.config.put("conf","cantalk","no");
 				vars.put("cantalk","no");
 				time = (new Date()).getTime()/1000 + shutUpFor;
-			} else	if ( actioncode.equals("TALKTOME") ) {
+			} else	if ( cf.command.equals("TALKTOME") ) {
 				log("schalte sprache ein");
 				pva.config.put("conf","cantalk","yes");
 				vars.put("cantalk","yes");

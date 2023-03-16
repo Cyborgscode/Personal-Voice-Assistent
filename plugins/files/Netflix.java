@@ -7,6 +7,7 @@ import server.PVA;
 import hash.StringHash;
 import hash.TwoKeyHash;
 import java.util.Date;
+import data.Command;
 
 public class Netflix extends Plugin {
 
@@ -78,9 +79,9 @@ public class Netflix extends Plugin {
 	final boolean wait = true;
 	
 	public String[] getActionCodes() {  return "NETFLIXHOME:NETFLIXMYLIST:NETFLIXSEARCH:NETFLIXRETURN:NETFLIXPAUSE:NETFLIXFORWARD:NETFLIXBACKWARDS:NETFLIXFULLSCREEN:NETFLIXSKIPINTRO:NETFLIXPLAYMOVIE:NETFLIXPLAY".split(":"); };
-	public boolean execute(String actioncode, String rawtext) { 
+	public boolean execute(Command cf, String rawtext) { 
 		try {
-			if ( actioncode.equals("NETFLIXFULLSCREEN") ) {
+			if ( cf.command.equals("NETFLIXFULLSCREEN") ) {
 				log("Netflix: toogle fullscreen");
 				if ( vars.get("playing").equals("yes") ) {
 
@@ -100,7 +101,7 @@ public class Netflix extends Plugin {
 
 				}
 			
-			} else if ( actioncode.equals("NETFLIXMYLIST") ) {
+			} else if ( cf.command.equals("NETFLIXMYLIST") ) {
 				log("Netflix: activate MY LIST");
 				
 				if ( vars.get("playing").equals("no") || kiosk ) {
@@ -115,7 +116,7 @@ public class Netflix extends Plugin {
 
 				}										
 
-			} else if ( actioncode.equals("NETFLIXHOME") ) {
+			} else if ( cf.command.equals("NETFLIXHOME") ) {
 				log("Netflix: activate HOME");
 				
 				if ( vars.get("playing").equals("no") || kiosk ) {
@@ -129,7 +130,7 @@ public class Netflix extends Plugin {
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
 				}										
 
-			} else if ( actioncode.equals("NETFLIXSKIPINTRO") ) {
+			} else if ( cf.command.equals("NETFLIXSKIPINTRO") ) {
 				log("Netflix: activate SKIPINTRO");
 				
 				if ( vars.get("playing").equals("yes") || kiosk ) {
@@ -143,7 +144,7 @@ public class Netflix extends Plugin {
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
 				}										
 
-			} else if ( actioncode.equals("NETFLIXRETURN") ) {
+			} else if ( cf.command.equals("NETFLIXRETURN") ) {
 				log("Netflix: activate RETURN");
 				
 				if ( vars.get("playing").equals("yes") || kiosk ) {
@@ -160,7 +161,7 @@ public class Netflix extends Plugin {
 
 				}										
 
-			} else if ( actioncode.equals("NETFLIXNEXT") ) {
+			} else if ( cf.command.equals("NETFLIXNEXT") ) {
                                 log("Netflix: activate NEXT");
 
                                 if ( vars.get("playing").equals("yes") || kiosk ) {
@@ -175,7 +176,7 @@ public class Netflix extends Plugin {
 
                                 }
 
-                        } else if ( actioncode.equals("NETFLIXPAUSE") || actioncode.equals("NEXTFLIXPLAY") ) {
+                        } else if ( cf.command.equals("NETFLIXPAUSE") || cf.command.equals("NEXTFLIXPLAY") ) {
 				log("Netflix: activate PAUSE/PLAY");
 
 				if ( vars.get("playing").equals("yes") || kiosk) {
@@ -188,7 +189,7 @@ public class Netflix extends Plugin {
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
 
-					if ( actioncode.equals("NEXTFLIXPLAY") ) {
+					if ( cf.command.equals("NEXTFLIXPLAY") ) {
 						pos.parse( "pos_emptyspace");
 						pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					}
@@ -201,7 +202,7 @@ public class Netflix extends Plugin {
 
 				}										
 
-			} else if ( actioncode.equals("NETFLIXFORWARD") ) {
+			} else if ( cf.command.equals("NETFLIXFORWARD") ) {
 				log("Netflix: activate FORWARD");
 				
 				if ( vars.get("playing").equals("yes") || kiosk ) {
@@ -219,7 +220,7 @@ public class Netflix extends Plugin {
 
 				}										
 
-			} else if ( actioncode.equals("NETFLIXBACKWARDS") ) {
+			} else if ( cf.command.equals("NETFLIXBACKWARDS") ) {
 				log("Netflix: activate BACKWARDS");
 				
 				if ( vars.get("playing").equals("yes") || kiosk ) {
@@ -236,7 +237,7 @@ public class Netflix extends Plugin {
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 				}										
 
-			} else if ( actioncode.equals("NETFLIXSEARCH") ) {
+			} else if ( cf.command.equals("NETFLIXSEARCH") ) {
 				log("Netflix: activate SEARCH");
 
 				activateNetflixWindow();
@@ -288,7 +289,7 @@ public class Netflix extends Plugin {
 				vars.put("playing","no");
 
 
-			} else if ( actioncode.equals("NETFLIXPLAYMOVIE") ) {
+			} else if ( cf.command.equals("NETFLIXPLAYMOVIE") ) {
 				log("Netflix: activate PLAYMOVIE");
 
 				activateNetflixWindow();
@@ -392,3 +393,4 @@ class Position {
 }
 
 }
+

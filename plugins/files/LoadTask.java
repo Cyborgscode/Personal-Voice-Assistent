@@ -6,6 +6,7 @@ import io.Dos;
 import server.PVA;
 import hash.StringHash;
 import hash.TwoKeyHash;
+import data.Command;
 
 public class LoadTask extends Plugin {
 
@@ -20,7 +21,7 @@ public class LoadTask extends Plugin {
 	public void init(PVA pva) {
 		this.pva = pva;
 		info.put("hasThread","yes"); // Tells the loader to run run() 
-		info.put("hasCodes","yes");  // Tells main task, that we take unhandled actioncodes
+		info.put("hasCodes","yes");  // Tells main task, that we take unhandled cf.commands
 		info.put("name","LoadTask"); // be nice, create a unique name
 		vars.put("silence","no");
 		validValues.put("silence","yes","ok");
@@ -46,9 +47,9 @@ public class LoadTask extends Plugin {
 	// getActionCodes() should return an empty String[], if we do not handle Actions
 
 	public String[] getActionCodes() {  return "HEALTHREPORT:SILENCELOADWARNING:UNSILENCELOADWARNING".split(":"); };
-	public boolean execute(String actioncode, String rawtext) { 
+	public boolean execute(Command cf, String rawtext) { 
 		try {
-			if ( actioncode.equals("HEALTHREPORT") ) {
+			if ( cf.command.equals("HEALTHREPORT") ) {
 				
 				// selfstatusreport
 				
@@ -65,12 +66,12 @@ public class LoadTask extends Plugin {
 						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSENORMAL") );
 				}	
 			
-			} else if ( actioncode.equals("SILENCELOADWARNING") ) {
+			} else if ( cf.command.equals("SILENCELOADWARNING") ) {
 				log("schalte warnung aus");
 				setVar("silence","yes");
 				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSETURNEDOFF") );
 	
-			} else if ( actioncode.equals("UNSILENCELOADWARNING") ) {
+			} else if ( cf.command.equals("UNSILENCELOADWARNING") ) {
 	
 				log("schalte warnung ein");
 				setVar("silence","no");
@@ -90,7 +91,7 @@ public class LoadTask extends Plugin {
 		HINT: if we handle codes, that are supported by multiply plugins i.e. a generalized silence cmd, the handling code returns "false";
 		      if we ever need a more complex reporting strategie, we need to refactor this execute() system.
 	
-		if ( actioncode.equals("GENERALSILENCE") ) {
+		if ( cf.command.equals("GENERALSILENCE") ) {
 
 			setVar("silence","yes");
 			return false;
