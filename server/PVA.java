@@ -52,7 +52,7 @@ public class PVA {
 	static String[] za = null;
 	static int c = 0;
 	static String metadata_enabled  = "";
-
+	
 	static void log(String x) { System.out.println(x); }
 	static String[] timedata;
 	
@@ -69,12 +69,12 @@ public class PVA {
                 return d.get(Calendar.DAY_OF_MONTH)+"."+( months[ d.get(Calendar.MONTH) ] )+" "+d.get(Calendar.HOUR_OF_DAY)+":"+ minutes;
         }
 
-	static void say(String text, boolean wait) throws IOException {
+	public static void say(String text, boolean wait) throws IOException {
 		if ( !config.get("conf","cantalk" ).equals("no") ) 
 			exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
 	}
 
-        static void say(String text) throws IOException {
+        public static void say(String text) throws IOException {
 		say( text, false );        
 	}
 
@@ -142,6 +142,7 @@ public class PVA {
 			}
 		} catch (Exception e) {
 			// we don't care 
+			log("we had a crash in exec()");
 		}
 		reaction = true;
 	}
@@ -600,7 +601,7 @@ public class PVA {
 		return "";
 	}
 	
-	static String getDesktop() {
+	public static String getDesktop() {
 		return System.getenv("DESKTOP_SESSION").trim();
 	}
 
@@ -814,7 +815,7 @@ public class PVA {
 
 			Command cc = commands.get(i);
 	
-			if (debug > 0 ) log("matching \""+ cc.words +"\" against \""+ text +"\" match_und="+ und( cc.words ) +" match_matches="+ text.matches( ".*"+ cc.words +".*" ) );
+			if (debug > 0 ) log("matching \""+ cc.words +"\" against \""+ text +"\" match_und="+ und( cc.words ) +" match_matches="+ text.matches( ".*"+ cc.words +".*" ) +" negative="+ cc.negative+" !und="+ !und( cc.negative ));
 	
 			if ( 
 				( 
@@ -869,9 +870,10 @@ public class PVA {
 					
 //					log(rp);
 					
-					if ( cf.words.endsWith(" .*") ) cf.words +=" "; // The next split needs this to function
-					
-					String[] parts = cf.words.split( Pattern.quote(" .* ") );
+					String[] parts;
+					if ( cf.words.endsWith(" .*") ) {
+						parts = (cf.words+" ").split( Pattern.quote(" .* ") );
+					} else  parts = cf.words.split( Pattern.quote(" .* ") );
 					
 					for(String x: parts) {
 						rp = rp.replaceAll(x,"");
@@ -1394,8 +1396,8 @@ public class PVA {
 							for(int i=0;i<cf.terms.size();i++)
 								term = term.replaceAll( "%"+i , (String)cf.terms.get(i) );						
 						
-						// log( term );
-						
+						log( term );
+	
 						exec( term.split(config.get("conf","splitter")),true);
 				
 					} else {
@@ -1527,8 +1529,6 @@ public class PVA {
 							
 							if ( hour > -1 ) timer = true;
 							
-							
-							
 //							log( rightNow.get(Calendar.DAY_OF_WEEK) +" sonntag="+ Calendar.SUNDAY);
 
 //							log ( rightNow.getTime().toString() );
@@ -1568,11 +1568,10 @@ public class PVA {
 				
 					boolean timer = false;
 					Calendar rightNow = Calendar.getInstance();
-	
+
 					Pattern pattern = Pattern.compile( "("+ texte.get( config.get("conf","lang_short"), "MAKETIMERATRELATIVE") +")" );
 					String[] stepone = pattern.split( text_raw.replaceAll( keyword, "").trim() , 2 );
 					if ( stepone.length == 2) {
-					
 						pattern = Pattern.compile( "("+ texte.get( config.get("conf","lang_short"), "MAKETIMERFOR") +")" );
 						String[] steptwo = pattern.split( stepone[1], 2 );
 						if ( steptwo.length == 2) {
@@ -1591,11 +1590,13 @@ public class PVA {
 							} else 	if ( text_raw.contains( texte.get( config.get("conf","lang_short"), "TIMEDAYS") ) ) {
 								multiply = 60*24;
 							}
+						
+							// log( "multiply="+ multiply);
 
-							for(int i=0;i<za.length;i++) 
+							for(int i=0;i<za.length;i++)
 								if ( text_raw.matches( ".* "+za[i]+" .*" ) || text_raw.contains(" "+za[i]+" ") ) 
 									when = i+1;
-							
+
 							if ( when > 0 ) {	
 								for ( int i=0; i < when*multiply; i++ )
 									rightNow.add(Calendar.MINUTE, 1 );
@@ -1616,7 +1617,7 @@ public class PVA {
 					} else  say( texte.get( config.get("conf","lang_short"), "MAKETIMERERROR") );
 				
 				}
-
+				
 				// repeat last cmd.. 
 
 				boolean writeLastArg = true;
@@ -2868,14 +2869,14 @@ public class PVA {
 						}
 					}
 				}
-
+				
 				if ( !reaction ) {
 					
 //					log("no internal reaction yet, lets test plugins to handle it.");	
 					
-					reaction = pls.handlePluginAction(cf, text_raw);
+					reaction = pls.handlePluginAction(cf, text);
 				}
-
+								
 				if ( !reaction ) {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
 						log("Ich glaube, Du hast nichts gesagt!");
@@ -2943,6 +2944,7 @@ static private class AnalyseMP3 extends Thread {
 }
 
 }
+
 
 class Reaction {
 
