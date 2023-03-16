@@ -4,10 +4,15 @@ package plugins.files;
 import plugins.Plugin;
 import io.Dos;
 import server.PVA;
+import server.Streaming;
+import data.Command;
 import hash.StringHash;
 import hash.TwoKeyHash;
+import hash.TreeSort;
 import java.util.Enumeration;
-import data.Command;
+import java.nio.file.Paths;
+import java.nio.file.Path;
+import java.util.HashMap;
 
 public class Cluster extends Plugin {
 
@@ -16,6 +21,9 @@ public class Cluster extends Plugin {
 	private TwoKeyHash validValues = new TwoKeyHash(); // this way we get multiply options for an argument 
 	private TwoKeyHash cluster = new TwoKeyHash(); 
 	private StringHash cmds = new StringHash();
+	
+	private HashMap<String,Streaming> server = new HashMap<String,Streaming>();
+	
 	
 	private String amid = "";
 	private String asid = "";
@@ -56,6 +64,12 @@ public class Cluster extends Plugin {
 		cmds.put("link_pva_left",      "pw-link ALLMICS:monitor_FL \"<id>:input_FL\"");
 		cmds.put("link_pva_right",     "pw-link ALLMICS:monitor_FR \"<id>:input_FR\"");
 
+		// Streaming 
+		
+		cmds.put("killplayer", "killall ffplay");
+		cmds.put("killstreamserver", "killall ffmpeg");
+		cmds.put("streamplayer", "export DISPLAY=:0; nohup ffplay -fs udp://<ip>:<streamport> &>/dev/null &");
+		cmds.put("streamserver", "/usr/bin/ffmpegx:x-rex:x-ix:x<TERM1>x:x-vcodecx:xlibx264x:x-b:vx:x3000kx:x-sx:x1920x1080x:x-strictx:xexperimentalx:x-gx:x25x:x-acodecx:xaacx:x-abx:x128000x:x-arx:x48000x:x-acx:x2x:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
 
 		// create the nodes, but only if they are not active
 
@@ -80,6 +94,7 @@ public class Cluster extends Plugin {
 			
 				cluster.put(key, "sport", "4656");
 				cluster.put(key, "mport", "4657");
+				cluster.put(key, "streamport", "9999");
 			
 				String[] args = config.get( key ).split(";");
 				for(String x : args) {
@@ -271,10 +286,7 @@ public class Cluster extends Plugin {
 			} else {
 				ssh = "ssh -i <key> <user>@<ip> \"<CMD>\"";
 			} 		
-			// System.out.println( replacePlaceHolders( infos, ssh.replaceAll("<CMD>", cmds.get( cmd ) ) ) );
-			String r = dos.readPipe( replacePlaceHolders( infos, ssh.replaceAll("<CMD>", cmds.get( cmd ) ) ) );
-			// System.out.println( "returns "+r );
-			return r;
+			return dos.readPipe( replacePlaceHolders( infos, ssh.replaceAll("<CMD>", cmds.get( cmd ) ) ) );
 		}
 		return "";
 	}
@@ -298,11 +310,94 @@ public class Cluster extends Plugin {
 	
 	// getActionCodes() should return an empty String[], if we do not handle Actions
 
-	public String[] getActionCodes() {  return "CLUSTERRESTARTCLIENT".split(":"); };
+	public String[] getActionCodes() {  return "CLUSTERRESTARTCLIENT:CLUSTERSTREAMVIDEO:CLUSTERSTREAMSTOP:CLUSTERSTREAMNEXT".split(":"); };
 	public boolean execute(Command cf, String rawtext) { 
 
 		try {
-			if ( cf.command.equals("CLUSTERRESTARTCLIENT") ) {
+			if ( cf.command.equals("CLUSTERSTREAMVIDEO") ) {
+			
+				if ( cf.terms.size() < 2 ) {
+					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERPARSEERROR") );
+					log("exit execute("+rawtext+")");
+					return false;
+				}
+
+				String subtext = ((String)cf.terms.get(0)).trim();
+				String client  = ((String)cf.terms.get(1)).trim();
+	
+				StringHash infos = cluster.get(client);
+				if ( infos != null ) {
+
+					log("Ich suche nach Videos : "+ subtext);
+
+					String suchergebnis = pva.suche( pva.config.get("path","video"), subtext, ".mp4|.mpg|.mkv|.avi|.flv" );
+					if (!suchergebnis.isEmpty() ) {	
+
+						dos.writeFile(pva.getHome()+"/.cache/pva/search.stream.cache",suchergebnis);					
+
+						TreeSort ts = new TreeSort();
+	
+						String[] files = suchergebnis.split(pva.config.get("conf","splitter"));
+						for(String file : files ) {
+							Path p = Paths.get( file );
+							ts.add( p.getFileName().toString(), file );
+						}
+						String[] erg  = ts.getValues();
+						suchergebnis = "";                				
+				                for(int uyz=0;uyz<ts.size();uyz++) suchergebnis += erg[uyz]+pva.config.get("conf","splitter");
+	
+						Streaming serverinstance = new Streaming( pva, infos,cmds, suchergebnis.split( pva.config.get("conf","splitter") ) );
+						server.put( client.toLowerCase(), serverinstance);
+				                serverinstance.start();
+	
+					} else {
+						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERSTREAMSEARCHERROR").replaceAll("<TERM1>", client ) );
+					}
+				} else {
+					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+				}
+				
+				return true;
+			
+			} else if ( cf.command.equals("CLUSTERSTREAMNEXT") ) {
+
+				String text = rawtext.trim();
+				
+				StringHash infos = cluster.get(text);
+				if ( infos != null ) {
+					log("skip to next video for client "+ text);					
+					log("server="+server.toString() );
+	
+					Streaming s = server.get( text );
+					if ( s!=null && infos.get("streaming").equals("on") ) {
+						log("skip "+ text);
+						s.next();
+						log("skipped "+ text);
+					} else 	log("s="+s+ " and streaming is "+ infos.get("streaming") );
+			
+				} 
+				
+				return true;
+					
+			} else if ( cf.command.equals("CLUSTERSTREAMSTOP") ) {
+
+				String text = rawtext.trim();
+				
+				StringHash infos = cluster.get(text);
+				if ( infos != null ) {
+					log("streaming stop for client "+ text);
+					Streaming s = server.get( text );
+					if ( s!=null && infos.get("streaming").equals("on") ) {
+						log("stopping "+ text);
+						s.exit();
+						log("stopped "+ text);
+					} else  log("s="+s+ " and streaming is "+ infos.get("streaming") );
+			
+				} 
+				
+				return true;
+					
+			} else if ( cf.command.equals("CLUSTERRESTARTCLIENT") ) {
 
 				donotdisturb = true;
 				
