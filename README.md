@@ -646,7 +646,7 @@ If your sound starts stuttering, your client device is poorly connected to the n
 
 A working conncection takes around 200kB/s per client. Even with 2,4GHz wifi you can run a couple of clients, but remember: If someone on your channel sends MB/s traffic, your available bandwith can be shorten to a point, where the clients stutter. It will autocorrect itself with enough bandwith available.
 
-##Config-Options:
+## Config-Options:
 
 ```
 ip:    client ip i.e. 192.168.178.3
@@ -659,13 +659,13 @@ mport: port for the microphone-tunnel. Default: 4657
 
 It's possible to have more than one cluster control server running, if the local cluster configs use different ports to connect to. Depending on your usecase, this can become very handy.
 
-### Video Streaming ###
+### Video Streaming 
 
 You can stream any video from your harddrives to a cluster client. A command in the form of "stream enterprise to tablet" is enough. PVA uses FFMPEG on the server and client side to transfer a FullHD stream with 3 Mb/s to your devive. As all streaming options for clients have defaults, you do not need to change your config, except, you need to use a different resolution/bandwith for your client device.
 
 Videostreaming will continue if PVA gets stopped in mid streaming. **There is no recovery at startup atm.**
 
-##Config-Options:
+## Config-Options:
 
 ```
 streamresolution: WidthxHeight. Defaults to "1920x1080" 
