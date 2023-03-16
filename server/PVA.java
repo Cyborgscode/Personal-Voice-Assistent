@@ -2871,7 +2871,7 @@ public class PVA {
 					
 //					log("no internal reaction yet, lets test plugins to handle it.");	
 					
-					reaction = pls.handlePluginAction(cf.command, text_raw);
+					reaction = pls.handlePluginAction(cf, text_raw);
 				}
 
 				if ( !reaction ) {
@@ -2940,33 +2940,6 @@ static private class AnalyseMP3 extends Thread {
 	}
 }
 
-}
-
-
-class Command {
-
-	public String words = "";
-	public String command = "";
-	public String filter = "";
-	public String negative = "";
-	public Vector terms = null;
-	
-	public Command (String w,String c,String f,String n) {
-		this.words = w;
-		this.command = c;
-		this.filter = f;
-		this.negative = n;
-		this.terms = new Vector();
-	}
-	public Command (String w,String c,String f,String n,Vector t) {
-		this.words = w;
-		this.command = c;
-		this.filter = f;
-		this.negative = n;
-		if ( t != null ) {
-			this.terms = t;
-		} else	this.terms = new Vector();
-	}
 }
 
 class Reaction {
