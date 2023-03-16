@@ -85,8 +85,8 @@ public class Streaming extends Thread {
 
 	public void exit() {
 		log("stopping streamserver "+ infos.get("ip") );	
-		local("killstreamserver");
 		endthis = true;
+		local("killstreamserver");
 	}
 
 	public void run() {
