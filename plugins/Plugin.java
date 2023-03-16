@@ -5,6 +5,7 @@ import io.Dos;
 import server.PVA;
 import hash.StringHash;
 import hash.TwoKeyHash;
+import data.Command;
 
 abstract public class Plugin extends Thread implements PluginInterface {
 
