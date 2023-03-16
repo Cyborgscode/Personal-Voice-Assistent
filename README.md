@@ -648,11 +648,28 @@ A working conncection takes around 200kB/s per client. Even with 2,4GHz wifi you
 
 #Config-Options:
 
+```
 ip:    client ip i.e. 192.168.178.3
 user:  desktopuser of the running session of the client. You need a running desktop session as you need a running pipewireserver
 key:   path/to/your/openssh.keyfile  or the word "default" for automatic key selection by ssh
 name:  A nice simple Name for your Device. One word is recommended. 
 sport: port for the speaker-tunnel. Default: 4656
 mport: port for the microphone-tunnel. Default: 4657
+```
 
 It's possible to have more than one cluster control server running, if the local cluster configs use different ports to connect to. Depending on your usecase, this can become very handy.
+
+### Video Streaming ###
+
+You can stream any video from your harddrives to a cluster client. A command in the form of "stream enterprise to tablet" is enough. PVA uses FFMPEG on the server and client side to transfer a FullHD stream with 3 Mb/s to your devive. As all streaming options for clients have defaults, you do not need to change youre config, except, you need to use a different resolution/bandwith for your client device.
+
+Videostreaming will continue if PVA gets stopped in mid streaming. **There is no recovery at startup atm.**
+
+#Config-Options:
+
+```
+streamresolution: WidthxHeight. Defaults to "1920x1080" 
+streamport: port for the videostream-tunnel. Defaults to "9999"
+streamvideorate: defaults to "3000" => 3000 Kb/s . Note: PVA adds the necessary "k" to the number. 
+streamaudiorate: defaults to "48000". No need to change this
+```
