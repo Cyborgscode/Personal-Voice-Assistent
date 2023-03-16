@@ -661,7 +661,7 @@ It's possible to have more than one cluster control server running, if the local
 
 ### Video Streaming ###
 
-You can stream any video from your harddrives to a cluster client. A command in the form of "stream enterprise to tablet" is enough. PVA uses FFMPEG on the server and client side to transfer a FullHD stream with 3 Mb/s to your devive. As all streaming options for clients have defaults, you do not need to change youre config, except, you need to use a different resolution/bandwith for your client device.
+You can stream any video from your harddrives to a cluster client. A command in the form of "stream enterprise to tablet" is enough. PVA uses FFMPEG on the server and client side to transfer a FullHD stream with 3 Mb/s to your devive. As all streaming options for clients have defaults, you do not need to change your config, except, you need to use a different resolution/bandwith for your client device.
 
 Videostreaming will continue if PVA gets stopped in mid streaming. **There is no recovery at startup atm.**
 
