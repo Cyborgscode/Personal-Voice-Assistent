@@ -4,6 +4,7 @@ import io.Dos;
 import server.PVA;
 import hash.StringHash;
 import hash.TwoKeyHash;
+import data.Command;
 
 public interface PluginInterface {
 
@@ -11,7 +12,7 @@ public interface PluginInterface {
 	public String  getVar(String name);
 	public boolean setVar(String name,String value);
 	public String[] getActionCodes();
-	public boolean execute(String actioncode, String rawtext);
+	public boolean execute(Command cf, String rawtext);
 	public void run();
 	public void init(PVA pva);
 }
