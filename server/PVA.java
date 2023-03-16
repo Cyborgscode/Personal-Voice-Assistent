@@ -604,7 +604,7 @@ public class PVA {
 		return System.getenv("DESKTOP_SESSION").trim();
 	}
 
-	static String getHome() {
+	public static String getHome() {
 		return System.getenv("HOME").trim();
 	}
 
@@ -739,7 +739,7 @@ public class PVA {
 		return filename;
 	}
 
-	static String suche(String start,String suchwort,String type) {
+	public static String suche(String start,String suchwort,String type) {
 	
 		if ( start.contains(":") ) {
 
