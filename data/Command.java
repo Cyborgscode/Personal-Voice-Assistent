@@ -4,7 +4,7 @@ package data;
 
 import java.util.Vector;
 
-class Command {
+public class Command {
 
 	public String words = "";
 	public String command = "";
