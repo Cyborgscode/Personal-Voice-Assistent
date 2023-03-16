@@ -869,6 +869,8 @@ public class PVA {
 					
 //					log(rp);
 					
+					if ( cf.words.endsWith(" .*") ) cf.words +=" "; // The next split needs this to function
+					
 					String[] parts = cf.words.split( Pattern.quote(" .* ") );
 					
 					for(String x: parts) {
