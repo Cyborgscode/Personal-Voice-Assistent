@@ -12,6 +12,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import server.PVA;
 import hash.StringHash;
+import data.Command;
 
 public class Plugins {
 
@@ -43,7 +44,7 @@ public class Plugins {
                 if ( entries != null ) {
                         for(int i =0; i < entries.length; i++ )
                                 if ( entries[i].toString().endsWith(".class") && !entries[i].toString().contains("$") && pluginsfound < 1000 ) {
-//                                      System.out.println(" filename raw = "+ entries[i].getAbsolutePath() );
+//					System.out.println(" filename raw = "+ entries[i].getAbsolutePath() );
 
                                         String name = entries[i].getAbsolutePath().
                                                                  replaceAll("^.*plugins/files/","plugins/files/").
@@ -81,7 +82,7 @@ public class Plugins {
                 return false;
         }
 
-	public boolean handlePluginAction(String command,String textraw) {
+	public boolean handlePluginAction(Command cf,String textraw) {
 		for(int i = 0; i< pluginsfound ;i++ ) {
 		
 			boolean wehandleit = false;
@@ -96,13 +97,13 @@ public class Plugins {
 //					System.out.print("handle Plugin "+ info.get("name") + " can handle ... ");
 					for(String x : ac ) {
 //						System.out.print(" "+ x +" : ");
-						if ( x.equals(command) ) wehandleit = true;
+						if ( x.equals(cf.command) ) wehandleit = true;
 					}
 //					System.out.println("");
 					
 					if ( wehandleit ) {
-//						System.out.println("Plugin "+ info.get("name") + " called => execute("+command+","+ textraw +")");
-						boolean rc = p.execute( command, textraw );
+						System.out.println("Plugin "+ info.get("name") + " called => execute("+cf.command+","+ textraw +")");
+						boolean rc = p.execute( cf, textraw );
 						if ( rc ) {
 //							System.out.println("Plugin "+ info.get("name") + " handled it ");
 							return rc;
@@ -117,4 +118,3 @@ public class Plugins {
 	}
 	
 }
-
