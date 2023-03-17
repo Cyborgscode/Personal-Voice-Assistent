@@ -16,7 +16,7 @@ public class Streaming extends Thread {
 	StringHash cmds;
 	
 	boolean endthis = false;
-	int log = 2;
+	int log = 0;
 	PVA pva;
 
 	void log(String x) { System.out.println(x); }
