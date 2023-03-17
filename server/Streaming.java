@@ -16,7 +16,7 @@ public class Streaming extends Thread {
 	StringHash cmds;
 	
 	boolean endthis = false;
-	int log = 0;
+	int log = 2;
 	PVA pva;
 
 	void log(String x) { System.out.println(x); }
@@ -28,7 +28,6 @@ public class Streaming extends Thread {
 		this.infos = infos;
 		this.cmds = cmds;
 		this.videos = videos;
-	
 	}
 	
 	private String replacePlaceHolders(StringHash infos, String cmd) {
@@ -92,26 +91,39 @@ public class Streaming extends Thread {
 	public void run() {
 		try {
 			remote("streamplayer");
-		
-			for(String file : videos ) {
 
-				log("streaming "+ file);
+			if ( videos != null  ) {
+		
+				for(String file : videos ) {
+
+					log("streaming "+ file);
 			
-				if (isInterrupted() || endthis ) {
-					log("killing stream "+ infos.get("ip") );	
-					remote("killplayer");
-					local("killstreamserver");
+					if (isInterrupted() || endthis ) {
+						log("killing stream "+ infos.get("ip") );	
+						remote("killplayer");
+						local("killstreamserver");
+						infos.put("streaming","off");
+						break;
+					}
+					infos.put("streaming","on");
+					infos.put("playing",file);
+					local("streamserver",file);
 					infos.put("streaming","off");
-					break;
 				}
-				infos.put("streaming","on");
-				infos.put("playing",file);
-				local("streamserver",file);
-				infos.put("streaming","off");
-			}
-
-			remote("killplayer");
+	
+				remote("killplayer");
+			} else {
+				// DESKTOP STREAMING
+				log("streaming desktop");
 		
+				infos.put("streaming","on");
+				infos.put("playing","DESKTOP");
+				local("desktopstream","");
+				remote("killplayer");
+				infos.put("streaming","off");
+				
+			}
+			
 		} catch (Exception localException) {
 		}
 		
