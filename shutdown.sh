@@ -8,7 +8,7 @@ if [ "$GREETING" != "" ]; then
         if [ "$SAY" == "" ]; then
                 SAY="/usr/local/sbin/say"
         fi
-        $SAY "$GREETING"
+        $SAY "$GREETING" &
 fi
 
 
