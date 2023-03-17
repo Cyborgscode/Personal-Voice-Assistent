@@ -663,6 +663,8 @@ It's possible to have more than one cluster control server running, if the local
 
 You can stream any video from your harddrives to a cluster client. A command in the form of "stream enterprise to tablet" is enough. PVA uses FFMPEG on the server and client side to transfer a FullHD stream with 3 Mb/s to your devive. As all streaming options for clients have defaults, you do not need to change your config, except, you need to use a different resolution/bandwith for your client device.
 
+You can also stream your desktop screen + audio to any client. 
+
 Videostreaming will continue if PVA gets stopped in mid streaming. **There is no recovery at startup atm.**
 
 ### Config-Options:
@@ -672,4 +674,7 @@ streamresolution: WidthxHeight. Defaults to "1920x1080"
 streamport: port for the videostream-tunnel. Defaults to "9999"
 streamvideorate: defaults to "3000" => 3000 Kb/s . Note: PVA adds the necessary "k" to the number. 
 streamaudiorate: defaults to "48000". No need to change this
+desktopresolution: defaults to "1920x1080"
+desktopdisplay: defaults to ":1"
+desktopaudio: SOURCE for capturing audio. Default: see 50-plugin-cluster.conf
 ```
