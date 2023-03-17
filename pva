@@ -109,7 +109,7 @@ if [ "$GREETING" != "" ]; then
 	if [ "$SAY" == "" ]; then
 		SAY="/usr/local/sbin/say"
 	fi
-	$SAY "$GREETING"
+	$SAY "$GREETING" &
 fi
 
 ICON=$(ps auxf|grep -v grep|grep -c pvatrayicon)
