@@ -70,7 +70,7 @@ public class Cluster extends Plugin {
 		cmds.put("killstreamserver", "killall ffmpeg");
 		cmds.put("streamplayer", "export DISPLAY=:0; nohup ffplay -fs udp://<ip>:<streamport> &>/dev/null &");
 		cmds.put("streamserver", "/usr/bin/ffmpegx:x-rex:x-ix:x<TERM1>x:x-vcodecx:xlibx264x:x-b:vx:x<streamvideorate>kx:x-sx:x<streamresolution>x:x-strictx:xexperimentalx:x-gx:x25x:x-acodecx:xaacx:x-abx:x128000x:x-arx:x<streamaudiorate>x:x-acx:x2x:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
-		cmds.put("desktopstream", "/usr/bin/ffmpegx:x-threadsx:x0x:x-sx:x<desktopresolution>x:x-fx:xx11grabx:x-thread_queue_sizex:x1024x:x-ix:x<desktopdisplay>x:x-rx:x30x:x-fx:xpulsex:x-thread_queue_sizex:x1024x:x-ix:xalsa_output.pci-0000_0a_00.4.analog-stereo.monitorx:x-b:v:0x:x3000kx:x-b:a:0x:x128kx:x-c:a:0x:xaacx:x-c:v:0x:xlibx264x:x-presetx:xsuperfastx:x-pix_fmtx:xyuv420px:x-sx:x<streamresolution>x:x-strictx:xexperimentalx:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
+		cmds.put("desktopstream", "/usr/bin/ffmpegx:x-threadsx:x0x:x-sx:x<desktopresolution>x:x-fx:xx11grabx:x-thread_queue_sizex:x1024x:x-ix:x<desktopdisplay>x:x-rx:x30x:x-fx:xpulsex:x-thread_queue_sizex:x1024x:x-ix:x<desktopaudio>x:x-b:v:0x:x3000kx:x-b:a:0x:x128kx:x-c:a:0x:xaacx:x-c:v:0x:xlibx264x:x-presetx:xsuperfastx:x-pix_fmtx:xyuv420px:x-sx:x<streamresolution>x:x-strictx:xexperimentalx:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
 
 
 		// create the nodes, but only if they are not active
@@ -102,7 +102,7 @@ public class Cluster extends Plugin {
 				cluster.put(key, "streamaudiorate", "48000");
 				cluster.put(key, "desktopresolution", config.get("internal_resolution") );
 				cluster.put(key, "desktopdisplay", config.get("internal_display") );
-			
+				cluster.put(key, "desktopaudio", config.get("internal_audio") );
 				String[] args = config.get( key ).split(";");
 				for(String x : args) {
 					String[] opts = x.split("=");
