@@ -69,7 +69,9 @@ public class Cluster extends Plugin {
 		cmds.put("killplayer", "killall ffplay");
 		cmds.put("killstreamserver", "killall ffmpeg");
 		cmds.put("streamplayer", "export DISPLAY=:0; nohup ffplay -fs udp://<ip>:<streamport> &>/dev/null &");
-		cmds.put("streamserver", "/usr/bin/ffmpegx:x-rex:x-ix:x<TERM1>x:x-vcodecx:xlibx264x:x-b:vx:x3000kx:x-sx:x1920x1080x:x-strictx:xexperimentalx:x-gx:x25x:x-acodecx:xaacx:x-abx:x128000x:x-arx:x48000x:x-acx:x2x:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
+		cmds.put("streamserver", "/usr/bin/ffmpegx:x-rex:x-ix:x<TERM1>x:x-vcodecx:xlibx264x:x-b:vx:x<streamvideorate>kx:x-sx:x<streamresolution>x:x-strictx:xexperimentalx:x-gx:x25x:x-acodecx:xaacx:x-abx:x128000x:x-arx:x<streamaudiorate>x:x-acx:x2x:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
+		cmds.put("desktopstream", "/usr/bin/ffmpegx:x-threadsx:x0x:x-sx:x<desktopresolution>x:x-fx:xx11grabx:x-thread_queue_sizex:x1024x:x-ix:x<desktopdisplay>x:x-rx:x30x:x-fx:xpulsex:x-thread_queue_sizex:x1024x:x-ix:xalsa_output.pci-0000_0a_00.4.analog-stereo.monitorx:x-b:v:0x:x3000kx:x-b:a:0x:x128kx:x-c:a:0x:xaacx:x-c:v:0x:xlibx264x:x-presetx:xsuperfastx:x-pix_fmtx:xyuv420px:x-sx:x<streamresolution>x:x-strictx:xexperimentalx:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
+
 
 		// create the nodes, but only if they are not active
 
@@ -95,6 +97,11 @@ public class Cluster extends Plugin {
 				cluster.put(key, "sport", "4656");
 				cluster.put(key, "mport", "4657");
 				cluster.put(key, "streamport", "9999");
+				cluster.put(key, "streamresolution", "1920x1080");
+				cluster.put(key, "streamvideorate", "3000");
+				cluster.put(key, "streamaudiorate", "48000");
+				cluster.put(key, "desktopresolution", config.get("internal_resolution") );
+				cluster.put(key, "desktopdisplay", config.get("internal_display") );
 			
 				String[] args = config.get( key ).split(";");
 				for(String x : args) {
@@ -310,7 +317,7 @@ public class Cluster extends Plugin {
 	
 	// getActionCodes() should return an empty String[], if we do not handle Actions
 
-	public String[] getActionCodes() {  return "CLUSTERRESTARTCLIENT:CLUSTERSTREAMVIDEO:CLUSTERSTREAMSTOP:CLUSTERSTREAMNEXT".split(":"); };
+	public String[] getActionCodes() {  return "CLUSTERRESTARTCLIENT:CLUSTERSTREAMDESKTOP:CLUSTERSTREAMVIDEO:CLUSTERSTREAMSTOP:CLUSTERSTREAMNEXT:CLUSTERLISTCLIENTS".split(":"); };
 	public boolean execute(Command cf, String rawtext) { 
 
 		try {
@@ -351,9 +358,34 @@ public class Cluster extends Plugin {
 				                serverinstance.start();
 	
 					} else {
+						log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERSTREAMSEARCHERROR").replaceAll("<TERM1>", client ) );
 						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERSTREAMSEARCHERROR").replaceAll("<TERM1>", client ) );
 					}
 				} else {
+					log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+				}
+				
+				return true;
+			
+			} else if ( cf.command.equals("CLUSTERSTREAMDESKTOP") ) {
+			
+				if ( cf.terms.size() < 1 ) {
+					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERPARSEERROR") );
+					log("exit execute("+rawtext+")");
+					return false;
+				}
+
+				String client = ((String)cf.terms.get(0)).trim();
+				StringHash infos = cluster.get(client);
+				if ( infos != null ) {
+	
+					Streaming serverinstance = new Streaming( pva, infos,cmds, null );
+					server.put( client.toLowerCase(), serverinstance);
+			                serverinstance.start();
+	
+				} else {
+					log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
 					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
 				}
 				
@@ -362,6 +394,15 @@ public class Cluster extends Plugin {
 			} else if ( cf.command.equals("CLUSTERSTREAMNEXT") ) {
 
 				String text = rawtext.trim();
+
+				if ( text.isEmpty() ) {
+				
+					log("cf.size= "+ cf.terms.size() + "\n" + cf.terms.toString() );
+				
+					if ( cf.terms.size() > 0 && ! ((String)cf.terms.get(0)).trim().isEmpty() ) {
+						text = ((String)cf.terms.get(0)).trim();
+					}
+				}
 				
 				StringHash infos = cluster.get(text);
 				if ( infos != null ) {
@@ -383,6 +424,17 @@ public class Cluster extends Plugin {
 
 				String text = rawtext.trim();
 				
+				if ( text.isEmpty() ) {
+				
+					log("cf.size= "+ cf.terms.size() + "\n" + cf.terms.toString() );
+				
+					if ( cf.terms.size() > 0 && ! ((String)cf.terms.get(0)).trim().isEmpty() ) {
+						text = ((String)cf.terms.get(0)).trim();
+					}
+				}
+						
+				log("stoppe client "+text);
+				
 				StringHash infos = cluster.get(text);
 				if ( infos != null ) {
 					log("streaming stop for client "+ text);
@@ -391,9 +443,22 @@ public class Cluster extends Plugin {
 						log("stopping "+ text);
 						s.exit();
 						log("stopped "+ text);
+						server.remove(s);
 					} else  log("s="+s+ " and streaming is "+ infos.get("streaming") );
 			
 				} 
+				
+				return true;
+					
+			} else if ( cf.command.equals("CLUSTERLISTCLIENTS") ) {
+
+				String text = "";
+				Enumeration en = cluster.keys();
+				while ( en.hasMoreElements() ) {
+					text += (String)en.nextElement() +".";
+				}
+
+				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERLISTCLIENTS").replaceAll("<TERM1>", text ) );
 				
 				return true;
 					
