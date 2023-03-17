@@ -176,7 +176,7 @@ public class Netflix extends Plugin {
 
                                 }
 
-                        } else if ( cf.command.equals("NETFLIXPAUSE") || cf.command.equals("NEXTFLIXPLAY") ) {
+                        } else if ( cf.command.equals("NETFLIXPAUSE") || cf.command.equals("NETFLIXPLAY") ) {
 				log("Netflix: activate PAUSE/PLAY");
 
 				if ( vars.get("playing").equals("yes") || kiosk) {
@@ -189,7 +189,7 @@ public class Netflix extends Plugin {
 					pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					pva.exec( pva.config.get("netflix","clickLMB").split(pva.config.get("conf","splitter")), wait);
 
-					if ( cf.command.equals("NEXTFLIXPLAY") ) {
+					if ( cf.command.equals("NETFLIXPLAY") ) {
 						pos.parse( "pos_emptyspace");
 						pva.exec( pva.config.get("netflix","mousemove").replaceAll("XXX", ""+pos.x ).replaceAll("YYY", ""+pos.y ).split(pva.config.get("conf","splitter")), wait);
 					}
@@ -393,4 +393,3 @@ class Position {
 }
 
 }
-
