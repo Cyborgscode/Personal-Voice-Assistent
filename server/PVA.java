@@ -822,7 +822,7 @@ public class PVA {
 					( !cc.words.contains(".*") && und( cc.words ) ) ||  
 					( cc.words.contains(".*") && text.matches( ".*"+ cc.words +".*" ) )
 				) 
-				&& ( cc.negative.isEmpty() || !und( cc.negative ) ) ) {
+				&& ( cc.negative.isEmpty() || !oder( cc.negative ) ) ) {
 				
 				Vector terms = new Vector();
 				
@@ -873,11 +873,15 @@ public class PVA {
 					String[] parts;
 					if ( cf.words.endsWith(" .*") ) {
 						parts = (cf.words+" ").split( Pattern.quote(" .* ") );
-					} else  parts = cf.words.split( Pattern.quote(" .* ") );
+					} else if (cf.words.startsWith(".* ")) {
+						parts = (" "+cf.words).split( Pattern.quote(" .* ") );
+					} else parts = cf.words.split( Pattern.quote(" .* ") );
 					
 					for(String x: parts) {
-						rp = rp.replaceAll(x,"x:x");
-//						log("replace "+x+" : result "+ rp);
+						if ( !x.isEmpty() ) {
+							rp = rp.replaceAll(x,"x:x");
+//							log("replace "+x+" : result "+ rp);
+						}
 					}
 					
 					rp = rp.trim();
@@ -908,7 +912,7 @@ public class PVA {
 		}
 	
 		return cf;
-					
+ 					
 	}
 
 	static public void main(String[] args) {
