@@ -4,7 +4,7 @@ package plugins.files;
 import plugins.Plugin;
 import io.Dos;
 import server.PVA;
-import server.Streaming;
+import server.streaming.*;
 import data.Command;
 import hash.StringHash;
 import hash.TwoKeyHash;
@@ -67,11 +67,11 @@ public class Cluster extends Plugin {
 		// Streaming 
 		
 		cmds.put("killplayer", "killall ffplay");
-		cmds.put("killstreamserver", "killall ffmpeg");
+		cmds.put("killstreamserver", "pkill -i -f ffmpeg.*<ip>");
 		cmds.put("streamplayer", "export DISPLAY=:0; nohup ffplay -fs udp://<ip>:<streamport> &>/dev/null &");
 		cmds.put("streamserver", "/usr/bin/ffmpegx:x-rex:x-ix:x<TERM1>x:x-vcodecx:xlibx264x:x-b:vx:x<streamvideorate>kx:x-sx:x<streamresolution>x:x-strictx:xexperimentalx:x-gx:x25x:x-acodecx:xaacx:x-abx:x128000x:x-arx:x<streamaudiorate>x:x-acx:x2x:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
 		cmds.put("desktopstream", "/usr/bin/ffmpegx:x-threadsx:x0x:x-sx:x<desktopresolution>x:x-fx:xx11grabx:x-thread_queue_sizex:x1024x:x-ix:x<desktopdisplay>x:x-rx:x30x:x-fx:xpulsex:x-thread_queue_sizex:x1024x:x-ix:x<desktopaudio>x:x-b:v:0x:x3000kx:x-b:a:0x:x128kx:x-c:a:0x:xaacx:x-c:v:0x:xlibx264x:x-presetx:xsuperfastx:x-pix_fmtx:xyuv420px:x-sx:x<streamresolution>x:x-strictx:xexperimentalx:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
-
+		cmds.put("camerastream", "/usr/bin/ffmpegx:x-hide_bannerx:x-threadsx:x0x:x-fx:xpulsex:x-thread_queue_sizex:x10240x:x-acx:x2x:x-ix:x<desktopaudio>x:x-fx:xvideo4linux2x:x-input_formatx:xmjpegx:x-thread_queue_sizex:x10240x:x-frameratex:x30x:x-tsx:xmono2absx:x-itsoffsetx:x4x:x-ix:x<videodevice>x:x-video_sizex:x<streamresolution>x:x-pixel_formatx:xyuvj420px:x-c:v:0x:xlibx264x:x-b:v:0x:x2000kx:x-c:a:0x:xaacx:x-b:a:0x:x128kx:x-arx:x48000x:x-acx:x2x:x-vbsfx:xh264_mp4toannexbx:x-gx:x25x:x-movflagsx:x+faststartx:x-rx:x30x:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
 
 		// create the nodes, but only if they are not active
 
@@ -103,6 +103,7 @@ public class Cluster extends Plugin {
 				cluster.put(key, "desktopresolution", config.get("internal_resolution") );
 				cluster.put(key, "desktopdisplay", config.get("internal_display") );
 				cluster.put(key, "desktopaudio", config.get("internal_audio") );
+				cluster.put(key, "videodevice", config.get("internal_videodevice") );
 				String[] args = config.get( key ).split(";");
 				for(String x : args) {
 					String[] opts = x.split("=");
@@ -317,7 +318,7 @@ public class Cluster extends Plugin {
 	
 	// getActionCodes() should return an empty String[], if we do not handle Actions
 
-	public String[] getActionCodes() {  return "CLUSTERRESTARTCLIENT:CLUSTERSTREAMDESKTOP:CLUSTERSTREAMVIDEO:CLUSTERSTREAMSTOP:CLUSTERSTREAMNEXT:CLUSTERLISTCLIENTS".split(":"); };
+	public String[] getActionCodes() {  return "CLUSTERRESTARTCLIENT:CLUSTERSTREAMDESKTOP:CLUSTERSTREAMVIDEO:CLUSTERSTREAMSTOP:CLUSTERSTREAMNEXT:CLUSTERLISTCLIENTS:CLUSTERSTREAMCAMERA".split(":"); };
 	public boolean execute(Command cf, String rawtext) { 
 
 		try {
@@ -353,7 +354,7 @@ public class Cluster extends Plugin {
 						suchergebnis = "";                				
 				                for(int uyz=0;uyz<ts.size();uyz++) suchergebnis += erg[uyz]+pva.config.get("conf","splitter");
 	
-						Streaming serverinstance = new Streaming( pva, infos,cmds, suchergebnis.split( pva.config.get("conf","splitter") ) );
+						Streaming serverinstance = (Streaming)(new VideoStreaming( pva, infos,cmds, suchergebnis.split( pva.config.get("conf","splitter") ) ) );
 						server.put( client.toLowerCase(), serverinstance);
 				                serverinstance.start();
 	
@@ -380,7 +381,7 @@ public class Cluster extends Plugin {
 				StringHash infos = cluster.get(client);
 				if ( infos != null ) {
 	
-					Streaming serverinstance = new Streaming( pva, infos,cmds, null );
+					Streaming serverinstance = (Streaming)(new DesktopStreaming( pva, infos,cmds, null ));
 					server.put( client.toLowerCase(), serverinstance);
 			                serverinstance.start();
 	
@@ -390,6 +391,30 @@ public class Cluster extends Plugin {
 				}
 				
 				return true;
+			
+			} else if ( cf.command.equals("CLUSTERSTREAMCAMERA") ) {
+
+				if ( cf.terms.size() < 1 ) {
+					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERPARSEERROR") );
+					log("exit execute("+rawtext+")");
+					return false;
+				}
+
+				String client = ((String)cf.terms.get(0)).trim();
+				StringHash infos = cluster.get(client);
+				if ( infos != null ) {
+	
+					Streaming serverinstance = (Streaming)(new LiveStreaming( pva, infos,cmds, null ));
+					server.put( client.toLowerCase(), serverinstance);
+			                serverinstance.start();
+	
+				} else {
+					log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+				}
+				
+				return true;
+			
 			
 			} else if ( cf.command.equals("CLUSTERSTREAMNEXT") ) {
 
