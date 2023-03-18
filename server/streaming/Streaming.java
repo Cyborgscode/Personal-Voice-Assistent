@@ -1,11 +1,11 @@
 
-package server;
-
+package server.streaming;
+import server.*;
 import hash.StringHash;
 import java.util.Enumeration;
 import io.Dos;
 
-public class Streaming extends Thread {
+public abstract class Streaming extends Thread {
 
 
 	Dos dos = new Dos();
@@ -20,16 +20,7 @@ public class Streaming extends Thread {
 	PVA pva;
 
 	void log(String x) { System.out.println(x); }
-	
-	public Streaming(PVA pva, StringHash infos, StringHash cmds, String[] videos) {
-		
-		this.pva = pva;
-	
-		this.infos = infos;
-		this.cmds = cmds;
-		this.videos = videos;
-	}
-	
+
 	private String replacePlaceHolders(StringHash infos, String cmd) {
 	
 		Enumeration en = infos.keys();
@@ -41,7 +32,7 @@ public class Streaming extends Thread {
 	}
 
 
-	private String remote(String cmd) {
+	public String remote(String cmd) {
 		if ( infos != null ) {
 			String ssh = "";
 			if ( infos.get("key").equals("default") ) {
@@ -55,7 +46,7 @@ public class Streaming extends Thread {
 		return "";
 	}
 	
-	private void local(String cmd) {
+	public void local(String cmd) {
 	
 		if ( log>1 ) System.out.println( replacePlaceHolders( infos, cmds.get( cmd ) ) );
 		
@@ -64,7 +55,7 @@ public class Streaming extends Thread {
 		if ( log>0 ) System.out.println( "returns "+r );	
 	}
 	
-	private void local(String cmd,String term) {
+	public void local(String cmd,String term) {
 	
 		if ( log>1 ) System.out.println( replacePlaceHolders( infos, cmds.get( cmd ) ).replaceAll("<TERM1>",term) );
 		
@@ -88,44 +79,6 @@ public class Streaming extends Thread {
 		local("killstreamserver");
 	}
 
-	public void run() {
-		try {
-			remote("streamplayer");
+	public abstract void run();
 
-			if ( videos != null  ) {
-		
-				for(String file : videos ) {
-
-					log("streaming "+ file);
-			
-					if (isInterrupted() || endthis ) {
-						log("killing stream "+ infos.get("ip") );	
-						remote("killplayer");
-						local("killstreamserver");
-						infos.put("streaming","off");
-						break;
-					}
-					infos.put("streaming","on");
-					infos.put("playing",file);
-					local("streamserver",file);
-					infos.put("streaming","off");
-				}
-	
-				remote("killplayer");
-			} else {
-				// DESKTOP STREAMING
-				log("streaming desktop");
-		
-				infos.put("streaming","on");
-				infos.put("playing","DESKTOP");
-				local("desktopstream","");
-				remote("killplayer");
-				infos.put("streaming","off");
-				
-			}
-			
-		} catch (Exception localException) {
-		}
-		
-	}
 }
