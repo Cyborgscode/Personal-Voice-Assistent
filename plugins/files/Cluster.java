@@ -71,7 +71,7 @@ public class Cluster extends Plugin {
 		cmds.put("streamplayer", "export DISPLAY=:0; nohup ffplay -fs udp://<ip>:<streamport> &>/dev/null &");
 		cmds.put("streamserver", "/usr/bin/ffmpegx:x-rex:x-ix:x<TERM1>x:x-vcodecx:xlibx264x:x-b:vx:x<streamvideorate>kx:x-sx:x<streamresolution>x:x-strictx:xexperimentalx:x-gx:x25x:x-acodecx:xaacx:x-abx:x128000x:x-arx:x<streamaudiorate>x:x-acx:x2x:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
 		cmds.put("desktopstream", "/usr/bin/ffmpegx:x-threadsx:x0x:x-sx:x<desktopresolution>x:x-fx:xx11grabx:x-thread_queue_sizex:x1024x:x-ix:x<desktopdisplay>x:x-rx:x30x:x-fx:xpulsex:x-thread_queue_sizex:x1024x:x-ix:x<desktopaudio>x:x-b:v:0x:x3000kx:x-b:a:0x:x128kx:x-c:a:0x:xaacx:x-c:v:0x:xlibx264x:x-presetx:xsuperfastx:x-pix_fmtx:xyuv420px:x-sx:x<streamresolution>x:x-strictx:xexperimentalx:x-vbsfx:xh264_mp4toannexbx:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
-		cmds.put("camerastream", "/usr/bin/ffmpegx:x-hide_bannerx:x-threadsx:x0x:x-fx:xpulsex:x-thread_queue_sizex:x10240x:x-acx:x2x:x-ix:x<desktopaudio>x:x-fx:xvideo4linux2x:x-input_formatx:xmjpegx:x-thread_queue_sizex:x10240x:x-frameratex:x30x:x-tsx:xmono2absx:x-itsoffsetx:x4x:x-ix:x<videodevice>x:x-video_sizex:x<streamresolution>x:x-pixel_formatx:xyuvj420px:x-c:v:0x:xlibx264x:x-b:v:0x:x2000kx:x-c:a:0x:xaacx:x-b:a:0x:x128kx:x-arx:x48000x:x-acx:x2x:x-vbsfx:xh264_mp4toannexbx:x-gx:x25x:x-movflagsx:x+faststartx:x-rx:x30x:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
+		cmds.put("camerastream", "/usr/bin/ffmpegx:x-hide_bannerx:x-threadsx:x0x:x-fx:xpulsex:x-thread_queue_sizex:x10240x:x-acx:x2x:x-ix:x<audiodevice>x:x-fx:xvideo4linux2x:x-input_formatx:xmjpegx:x-thread_queue_sizex:x10240x:x-frameratex:x30x:x-tsx:xmono2absx:x-itsoffsetx:x4x:x-ix:x<videodevice>x:x-video_sizex:x<streamresolution>x:x-pixel_formatx:xyuvj420px:x-c:v:0x:xlibx264x:x-b:v:0x:x2000kx:x-c:a:0x:xaacx:x-b:a:0x:x128kx:x-arx:x48000x:x-acx:x2x:x-vbsfx:xh264_mp4toannexbx:x-gx:x25x:x-movflagsx:x+faststartx:x-rx:x30x:x-fx:xmpegtsx:xudp://<ip>:<streamport>?pkt_size=1316");
 
 		// create the nodes, but only if they are not active
 
@@ -104,6 +104,8 @@ public class Cluster extends Plugin {
 				cluster.put(key, "desktopdisplay", config.get("internal_display") );
 				cluster.put(key, "desktopaudio", config.get("internal_audio") );
 				cluster.put(key, "videodevice", config.get("internal_videodevice") );
+				cluster.put(key, "audiodevice", config.get("internal_audiodevice") );
+				
 				String[] args = config.get( key ).split(";");
 				for(String x : args) {
 					String[] opts = x.split("=");
