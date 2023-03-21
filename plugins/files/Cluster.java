@@ -640,9 +640,10 @@ public class Cluster extends Plugin {
 						
 						boolean found_s = false;
 						boolean found_m = false;
+						
 						for(String line : modules.split("\n") ) {
-							if ( !cluster.get(key,"sid").equals("0") && line.startsWith( cluster.get(key,"sid") ) ) found_s = true;
-							if ( !cluster.get(key,"mid").equals("0") && line.startsWith( cluster.get(key,"mid") ) ) found_m = true;
+							if ( !cluster.get(key,"tsid").equals("0") && line.startsWith( cluster.get(key,"tsid") ) ) found_s = true;
+							if ( !cluster.get(key,"tmid").equals("0") && line.startsWith( cluster.get(key,"tmid") ) ) found_m = true;
 						} 
 
 						// test if we lost connection .. being pingable is not everything that could happen!
