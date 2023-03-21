@@ -606,6 +606,8 @@ public class Cluster extends Plugin {
 				sleep(10000L);
 
 				if ( donotdisturb ) continue;
+
+				String modules = dos.readPipe("pactl list modules short");
 				
 				StringHash config = pva.config.get("cluster");
 				Enumeration en = config.keys();
@@ -633,6 +635,21 @@ public class Cluster extends Plugin {
 						
 						// If a client host is up AND we have a sid&mic from it, everything is fine
 						// BUT, if a sid/mic is 0, we need to setup him.
+						
+						// unfortunatly, not so fine as we thought :)
+						
+						boolean found_s = false;
+						boolean found_m = false;
+						for(String line : modules.split("\n") ) {
+							if ( !cluster.get(key,"sid").equals("0") && line.startsWith( cluster.get(key,"sid") ) ) found_s = true;
+							if ( !cluster.get(key,"mid").equals("0") && line.startsWith( cluster.get(key,"mid") ) ) found_m = true;
+						} 
+
+						// test if we lost connection .. being pingable is not everything that could happen!
+
+						if ( !found_s ) cluster.put(key,"sid","0");
+						if ( !found_m ) cluster.put(key,"mid","0");
+						
 				
 						if ( cluster.get(key,"sid").equals("0") || cluster.get(key,"mid").equals("0") ) {
 				
