@@ -556,6 +556,13 @@ public class Cluster extends Plugin {
 					local( infos, "link_speaker_left" );
 					local( infos, "link_speaker_right" );
 				
+					// needed to compensate for change <= pw 0.3.67 to a new naming schema
+
+					local( infos, "link_speaker_left_new" );
+					local( infos, "link_speaker_right_new" );
+					local( infos, "link_speaker_left_new" );
+					local( infos, "link_speaker_right_new" );
+
 					if ( !r.contains("server=tcp:"+ infos.get("ip") +":"+infos.get("mport")+" source_name="+ infos.get("name") ) ) {
 	
 						// it does not, so we create it.
@@ -710,6 +717,15 @@ public class Cluster extends Plugin {
 									local( cluster.get(key), "link_speaker_right" );
 									local( cluster.get(key), "link_speaker_left" );
 									local( cluster.get(key), "link_speaker_right" );
+									
+									// needed to compensate for change <= pw 0.3.67 to a new naming schema
+
+									local( cluster.get(key), "link_speaker_left_new" );
+									local( cluster.get(key), "link_speaker_right_new" );
+									local( cluster.get(key), "link_speaker_left_new" );
+									local( cluster.get(key), "link_speaker_right_new" );
+
+									
 								}
 							
 								if (rmid.trim().matches("^[0-9]+$") ) {
