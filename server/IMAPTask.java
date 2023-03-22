@@ -2,6 +2,7 @@
 package server;
 
 import io.*;
+import hash.StringHash;
 import utils.Tools;
 import java.util.Date;
 import java.util.Enumeration;
@@ -112,7 +113,36 @@ class IMAPTask extends Thread {
 									if ( !mailtext.isEmpty() && ( playing || pva.config.get("conf","donotdisturb").equals("overwrite") ) ) {
 									
 										try {
-											pva.say(mailtext,true);
+											if ( pva.config.get("imapfilter") != null ) {
+												log("Found IMAPFilter");
+												StringHash filter = pva.config.get("imapfilter");
+												
+												// Does only work reliable without readoutloud flag.
+												String[] subjects = mailtext.split("\n");
+												mailtext = ""; // clear text and addonly lines which do not match
+												for(String line : subjects ) {
+
+													line = line.replaceAll("neue Mail von ","");
+
+													boolean iamallowed = true;													
+													Enumeration en = filter.keys();
+													while( en.hasMoreElements() ){
+														String name = (String)en.nextElement();
+														String regex = filter.get(name);
+														// log("filter:"+name+":"+regex+":"+line);
+														if ( line.matches(regex) ) 
+															iamallowed = false;
+															
+														// log("processing filter: "+ name + " => "+ iamallowed);
+													}
+													
+													if ( iamallowed ) mailtext += "neue Mail von "+ line +"\n";
+												}
+												if ( !mailtext.trim().isEmpty() )
+													pva.say(mailtext,true);	
+											} else {
+												pva.say(mailtext,true);
+											}
 										} catch (IOException ie) {
 											// Ignore.. we can't do much if say failed.
 										}
