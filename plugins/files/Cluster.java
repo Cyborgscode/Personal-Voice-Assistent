@@ -59,12 +59,14 @@ public class Cluster extends Plugin {
 
 		// LINK commands should be executed for 2 times, as it happens to be that links sometimes do not work on the first try
 
-		cmds.put("link_speaker_left",  "pw-link ALLTUNNEL:monitor_FL \"<name>:playback_FL\"");
-		cmds.put("link_speaker_right", "pw-link ALLTUNNEL:monitor_FR \"<name>:playback_FR\"");
-		cmds.put("link_micro_left",    "pw-link <name>:capture_FL ALLMICS:playback_FL");
-		cmds.put("link_micro_right",   "pw-link <name>:capture_FR ALLMICS:playback_FR");
-		cmds.put("link_pva_left",      "pw-link ALLMICS:monitor_FL \"<id>:input_FL\"");
-		cmds.put("link_pva_right",     "pw-link ALLMICS:monitor_FR \"<id>:input_FR\"");
+		cmds.put("link_speaker_left",      "pw-link ALLTUNNEL:monitor_FL \"<name>:playback_FL\"");
+		cmds.put("link_speaker_right",     "pw-link ALLTUNNEL:monitor_FR \"<name>:playback_FR\"");
+		cmds.put("link_speaker_left_new",  "pw-link ALLTUNNEL:monitor_FL \"<name>:send_FL\"");		// Thanks PIPEWIRE 0.3.67 :(
+		cmds.put("link_speaker_right_new", "pw-link ALLTUNNEL:monitor_FR \"<name>:send_FR\"");
+		cmds.put("link_micro_left",        "pw-link <name>:capture_FL ALLMICS:playback_FL");
+		cmds.put("link_micro_right",       "pw-link <name>:capture_FR ALLMICS:playback_FR");
+		cmds.put("link_pva_left",          "pw-link ALLMICS:monitor_FL \"<id>:input_FL\"");
+		cmds.put("link_pva_right",         "pw-link ALLMICS:monitor_FR \"<id>:input_FR\"");
 
 		// Streaming 
 		
@@ -199,6 +201,13 @@ public class Cluster extends Plugin {
 						local( cluster.get(key), "link_speaker_left" );
 						local( cluster.get(key), "link_speaker_right" );
 
+						// needed to compensate for change <= pw 0.3.67 to a new naming schema
+
+						local( cluster.get(key), "link_speaker_left_new" );
+						local( cluster.get(key), "link_speaker_right_new" );
+						local( cluster.get(key), "link_speaker_left_new" );
+						local( cluster.get(key), "link_speaker_right_new" );
+
 					}
 				
 					if (rmid.trim().matches("^[0-9]+$") ) {
@@ -229,6 +238,7 @@ public class Cluster extends Plugin {
 						local( cluster.get(key), "link_micro_right" );
 						local( cluster.get(key), "link_micro_left" );
 						local( cluster.get(key), "link_micro_right" );
+
 					}
 				} else {
 					log("Cluster:init: unable to connect to client "+ key +" / unable to detect pipewire environment");
