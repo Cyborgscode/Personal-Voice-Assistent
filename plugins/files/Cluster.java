@@ -63,6 +63,8 @@ public class Cluster extends Plugin {
 		cmds.put("link_speaker_right",     "pw-link ALLTUNNEL:monitor_FR \"<name>:playback_FR\"");
 		cmds.put("link_speaker_left_new",  "pw-link ALLTUNNEL:monitor_FL \"<name>:send_FL\"");		// Thanks PIPEWIRE 0.3.67 :(
 		cmds.put("link_speaker_right_new", "pw-link ALLTUNNEL:monitor_FR \"<name>:send_FR\"");
+		cmds.put("link_micro_left_new",    "pw-link <name>:receive_FL ALLMICS:playback_FL");
+		cmds.put("link_micro_right_new",   "pw-link <name>:receive_FR ALLMICS:playback_FR");
 		cmds.put("link_micro_left",        "pw-link <name>:capture_FL ALLMICS:playback_FL");
 		cmds.put("link_micro_right",       "pw-link <name>:capture_FR ALLMICS:playback_FR");
 		cmds.put("link_pva_left",          "pw-link ALLMICS:monitor_FL \"<id>:input_FL\"");
@@ -238,6 +240,11 @@ public class Cluster extends Plugin {
 						local( cluster.get(key), "link_micro_right" );
 						local( cluster.get(key), "link_micro_left" );
 						local( cluster.get(key), "link_micro_right" );
+
+						local( cluster.get(key), "link_micro_left_new" );
+						local( cluster.get(key), "link_micro_right_new" );
+						local( cluster.get(key), "link_micro_left_new" );
+						local( cluster.get(key), "link_micro_right_new" );
 
 					}
 				} else {
@@ -588,6 +595,11 @@ public class Cluster extends Plugin {
 					local( infos, "link_micro_left" );
 					local( infos, "link_micro_right" );
 					
+					local( infos, "link_micro_left_new" );
+					local( infos, "link_micro_right_new" );
+					local( infos, "link_micro_left_new" );
+					local( infos, "link_micro_right_new" );
+
 					if ( !infos.get("tsid").matches("^[0-9]+$") || !infos.get("tmid").matches("^[0-9]+$") ) {
 						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", text ) );
 					}
@@ -745,6 +757,12 @@ public class Cluster extends Plugin {
 									local( cluster.get(key), "link_micro_right" );
 									local( cluster.get(key), "link_micro_left" );
 									local( cluster.get(key), "link_micro_right" );
+	
+									local( cluster.get(key), "link_micro_left_new" );
+									local( cluster.get(key), "link_micro_right_new" );
+									local( cluster.get(key), "link_micro_left_new" );
+									local( cluster.get(key), "link_micro_right_new" );
+
 								}
 							} else {
 								log("Cluster:init: unable to connect to client "+ key +" / unable to detect pipewire environment");
