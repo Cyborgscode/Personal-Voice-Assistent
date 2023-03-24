@@ -69,13 +69,45 @@ public class PVA {
                 return d.get(Calendar.DAY_OF_MONTH)+"."+( months[ d.get(Calendar.MONTH) ] )+" "+d.get(Calendar.HOUR_OF_DAY)+":"+ minutes;
         }
 
+	private static String pa_outputid = "";
+
 	public static void say(String text, boolean wait) throws IOException {
-		if ( !config.get("conf","cantalk" ).equals("no") ) 
+		if ( !config.get("conf","cantalk" ).equals("no") ) {
+			if ( pa_outputid.isEmpty() ) {
+				String[] outputs =  dos.readPipe("env LANG=C pactl list source-outputs").split("\n");
+				String det = ""; // don't fill the real idString with possible wrong ids, we need to get sure!
+				for(String o : outputs ) {
+					if ( o.startsWith("Source Output #") ) {
+						det = o.replaceAll("^.*#","").trim();
+						// log("det="+det);
+					}
+					if ( o.contains("node.name = \"ALSA Capture\"") ) {
+						// log("found node");
+						pa_outputid  = det;
+						break;
+					}
+				}
+				// log("pa_outputid = "+ pa_outputid );
+			} 	
+
+			if ( !pa_outputid.isEmpty() ) {
+				// Disable output of recording node, to prevent pva from hearing itself
+				// log ( "pactl set-source-output-mute "+ pa_outputid +" 1" );
+				log ( dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 1"));
+			}
 			exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
+						
+			if ( !pa_outputid.isEmpty() ) {
+				// enable the node again... or we will never hear from our pva again ;)
+				// log ( "pactl set-source-output-mute "+ pa_outputid +" 0" );
+				log ( dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 0"));
+			}
+		
+		}
 	}
 
         public static void say(String text) throws IOException {
-		say( text, false );        
+		say( text, true );
 	}
 
 
@@ -806,6 +838,41 @@ public class PVA {
 		return dos.writeFile( getHome()+"/.config/pva/pva.conf", sb.toString() );
 	}
 
+	static boolean checkMediaPlayback() {
+		boolean playing = true;
+
+		if ( !config.get("mediaplayer","status").isEmpty() ) {
+			String allplayerservices = dos.readPipe( config.get("mediaplayer","find").replaceAll(config.get("conf","splitter")," ") );
+			if ( ! allplayerservices.isEmpty() ) {
+				String[] lines = allplayerservices.split("\n");
+				for(String service : lines ) {
+							
+					if ( service.contains("org.mpris.MediaPlayer2") ) {
+						
+						String 	vplayer = dos.readPipe( config.get("mediaplayer","status")
+										      .replaceAll("<TARGET>", 
+										Tools.zwischen( service, "\"","\"") ).replaceAll( config.get("conf","splitter")," ") );
+
+						if ( ! vplayer.trim().isEmpty() && vplayer.trim().contains("Playing") ) {
+							playing = false; // because a player is running.
+						}
+					}
+				}
+			}
+		}
+				
+		if ( ! dos.readPipe( "pgrep -f "+ config.get("audioplayer","pname").replaceAll( config.get("conf","splitter")," ") ).trim().isEmpty()  && !config.get("audioplayer","status").isEmpty() ) {
+		String[] result = dos.readPipe( config.get("audioplayer","status").replaceAll(config.get("conf","splitter")," "),true).split("\n");
+			for(String x : result ) {
+				if ( x.contains("[paused]") ) break;
+				if ( x.contains("TITLE") ) {
+					playing = false; // because a player is running.
+				}
+			}
+		}
+		return playing;
+	}
+
 	static private Command parseCommand(String textToParse) {
 
 		text = textToParse;
@@ -868,7 +935,7 @@ public class PVA {
 					
 					String rp = text;
 					
-//					log(rp);
+					log(rp);
 					
 					String[] parts;
 					if ( cf.words.endsWith(" .*") ) {
@@ -879,8 +946,12 @@ public class PVA {
 					
 					for(String x: parts) {
 						if ( !x.isEmpty() ) {
-							rp = rp.replaceAll(x,"x:x");
-//							log("replace "+x+" : result "+ rp);
+							if ( rp.startsWith(x) ) {
+								rp=rp.replaceAll(x+" ","x:x");
+							} else if ( rp.endsWith(x) ) {
+								rp=rp.replaceAll(" "+x,"x:x");
+							} else  rp = rp.replaceAll(" "+x+" ","x:x");
+							log("replace "+x+" : result "+ rp);
 						}
 					}
 					
@@ -890,7 +961,7 @@ public class PVA {
 					while ( rp.contains("  ") ) 
 						rp = rp.replaceAll("[  ]+"," ");
 				
-//					log(rp);
+					log(rp);
 				
 					String[] ra = rp.trim().split("x:x");
 					for(String x: ra) 
@@ -1183,6 +1254,11 @@ public class PVA {
 
 			String text_raw = text; 
 
+			// Exit if there is nothing to process
+
+			if ( text.trim().isEmpty() ) return;
+
+
 			if ( debug > 1 ) log("raw="+ text);
 
 			if ( debug > 2 ) log("LANG="+ config.get("conf","lang") );
@@ -1299,6 +1375,7 @@ public class PVA {
 					
 				}
 			}
+			
 			if ( temp.size() > 0 ) {
 				Reaction r = null;
 				String lastr = dos.readFile(getHome()+"/.cache/pva/reaction.last");
@@ -1306,53 +1383,41 @@ public class PVA {
 				do {
 					r = temp.get( (int)( Math.random() * temp.size() ) );
 				} while ( r.answere.equals( lastr ) && temp.size()>1 );
-				
-				boolean playing = true;
-
-				if ( !config.get("mediaplayer","status").isEmpty() ) {
-
-					String allplayerservices = dos.readPipe( config.get("mediaplayer","find").replaceAll(config.get("conf","splitter")," ") );
-					if ( ! allplayerservices.isEmpty() ) {
-						String[] lines = allplayerservices.split("\n");
-						for(String service : lines ) {
-							
-							if ( service.contains("org.mpris.MediaPlayer2") ) {
-								
-								String 	vplayer = dos.readPipe( config.get("mediaplayer","status")
-												      .replaceAll("<TARGET>", 
-												Tools.zwischen( service, "\"","\"") ).replaceAll( config.get("conf","splitter")," ") );
-
-								if ( ! vplayer.trim().isEmpty() && vplayer.trim().contains("Playing") ) {
-									playing = false; // because a player is running.
-								}
-							}
-						}
-					}
-				}
-				
-				if ( ! dos.readPipe( "pgrep -f "+ config.get("audioplayer","pname").replaceAll( config.get("conf","splitter")," ") ).trim().isEmpty()  && !config.get("audioplayer","status").isEmpty() ) {
-
-					String[] result = dos.readPipe( config.get("audioplayer","status").replaceAll(config.get("conf","splitter")," "),true).split("\n");
-					for(String x : result ) {
-						if ( x.contains("[paused]") ) break;
-						if ( x.contains("TITLE") ) {
-							playing = false; // because a player is running.
-						}
-					}
-				}
 			
-				if ( playing ) 
-					say( r.answere.replaceAll("%KEYWORD", keyword ));
+				if ( checkMediaPlayback() ) 
+					say( r.answere.replaceAll("%KEYWORD", keyword ),true);
 
 				dos.writeFile( getHome()+"/.cache/pva/reaction.last" , r.answere );
 			}
+			
+			if ( temp.size() == 0 && !wort(keyword) ) {
 
-
+				// we need a sentence detection against the noise
+				
+					StringHash cgpt = config.get("chatgpt");
+					if ( cgpt != null ) {
+						if ( cgpt.get("enable").equals("true") && cgpt.get("bin") != null ) {
+							if ( text.trim().split(" ").length > 3 ) {
+	
+								if ( checkMediaPlayback() ) {
+					
+									log("we send :" + text);
+								
+									String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" ).trim();
+	
+									log("we got back:" + answere);
+								
+									say( answere,true );
+								}
+							} // else say(  texte.get( config.get("conf","lang_short"), "CHATGPTNOTENOUGHWORDSTOPROCESS"), true );
+						} else log("no config for chatgpt found");
+					} else log("no chatgpt");
+			}
 
 			// now the part that interessts you most .. the context depending parser
 			
 			// before we start the static methods:
-			// word("term") means exactly this term in the variable "text"
+			// wort("term") means exactly this term in the variable "text"
 			// oder("term|term2") means one of these terms
 			// und("term|term2") means all of these terms, but the order is irrelevant  und("eins|zwei|drei") works on "drei zwei eins" same as on "sprecher nummer drei hatte um eins einen termin mit zwei leuten"
 			// in later versions of this app, we will have a regexp database that will do this work as far as possible
