@@ -1,4 +1,9 @@
 #!/bin/bash
 
+# Download and install https://github.com/reorx/ai.py
+# go to open.ai, register an account, create an api key, follow instructions to add the key to your local ai.py conf
+# enable chatgpt in your local copy of 12-chatgpt.conf
+
+
 echo "$(/usr/local/sbin/ai.py -c "$1" 2>/dev/null </dev/null)"
 
