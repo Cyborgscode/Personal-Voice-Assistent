@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo "$(/usr/local/sbin/ai.py -c "$1" 2>/dev/null </dev/null)"
+
