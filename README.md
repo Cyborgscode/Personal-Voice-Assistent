@@ -696,12 +696,17 @@ To not send more nonsense from the STS as necessary, you need at least four word
 start ai.py and follow instructiontions to add your OpenAI API key to ai.py's config. 
 Enable chatgpt support in a local userbased config file, and restart PVA.
 	
-What you can expect:
+What you can expect: *BETA*
 	
 Shitload of FUN with misunderstanding STT software (vosk) in conjunction with sometimes unhelpfull, but entertaining answeres to stuff, noone had said ;)
 	
-TBH: the usability of this is limited. If your super hard to yourself and do only talk in front of your pc, if you have a question, it can be helpful. If you comment your daily life in front of your pc, you will get useless feedback. That's mainly, as you need an AI system to decide if what you just said, makes sense at all and should be sent to ChatGPT.
+TBH: the usability of this is limited. If your super hard to yourself and do only talk in front of your pc, if you have a question, it can be helpful. If you comment your daily life in front of your pc, you will get useless feedback. That's mainly, as you need an AI system to decide if what you just said, makes sense at all and should be sent to ChatGPT ;) As a solution to this problem, I added a workmode option:
 
+### Modes
 
-	
-	
+"freetalk"  talk to your pva as you would do to a human. No configured reaction a been triggered 
+            and the text has a minimum of 4 words required to be recognized as a worthy sentence to be send. 
+"keyword"   set a keyword to react on and use it to address chatgpt
+"gapfiller" this mode reacts to the main pva keyword, but only, if no internal or external command was found and nothing reacted to your command.
+
+Now you can decide how hard it shall be to use ChatGPT in your environment. See the default ChatGPT config for details.
