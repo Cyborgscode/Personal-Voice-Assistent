@@ -70,37 +70,49 @@ public class PVA {
         }
 
 	private static String pa_outputid = "";
+	
+	private static boolean initPulseAudio() {
+	
+		if ( pa_outputid.isEmpty() ) {
+			String[] outputs =  dos.readPipe("env LANG=C pactl list source-outputs").split("\n");
+			String det = ""; // don't fill the real idString with possible wrong ids, we need to get sure!
+			for(String o : outputs ) {
+				if ( o.startsWith("Source Output #") ) {
+					det = o.replaceAll("^.*#","").trim();
+					// log("det="+det);
+				}
+				if ( o.contains("node.name = \"ALSA Capture\"") ) {
+					// log("found node");
+					pa_outputid  = det;
+					break;
+				}
+			}
+			// log("pa_outputid = "+ pa_outputid );
+		} 
+		if ( pa_outputid.isEmpty() ) return false;
+		return true;
+	}
+	
 
 	public static void say(String text, boolean wait) throws IOException {
 		if ( !config.get("conf","cantalk" ).equals("no") ) {
+			
 			if ( pa_outputid.isEmpty() ) {
-				String[] outputs =  dos.readPipe("env LANG=C pactl list source-outputs").split("\n");
-				String det = ""; // don't fill the real idString with possible wrong ids, we need to get sure!
-				for(String o : outputs ) {
-					if ( o.startsWith("Source Output #") ) {
-						det = o.replaceAll("^.*#","").trim();
-						// log("det="+det);
-					}
-					if ( o.contains("node.name = \"ALSA Capture\"") ) {
-						// log("found node");
-						pa_outputid  = det;
-						break;
-					}
-				}
-				// log("pa_outputid = "+ pa_outputid );
-			} 	
-
+				// just in Case we did not get a valid result before!
+				initPulseAudio();
+			}
+		
 			if ( !pa_outputid.isEmpty() ) {
 				// Disable output of recording node, to prevent pva from hearing itself
 				// log ( "pactl set-source-output-mute "+ pa_outputid +" 1" );
-				log ( dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 1"));
+				dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 1");
 			}
 			exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
 						
 			if ( !pa_outputid.isEmpty() ) {
 				// enable the node again... or we will never hear from our pva again ;)
 				// log ( "pactl set-source-output-mute "+ pa_outputid +" 0" );
-				log ( dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 0"));
+				dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 0");
 			}
 		
 		}
@@ -1208,6 +1220,11 @@ public class PVA {
 
 			// Wait until be receive ctrl+c or the EXIT command is given
 
+			if ( initPulseAudio() ) {
+				// enable input source for sure, in case we got restarted in mid blockade of the mic input
+				dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 0");
+			}
+
 			do {
 				Thread.sleep(1000);
 			} while ( ! Thread.currentThread().isInterrupted() && !doexit );
@@ -1410,8 +1427,8 @@ public class PVA {
 									say( answere,true );
 								}
 							} // else say(  texte.get( config.get("conf","lang_short"), "CHATGPTNOTENOUGHWORDSTOPROCESS"), true );
-						} else log("no config for chatgpt found");
-					} else log("no chatgpt");
+						} else if ( cgpt.get("bin") == null ) log("no config for chatgpt found");
+					} else if ( debug > 2 ) log("no chatgpt");
 			}
 
 			// now the part that interessts you most .. the context depending parser
