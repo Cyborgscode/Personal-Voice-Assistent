@@ -1426,11 +1426,12 @@ public class PVA {
 								log("we send :" + text);
 								
 								String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" ).trim();
-	
-								log("we got back:" + answere);
+								if ( answere != null ) {
+									log("we got back:" + answere);
 								
-								say( answere,true );
-								reaction = true;
+									say( answere,true );
+									reaction = true;
+								}
 							}
 						} // else say(  texte.get( config.get("conf","lang_short"), "CHATGPTNOTENOUGHWORDSTOPROCESS"), true );
 					} else if ( cgpt.get("bin") == null ) log("no config for chatgpt found");
