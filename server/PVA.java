@@ -28,16 +28,16 @@ public class PVA {
 	static long debug = 0;
 	static boolean doexit = false;
 
-	static public TwoKeyHash config          = new TwoKeyHash();
-	static TwoKeyHash alternatives    = new TwoKeyHash();
-	static public TwoKeyHash texte           = new TwoKeyHash();
-	static TwoKeyHash context         = new TwoKeyHash();
-	static Vector<Reaction> reactions = new Vector<Reaction>();
-	static Vector<Command> commands   = new Vector<Command>();
-	static Vector<Contact> contacts   = new Vector<Contact>();
-	static Vector<MailboxData> mailboxes  = new Vector<MailboxData>();
-	static StringHash timers	  = new StringHash();
-	static Vector<String> categories  = new Vector<String>();
+	static public TwoKeyHash config   	= new TwoKeyHash();
+	static TwoKeyHash alternatives    	= new TwoKeyHash();
+	static public TwoKeyHash texte    	= new TwoKeyHash();
+	static TwoKeyHash context         	= new TwoKeyHash();
+	static Vector<Reaction> reactions 	= new Vector<Reaction>();
+	static Vector<Command> commands   	= new Vector<Command>();
+	static Vector<Contact> contacts   	= new Vector<Contact>();
+	static Vector<MailboxData> mailboxes  	= new Vector<MailboxData>();
+	static StringHash timers	  	= new StringHash();
+	static Vector<String> categories  	= new Vector<String>();
 	static TimerTask tt;
 	static IMAPTask it;
 	static SearchTask st;
@@ -79,15 +79,12 @@ public class PVA {
 			for(String o : outputs ) {
 				if ( o.startsWith("Source Output #") ) {
 					det = o.replaceAll("^.*#","").trim();
-					// log("det="+det);
 				}
 				if ( o.contains("node.name = \"ALSA Capture\"") ) {
-					// log("found node");
 					pa_outputid  = det;
 					break;
 				}
 			}
-			// log("pa_outputid = "+ pa_outputid );
 		} 
 		if ( pa_outputid.isEmpty() ) return false;
 		return true;
@@ -1407,28 +1404,37 @@ public class PVA {
 				dos.writeFile( getHome()+"/.cache/pva/reaction.last" , r.answere );
 			}
 			
-			if ( temp.size() == 0 && !wort(keyword) ) {
+			StringHash cgpt = config.get("chatgpt");
+			if ( !wort(keyword) ) {
 
 				// we need a sentence detection against the noise
 				
-					StringHash cgpt = config.get("chatgpt");
-					if ( cgpt != null ) {
-						if ( cgpt.get("enable").equals("true") && cgpt.get("bin") != null ) {
-							if ( text.trim().split(" ").length > 3 ) {
-	
-								if ( checkMediaPlayback() ) {
+				if ( cgpt != null ) {
+					if ( cgpt.get("enable").equals("true") && cgpt.get("bin") != null ) {
+						// check a: no reaction happend + freetalk mode + more than 3 words are used
+						// OR
+						// check b: keyword mode is enabled and keyword is in textblock
 					
-									log("we send :" + text);
+						if ( ( temp.size() == 0 && cgpt.get("mode").equals("freetalk") && text.trim().split(" ").length > 3 ) ||
+						     ( cgpt.get("mode").equals("keyword") && wort( cgpt.get("keyword") ) ) ) {
+						
+							if ( cgpt.get("mode").equals("keyword") && wort( cgpt.get("keyword") ) ) 
+								text = text.trim().replaceAll( cgpt.get("keyword"), "").trim();
+						
+							if ( checkMediaPlayback() ) {
+					
+								log("we send :" + text);
 								
-									String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" ).trim();
+								String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" ).trim();
 	
-									log("we got back:" + answere);
+								log("we got back:" + answere);
 								
-									say( answere,true );
-								}
-							} // else say(  texte.get( config.get("conf","lang_short"), "CHATGPTNOTENOUGHWORDSTOPROCESS"), true );
-						} else if ( cgpt.get("bin") == null ) log("no config for chatgpt found");
-					} else if ( debug > 2 ) log("no chatgpt");
+								say( answere,true );
+								reaction = true;
+							}
+						} // else say(  texte.get( config.get("conf","lang_short"), "CHATGPTNOTENOUGHWORDSTOPROCESS"), true );
+					} else if ( cgpt.get("bin") == null ) log("no config for chatgpt found");
+				} else if ( debug > 2 ) log("no chatgpt");
 			}
 
 			// now the part that interessts you most .. the context depending parser
@@ -2965,6 +2971,23 @@ public class PVA {
 					
 					reaction = pls.handlePluginAction(cf, text);
 				}
+
+				if ( !reaction && cgpt != null && cgpt.get("enable").equals("true") && cgpt.get("bin") != null && cgpt.get("mode").equals("gapfiller") ) {
+					if ( checkMediaPlayback() ) {
+					
+						log("we send :" + text);
+								
+						String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" ).trim();
+	
+						log("we got back:" + answere);
+								
+						say( answere,true );
+						reaction = true;
+					}
+
+				} else if ( debug > 2 ) log("no chatgpt");
+
+				
 								
 				if ( !reaction ) {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
