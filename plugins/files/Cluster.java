@@ -37,13 +37,18 @@ public class Cluster extends Plugin {
 	public void init(PVA pva) {
 	
 		String r = "";
-	
-		this.pva = pva;
-		StringHash config = pva.config.get("cluster");
 
 		info.put("hasThread","yes"); // Tells the loader to run run() 
 		info.put("hasCodes","yes");  // Tells main task, that we take unhandled cf.commands
 		info.put("name","Cluster"); // be nice, create a unique name
+	
+		this.pva = pva;
+		StringHash config = pva.config.get("cluster");
+
+		if ( config == null ) {
+			log("Cluster:init:no cluster config found to work with");
+			return;
+		}
 
 		cmds.put("unload_micro",      "pactl unload-module <mid>");
 		cmds.put("unload_speaker",    "pactl unload-module <sid>");
@@ -71,7 +76,7 @@ public class Cluster extends Plugin {
 		cmds.put("link_pva_right",         "pw-link ALLMICS:monitor_FR \"<id>:input_FR\"");
 
 		// Streaming 
-		
+				
 		cmds.put("killplayer", config.get("internal_killplayer") );
 		cmds.put("killstreamserver", config.get("internal_killstreamserver") );
 		cmds.put("streamplayer", config.get("internal_streamplayer") );
