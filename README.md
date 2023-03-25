@@ -681,23 +681,24 @@ desktopaudio: SOURCE for capturing audio. Default: see 50-plugin-cluster.conf
 	
 ## ChatGPT Support
 
-To have ChatGPT support, you need an account at open.ai and ai.py from here: https://github.com/reorx/ai.py
+To have ChatGPT support, you need an account at open.ai.
 	
 If you do not directly talk to PVA(ientified by your keyword) or have a REACTION pattern in place, everything you say, will be send to Open.AI
 	
 **Because of it, this feature is disabled by default. It will violate our privacy for sure!**
 	
 To not send more nonsense from the STS as necessary, you need at least four words in your sentence to trigger chatgpt support. This is due to the-ghost-words-problem with vosk. It recognized stuff, noone said out of white noise.
+
+"ai.py" is included under the MIT license : https://github.com/reorx/ai.py/blob/master/LICENSE
 	
-Steps:
+### Steps:
 	
-Install ai.py to /usr/local/sbin
 start ai.py and follow instructiontions to add your OpenAI API key to ai.py's config. 
 Enable chatgpt support in a local userbased config file, and restart PVA.
 	
 What you can expect:
 	
-Shitload of FUN with misunderstanding STS software (vosk) in conjunction with sometimes unhelpfull, but entertaining answeres to stuff, noone had said ;)
+Shitload of FUN with misunderstanding STT software (vosk) in conjunction with sometimes unhelpfull, but entertaining answeres to stuff, noone had said ;)
 	
 TBH: the usability of this is limited. If your super hard to yourself and do only talk in front of your pc, if you have a question, it can be helpful. If you comment your daily life in front of your pc, you will get useless feedback. That's mainly, as you need an AI system to decide if what you just said, makes sense at all and should be sent to ChatGPT.
 
