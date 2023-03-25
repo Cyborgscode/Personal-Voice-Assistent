@@ -1419,9 +1419,9 @@ public class PVA {
 						     ( cgpt.get("mode").equals("keyword") && wort( cgpt.get("keyword") ) ) ) {
 						
 							if ( cgpt.get("mode").equals("keyword") && wort( cgpt.get("keyword") ) ) 
-								text = text.trim().replaceAll( cgpt.get("keyword"), "").trim();
+								text = text.substring( text.indexOf(cgpt.get("keyword"))+ cgpt.get("keyword").length() ).trim();
 						
-							if ( checkMediaPlayback() ) {
+							if ( checkMediaPlayback() && text.trim().length()>0 ) {
 					
 								log("we send :" + text);
 								
@@ -3011,7 +3011,7 @@ public class PVA {
 						dos.writeFile(getHome()+"/.cache/pva/cmd.last", text_raw);
 				}
 			} else {
-				log("Nicht für mich gedacht:" + text);
+				if ( ! reaction ) log("Nicht für mich gedacht:" + text);
 			}
 	}
 
