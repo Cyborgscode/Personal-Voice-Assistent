@@ -1421,7 +1421,7 @@ public class PVA {
 							if ( cgpt.get("mode").equals("keyword") && wort( cgpt.get("keyword") ) ) 
 								text = text.substring( text.indexOf(cgpt.get("keyword"))+ cgpt.get("keyword").length() ).trim();
 						
-							if ( checkMediaPlayback() && text.trim().length()>0 ) {
+							if ( ( ( cgpt.get("mode").equals("freetalk") && checkMediaPlayback() ) || !cgpt.get("mode").equals("freetalk") ) && text.trim().length()>0 ) {
 					
 								log("we send :" + text);
 								
@@ -1500,6 +1500,26 @@ public class PVA {
 						say( texte.get( config.get("conf","lang_short"), "SYNTAXERROR") );
 					}
 				}
+
+				if ( cf.command.equals("CHATGPTSWAP") ) {
+
+					String[] aliases = config.get("chatgpt","aliases").split(",");
+					if ( cf.terms.size() > 0 ) {
+						String newmode = ((String)cf.terms.get(0)).trim();
+						
+						for(String a : aliases ) {
+							String[] opts = a.split("=");
+							if ( opts[0].trim().equals( newmode )  ) {
+								log( "chatgpt:swap: "+ config.get("chatgpt","mode") + " => "+ opts[1].trim() ) ;
+								config.put("chatgpt","mode", opts[1].trim() );
+							}
+						}
+				
+					} else {
+						say( texte.get( config.get("conf","lang_short"), "SYNTAXERROR") );
+					}
+				}
+
 
 			
 				// The so called Star Trek part :) 
@@ -1788,7 +1808,7 @@ public class PVA {
 						Enumeration en1 = sub.keys(); // This Enumeration has only one Entry 
 						String changeapp = (String)en1.nextElement();
 						String changevalue = sub.get(changeapp);
-						log( "SWAP:"+ changeapp +" mit "+ changevalue);
+						log( "SWAP:"+ changeapp +" with "+ changevalue);
 						String[] apps = changeapp.split("\\|");
 						String[] values = changevalue.split("\\|");
 						if ( apps.length == values.length ) {
