@@ -41,7 +41,7 @@ public class Cluster extends Plugin {
 		info.put("hasThread","yes"); // Tells the loader to run run() 
 		info.put("hasCodes","yes");  // Tells main task, that we take unhandled cf.commands
 		info.put("name","Cluster"); // be nice, create a unique name
-	
+
 		this.pva = pva;
 		StringHash config = pva.config.get("cluster");
 
@@ -76,7 +76,7 @@ public class Cluster extends Plugin {
 		cmds.put("link_pva_right",         "pw-link ALLMICS:monitor_FR \"<id>:input_FR\"");
 
 		// Streaming 
-				
+		
 		cmds.put("killplayer", config.get("internal_killplayer") );
 		cmds.put("killstreamserver", config.get("internal_killstreamserver") );
 		cmds.put("streamplayer", config.get("internal_streamplayer") );
@@ -285,6 +285,43 @@ public class Cluster extends Plugin {
 		dos.readPipe("pw-link ALLTUNNEL:monitor_FR \""+ config.get("internal_speaker") +":playback_FR\"");
 	}
 	
+	public void shutdown() {
+	
+		StringHash config = pva.config.get("cluster");
+
+		if ( config == null ) {
+			log("Cluster:shutdown:no cluster config found to work with");
+			return;
+		}
+
+		if ( cluster.get("internal_shutdown").equals("true") ) {
+
+			// destroy the nodes
+
+			Enumeration en = config.keys();
+			while ( en.hasMoreElements() ) {
+				String key = (String)en.nextElement();
+				if ( !key.startsWith("internal_") ) {
+			
+					local(cluster.get(key),"unload_micro");
+					local(cluster.get(key),"unload_speaker");
+	
+				}
+			}
+
+			String[] r = dos.readPipe("pactl list short modules").split("\n");
+			for(String line : r ) {
+				if ( line.matches(".*module-null-sink.*ALLTUNNEL") || line.matches(".*module-null-sink.*ALLMICS") ) {
+					String[] opts = line.split("[\\s\\t]");
+					if ( opts.length > 0 ) {
+						log("Cluster:shutdown: shutting down "+ line );
+						dos.readPipe("pactl unload-module "+ opts[0]);
+					}
+				}
+			}
+		}
+	}
+
 	public StringHash getPluginInfo() {
 		return this.info;		
 	}
