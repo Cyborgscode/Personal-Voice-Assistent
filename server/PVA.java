@@ -1225,6 +1225,8 @@ public class PVA {
 			do {
 				Thread.sleep(1000);
 			} while ( ! Thread.currentThread().isInterrupted() && !doexit );
+			
+			pls.shutdown();
 
 		} catch (Exception e) {
 				
@@ -1528,7 +1530,12 @@ public class PVA {
 						if ( wort( config.get("code","alpha")) ) {
 							String cmd = dos.readFile(getHome()+"/.cache/pva/cmd.last");
 							if ( cmd.equals("exit") ) {
+
 								say( texte.get( config.get("conf","lang_short"), "QUIT") );	
+
+								// shutdown normally, kill python STT process 
+								doexit=true;
+
 								String[] e = dos.readPipe("pgrep -i -l -a python").split("\n");
 								for(String a : e ) {
 									if ( a.contains("pva.py") ) {
@@ -1861,7 +1868,7 @@ public class PVA {
 					dos.writeFile(getHome()+"/.cache/pva/cmd.last","exit");
 					say( texte.get( config.get("conf","lang_short"), "EXIT") );
 					
-					doexit=true;
+// 					doexit=true;
 					
 					return;
 				}
