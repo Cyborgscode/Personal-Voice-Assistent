@@ -116,5 +116,14 @@ public class Plugins {
 		}
 		return false;
 	}
+
+	// on shutdown call shutdown() on each plugin. Plugins decide itself if they implement special routines.
+
+	public void shutdown() {
+		for(int i = 0; i< pluginsfound ;i++ ) {
+			Plugin p = (Plugin)myPlugins[i];
+			p.shutdown();
+		}
+	}
 	
 }
