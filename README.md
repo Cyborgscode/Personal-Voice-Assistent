@@ -704,9 +704,10 @@ TBH: the usability of this is limited. If your super hard to yourself and do onl
 
 ### Modes
 
-"freetalk"  talk to your pva as you would do to a human. No configured reaction a been triggered 
-            and the text has a minimum of 4 words required to be recognized as a worthy sentence to be send. 
-"keyword"   set a keyword to react on and use it to address chatgpt
-"gapfiller" this mode reacts to the main pva keyword, but only, if no internal or external command was found and nothing reacted to your command.
+- "freetalk"  talk to your pva as you would do to a human. No configured reaction a been triggered and the text has a minimum of 4 words required to be recognized as a worthy sentence to be send. 
+- "keyword"   set a keyword to react on and use it to address chatgpt
+- "gapfiller" this mode reacts to the main pva keyword, but only, if no internal or external command was found and nothing reacted to your command.
 
 Now you can decide how hard it shall be to use ChatGPT in your environment. See the default ChatGPT config for details.
+
+With **0.3.0** of ai.py we got conversation mode. This means, old data gets send with the new data as history, so chatgpt has context of what it answered.
