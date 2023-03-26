@@ -15,5 +15,6 @@ public interface PluginInterface {
 	public boolean execute(Command cf, String rawtext);
 	public void run();
 	public void init(PVA pva);
+	public void shutdown();
 }
 
