@@ -122,7 +122,7 @@ public class Plugins {
 	public void shutdown() {
 		for(int i = 0; i< pluginsfound ;i++ ) {
 			Plugin p = (Plugin)myPlugins[i];
-			p.shutdown();
+			if ( p != null ) p.shutdown();
 		}
 	}
 	
