@@ -884,6 +884,10 @@ public class PVA {
 
 	static private Command parseCommand(String textToParse) {
 
+		// Filter out "?" , just in case a third party app sends this to the pva port. it leads to an endless loop in EXEC() and/or readPipe()
+		
+		if ( textToParse.contains("?") ) textToParse = textToParse.replace("?","");
+
 		text = textToParse;
 
 		Command cf = new Command("DUMMY","","",""); // cf = commandFound
@@ -896,7 +900,8 @@ public class PVA {
 			if ( 
 				( 
 					( !cc.words.contains(".*") && und( cc.words ) ) ||  
-					( cc.words.contains(".*") && text.matches( ".*"+ cc.words +".*" ) )
+					( cc.words.contains(".*") && text.matches( ".*"+ cc.words +".*" ) ) ||
+					( cc.words.startsWith("REGEXP:") && text.matches( cc.words.replace("REGEXP:","") ) )  // FULL REXEXP MODE 
 				) 
 				&& ( cc.negative.isEmpty() || !oder( cc.negative ) ) ) {
 				
@@ -933,9 +938,13 @@ public class PVA {
 //						log( "replace: ("+ cf.words +") => ");
 
 				// delete the command from the phrase
-							
-				if ( und( cc.words ) ) {
-					// Remove none REGEX
+				
+				if ( cc.words.startsWith("REGEXP:") && text.matches( cc.words.replace("REGEXP:","") ) ) {
+									
+					text = "";
+
+				} else if ( !cc.words.contains(".*") && und( cc.words ) ) {
+					// Remove via classic REGEX (arg1|arg2|arg3|...) => ""
 					text = text.replaceAll( "("+cf.words+")", "" );
 				} else {
 				
@@ -1189,6 +1198,68 @@ public class PVA {
 			
 			}
 
+			// read in vcard cache
+			// without this cache it would take several minutes to import addressbooks
+			// from time to time you should refresh it, by just deleteing it
+						
+			String vcards = dos.readFile( getHome()+"/.cache/pva/vcards.cache" );
+			if ( vcards.isEmpty() ) {
+				StringHash adb = config.get("addressbook");
+				if ( adb != null ) {
+					say( texte.get( config.get("conf","lang_short"), "READPHONEBOOK") );
+
+					Enumeration en = adb.keys();
+					while ( en.hasMoreElements() ) {
+						String key = (String) en.nextElement();
+						String value = adb.get(key);
+						log( key );
+						String[] url = key.split("/");
+						String basedomain = url[0]+"//"+url[2];
+						String[] html = dos.readPipe("curl "+ key +" --anyauth -u \""+ value +"\" 2>/dev/null").split("\n");
+						int c = 1, gesamt=0;
+						for(String line : html )
+							if ( line.contains("vcf\"><img") ) 
+								gesamt++;
+								
+						for(String line : html ){
+						
+							if ( line.contains("vcf\"><img") ) {
+								log("import Eintrag "+ c +"/"+gesamt);
+								String href = Tools.zwischen(line,"href=\"","\"");
+								String[] vcard = dos.readPipe("curl "+  basedomain+href +" --anyauth -u \""+ value +"\" 2>/dev/null").split("\n");
+								Contact vcf = new Contact();
+								for(String vline : vcard ) {
+									vcf.parseInput( vline );
+								}
+								contacts.addElement( vcf );	
+								c++;
+							}
+						
+						}
+				
+					}
+				}
+	
+				vcards = "";
+				Enumeration<Contact> een = contacts.elements();
+				if ( een != null ) while ( een.hasMoreElements() ) {
+					Contact c = een.nextElement();
+					vcards += c.exportVcard()+"XXXXXX---NEXT_ELEMENT---XXXXXX\n";
+				}
+				dos.writeFile(getHome()+"/.cache/pva/vcards.cache", vcards);
+			} else {
+				// log("Loading cache...");
+				String[] x = vcards.split("XXXXXX---NEXT_ELEMENT---XXXXXX\n");
+				for(String card : x) { 
+					Contact vcf = new Contact();
+					vcf.importVcard( card );
+					contacts.addElement( vcf );	
+				}
+								
+			}
+
+
+
 			// for speed resons, we got often used content in variables.
 			keyword = config.get("conf","keyword");
 
@@ -1295,66 +1366,6 @@ public class PVA {
 
 //			for( String x: za) log( x );
 
-			// read in vcard cache
-			// without this cache it would take several minutes to import addressbooks
-			// from time to time you should refresh it, by just deleteing it
-						
-			String vcards = dos.readFile( getHome()+"/.cache/pva/vcards.cache" );
-			if ( vcards.isEmpty() ) {
-				StringHash adb = config.get("addressbook");
-				if ( adb != null ) {
-					say( texte.get( config.get("conf","lang_short"), "READPHONEBOOK") );
-
-					Enumeration en = adb.keys();
-					while ( en.hasMoreElements() ) {
-						String key = (String) en.nextElement();
-						String value = adb.get(key);
-						log( key );
-						String[] url = key.split("/");
-						String basedomain = url[0]+"//"+url[2];
-						String[] html = dos.readPipe("curl "+ key +" --anyauth -u \""+ value +"\" 2>/dev/null").split("\n");
-						int c = 1, gesamt=0;
-						for(String line : html )
-							if ( line.contains("vcf\"><img") ) 
-								gesamt++;
-								
-						for(String line : html ){
-						
-							if ( line.contains("vcf\"><img") ) {
-								log("import Eintrag "+ c +"/"+gesamt);
-								String href = Tools.zwischen(line,"href=\"","\"");
-								String[] vcard = dos.readPipe("curl "+  basedomain+href +" --anyauth -u \""+ value +"\" 2>/dev/null").split("\n");
-								Contact vcf = new Contact();
-								for(String vline : vcard ) {
-									vcf.parseInput( vline );
-								}
-								contacts.addElement( vcf );	
-								c++;
-							}
-						
-						}
-				
-					}
-				}
-	
-				vcards = "";
-				Enumeration<Contact> een = contacts.elements();
-				if ( een != null ) while ( een.hasMoreElements() ) {
-					Contact c = een.nextElement();
-					vcards += c.exportVcard()+"XXXXXX---NEXT_ELEMENT---XXXXXX\n";
-				}
-				dos.writeFile(getHome()+"/.cache/pva/vcards.cache", vcards);
-			} else {
-				// log("Loading cache...");
-				String[] x = vcards.split("XXXXXX---NEXT_ELEMENT---XXXXXX\n");
-				for(String card : x) { 
-					Contact vcf = new Contact();
-					vcf.importVcard( card );
-					contacts.addElement( vcf );	
-				}
-								
-			}
-
 //			log("TEXT:" + text);			
 
 			// now some error corrections for bugs in vosk or the way you speak to your pc ;) 
@@ -1427,8 +1438,9 @@ public class PVA {
 					
 								log("we send :" + text);
 								
-								String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" ).trim();
+								String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" );
 								if ( answere != null ) {
+									answere = answere.trim();
 									log("we got back:" + answere);
 								
 									say( answere,true );
@@ -1514,6 +1526,7 @@ public class PVA {
 							if ( opts[0].trim().equals( newmode )  ) {
 								log( "chatgpt:swap: "+ config.get("chatgpt","mode") + " => "+ opts[1].trim() ) ;
 								config.put("chatgpt","mode", opts[1].trim() );
+								reaction = true;
 							}
 						}
 				
@@ -3001,16 +3014,23 @@ public class PVA {
 				}
 
 				if ( !reaction && cgpt != null && cgpt.get("enable").equals("true") && cgpt.get("bin") != null && cgpt.get("mode").equals("gapfiller") ) {
-					if ( checkMediaPlayback() ) {
+					if ( checkMediaPlayback() && text.trim().length()>0 ) {
 					
-						log("we send :" + text);
+						log("chatgpt:send:" + text);
 								
-						String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" ).trim();
+						String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" );
 	
-						log("we got back:" + answere);
+						if ( answere != null ) {
+							answere = answere.trim();
+							
+							if ( debug > 1 ) log("we got back:" + answere);
 								
-						say( answere,true );
-						reaction = true;
+							say( answere,true );
+							
+							reaction = true;
+						} else {
+							log("chatgpt:error:call to binary failed with NULL");
+						}
 					}
 
 				} else if ( debug > 2 ) log("no chatgpt");
