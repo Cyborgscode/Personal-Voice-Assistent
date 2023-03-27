@@ -687,26 +687,26 @@ If you do not directly talk to PVA(identified by your keyword) or have a REACTIO
 	
 **Because of it, this feature is disabled by default. It will violate our privacy for sure!**
 	
-To not send more nonsense from the STS as necessary, you need at least four words in your sentence to trigger chatgpt support. This is due to the-ghost-words-problem with vosk. It recognized stuff, noone said out of white noise.
+To not send more nonsense from the STS as necessary, you need at least four words in your sentence to trigger chatgpt support in freetalk-mode. This is due to the-ghost-words-problem with vosk. It recognizes stuff, noone said out of white noise.
 
 "ai.py" is included under the MIT license : https://github.com/reorx/ai.py/blob/master/LICENSE
 	
 ### Steps:
 	
-start ai.py and follow instructiontions to add your OpenAI API key to ai.py's config. 
+start ai.py and follow instructions to add your OpenAI API key to ai.py's config. 
 Enable chatgpt support in a local userbased config file, and restart PVA.
 	
-What you can expect: *BETA*
+What you can expect:
 	
 Shitload of FUN with misunderstanding STT software (vosk) in conjunction with sometimes unhelpfull, but entertaining answeres to stuff, noone had said ;)
 	
-TBH: the usability of this is limited. If your super hard to yourself and do only talk in front of your pc, if you have a question, it can be helpful. If you comment your daily life in front of your pc, you will get useless feedback. That's mainly, as you need an AI system to decide if what you just said, makes sense at all and should be sent to ChatGPT ;) As a solution to this problem, I added a workmode option:
+TBH: the usability of freetalk-mode is limited. If your super hard to yourself and do only talk in front of your pc, if you have a question, it can be helpful. If you comment your daily life in front of your pc, you will get useless feedback. That's mainly, as you need an AI system to decide if what you just said, makes sense at all and should be sent to ChatGPT ;) As a solution to this problem, a workmode option has been added : 
 
 ### Modes
 
-- "freetalk"  talk to your pva as you would do to a human. No configured reaction a been triggered and the text has a minimum of 4 words required to be recognized as a worthy sentence to be send. 
+- "freetalk"  talk to your pva as you would do to a human. Condition: no configured reaction has been triggered and the text has a minimum of 4 words required to be recognized as a worthy sentence to be send. 
 - "keyword"   set a keyword to react on and use it to address chatgpt
-- "gapfiller" this mode reacts to the main pva keyword, but only, if no internal or external command was found and nothing reacted to your command.
+- "gapfiller" this mode reacts to the main pva keyword, but only, if no internal or external command was found and no other subcomponent i.e. a plugin , reacted to your command.
 
 Now you can decide how hard it shall be to use ChatGPT in your environment. See the default ChatGPT config for details.
 
