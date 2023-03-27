@@ -683,7 +683,7 @@ desktopaudio: SOURCE for capturing audio. Default: see 50-plugin-cluster.conf
 
 To have ChatGPT support, you need an account at open.ai.
 	
-If you do not directly talk to PVA(ientified by your keyword) or have a REACTION pattern in place, everything you say, will be send to Open.AI
+If you do not directly talk to PVA(identified by your keyword) or have a REACTION pattern in place, everything you say, will be send to Open.AI
 	
 **Because of it, this feature is disabled by default. It will violate our privacy for sure!**
 	
