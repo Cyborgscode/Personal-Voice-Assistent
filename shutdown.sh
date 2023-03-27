@@ -43,7 +43,7 @@ else
 
 	// this should not be happening
 
-	PID=$(/usr/bin/pgrep -f server.PVA)
+	PID=$(/usr/bin/pgrep -u $USER -f server.PVA)
 
 	kill -9 $PID
 
