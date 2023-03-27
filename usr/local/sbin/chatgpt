@@ -5,5 +5,11 @@
 # enable chatgpt in your local copy of 12-chatgpt.conf
 
 
-echo "$(/usr/local/sbin/ai.py -c "$1" 2>/dev/null </dev/null)"
+if [ ! -e "$HOME/.cache/pva/history.json" ]; then
 
+	# create empty file 
+	echo "[]" > $HOME/.cache/pva/history.json
+	
+fi 
+
+echo "$(/usr/local/sbin/ai.py --history $HOME/.cache/pva/history.json -w -c "$1" 2>/dev/null </dev/null)"
