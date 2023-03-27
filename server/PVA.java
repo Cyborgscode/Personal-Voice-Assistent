@@ -26,7 +26,6 @@ public class PVA {
 	static String keyword = "carola";
 
 	static long debug = 0;
-	static boolean doexit = false;
 
 	static public TwoKeyHash config   	= new TwoKeyHash();
 	static TwoKeyHash alternatives    	= new TwoKeyHash();
@@ -43,6 +42,7 @@ public class PVA {
 	static SearchTask st;
 	static MetacacheTask mt;
 	static Plugins pls;
+	static Server server;
 	
 	static String text = "";
 	static String text_raw = "";
@@ -1280,24 +1280,43 @@ public class PVA {
 			log("start PluginLoader");
 			
 			pls = new Plugins(pva);
-			
-			log("start server");
-						
-	                Server server = new Server( Integer.parseInt( config.get("network","port") ) , pva );
-	                server.startServing();
 
-			// Wait until be receive ctrl+c or the EXIT command is given
+			log("PVA:main:init audio");
 
 			if ( initPulseAudio() ) {
 				// enable input source for sure, in case we got restarted in mid blockade of the mic input
 				dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 0");
 			}
-
-			do {
-				Thread.sleep(1000);
-			} while ( ! Thread.currentThread().isInterrupted() && !doexit );
 			
+			log("start server");
+						
+	                server = new Server( Integer.parseInt( config.get("network","port") ) , pva );
+	                server.startServing();
+
+			// Wait until be receive ctrl+c or the EXIT command is given
+		
 			pls.shutdown();
+			
+			log("PVA:main:shutdown");
+			
+			tt.interrupt();
+			it.interrupt();
+			Thread.currentThread().interrupt();
+
+			log("PVA:main:shutdown2");
+			
+			// as this does not work all ... hardcore exit :D  Some subthreads seem to block the JVM shutdown, but there is no hint which one it is.
+			
+			String pid = dos.readPipe("/usr/bin/pgrep -u "+  System.getenv("USER").trim() +" -f server.PVA");
+			if ( !pid.trim().isEmpty() ) {
+				String[] lines = pid.trim().split("\n");
+				for(String line : lines ) {
+					log("kill -9 "+ line);
+					dos.readPipe("kill -9 "+ line);
+				}
+			} else log("no pid to kill");
+
+			log("PVA:main:shutdown3"); // will never be visible in the logs ... is everything works
 
 		} catch (Exception e) {
 				
@@ -1437,7 +1456,7 @@ public class PVA {
 							if ( ( ( cgpt.get("mode").equals("freetalk") && checkMediaPlayback() ) || !cgpt.get("mode").equals("freetalk") ) && text.trim().length()>0 ) {
 					
 								log("we send :" + text);
-								
+								log(config.get("chatgpt","bin") +" \""+ text +"\"");
 								String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" );
 								if ( answere != null ) {
 									answere = answere.trim();
@@ -1547,8 +1566,22 @@ public class PVA {
 								say( texte.get( config.get("conf","lang_short"), "QUIT") );	
 
 								// shutdown normally, kill python STT process 
-								doexit=true;
+								server.interrupt();
 
+								String[] e = dos.readPipe("pgrep -i -l -a python").split("\n");
+								for(String a : e ) {
+									if ( a.contains("pva.py") ) {
+										String[] b = a.split(" ");
+										exec("kill "+ b[0] );
+									}
+								}
+							}
+							if ( cmd.equals("autoexit") ) {
+
+								// shutdown normally, kill python STT process 
+								
+								server.interrupt();
+								
 								String[] e = dos.readPipe("pgrep -i -l -a python").split("\n");
 								for(String a : e ) {
 									if ( a.contains("pva.py") ) {
@@ -1880,9 +1913,11 @@ public class PVA {
 				if ( cf.command.equals("EXIT") ) {
 					dos.writeFile(getHome()+"/.cache/pva/cmd.last","exit");
 					say( texte.get( config.get("conf","lang_short"), "EXIT") );
-					
-// 					doexit=true;
-					
+										
+					return;
+				}
+				if ( cf.command.equals("AUTOEXIT") ) {
+					dos.writeFile(getHome()+"/.cache/pva/cmd.last","autoexit");
 					return;
 				}
 			
