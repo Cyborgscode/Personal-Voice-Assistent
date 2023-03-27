@@ -18,6 +18,6 @@ abstract public class Plugin extends Thread implements PluginInterface {
 	protected StringHash info = new StringHash();
 		
 	protected void log(String x) { System.out.println(x); }
-	public void shutdown() {	return; }	
+	public void shutdown() { Thread.currentThread().interrupt( );return; }
 }
 
