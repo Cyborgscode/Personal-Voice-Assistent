@@ -107,7 +107,11 @@ public class Server {
                 System.out.println((new Date())+": Server: "+x);
         }
 
-        protected void startServing()  throws Exception {
+        public void interrupt() {
+                Thread.currentThread().interrupt();		
+        }
+
+	protected void startServing()  throws Exception {
 
                 ich = Thread.currentThread();
 
