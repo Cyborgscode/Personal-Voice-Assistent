@@ -320,6 +320,7 @@ public class Cluster extends Plugin {
 				}
 			}
 		}
+		Thread.currentThread().interrupt();
 	}
 
 	public StringHash getPluginInfo() {
