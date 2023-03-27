@@ -36,6 +36,10 @@ class TimerTask extends Thread {
 	}
 
 	void log(String x) { System.out.println(x); }
+
+	public void interrupt() {
+                Thread.currentThread().interrupt();
+	}
 	
 	public void run() {
 		try {
