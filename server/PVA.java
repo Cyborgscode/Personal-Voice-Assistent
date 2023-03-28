@@ -168,10 +168,18 @@ public class PVA {
 			log("EMPTY Command given to Exec()");
 			return;
 		}
+		String x = "";
 		for(String cmd : cmds) {
+			x += cmd+"#|#";
 			if (debug > 2 ) log( "argument:"+cmd );
 			if ( cmd == null ) {
 				log("exec():Illegal Argument NULL detected");
+				reaction = false;
+				return;
+			} 
+			if ( cmd.isEmpty() && cmds.length == 1 ) {
+				// this can happen, if i.e. raisevolume is executed, but not configured!
+				if ( debug > 2 ) log("exec():empty Argument \"\" detected");
 				reaction = false;
 				return;
 			} 
@@ -183,7 +191,8 @@ public class PVA {
 			}
 		} catch (Exception e) {
 			// we don't care 
-			log("we had a crash in exec()");
+			log("we had a crash in exec("+x+"):\n"+e);
+			e.printStackTrace();
 		}
 		reaction = true;
 	}
@@ -969,7 +978,7 @@ public class PVA {
 							} else if ( rp.endsWith(x) ) {
 								rp=rp.replaceAll(" "+x,"x:x");
 							} else  rp = rp.replaceAll(" "+x+" ","x:x");
-							log("replace "+x+" : result "+ rp);
+							if ( debug > 1 ) log("replace "+x+" : result "+ rp);
 						}
 					}
 					
@@ -1455,8 +1464,7 @@ public class PVA {
 						
 							if ( ( ( cgpt.get("mode").equals("freetalk") && checkMediaPlayback() ) || !cgpt.get("mode").equals("freetalk") ) && text.trim().length()>0 ) {
 					
-								log("we send :" + text);
-								log(config.get("chatgpt","bin") +" \""+ text +"\"");
+								log("chatgpt:send:" + text);
 								String answere = dos.readPipe( config.get("chatgpt","bin") +" \""+ text +"\"" );
 								if ( answere != null ) {
 									answere = answere.trim();
