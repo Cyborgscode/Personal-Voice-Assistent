@@ -94,6 +94,30 @@ i.e. Fedora: `dnf install gtts`
 
 #gsay caches created phrases to minimize the contact to Googleservers, but at least once per sentence to speak, it will need to contact it. 
 
+## Piper TTS 
+
+Source: https://github.com/rhasspy/piper
+
+Support for piper TTS has been added. You need the following directory structure:
+
+/usr/local/share/piper
+├── espeak-ng-data
+└── piper
+
+/usr/local/share/piper-voices
+├── voice-de-eva_k-x-low
+│   ├── de-eva_k-x-low.onnx
+│   ├── de-eva_k-x-low.onnx.json
+│   └── MODEL_CARD
+...
+├── voice-de-thorsten-low
+│   ├── de-thorsten-low.onnx
+│   ├── de-thorsten-low.onnx.json
+│   └── MODEL_CARD
+...
+
+Piper TTS is 100% local, so we have no privacy issues. 
+
 ## WARNING: 
 ### Your personal privacy is at risk if you use gtts, as the text of the PVA answers (which includes repeats of what you said) is transferred to a Google server, for which you need an active internet connection too. 
 
