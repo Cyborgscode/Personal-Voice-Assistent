@@ -2,8 +2,15 @@
 
 NAME=$(mktemp)
 
-if [ "$NAME" != "" ]; then 
-	echo "$1" | /usr/local/share/piper/piper -m /usr/local/share/piper-voices/voice-de-thorsten-low/de-thorsten-low.onnx -f $NAME 2>/dev/null
-	play $NAME 2>/dev/null
-	rm -f $NAME
-fi 
+#VOICE="de-thorsten-low"
+#VOICE="de-eva_k-x-low"
+#VOICE="de-karlsson-low"
+VOICE="de-kerstin-low"
+#VOICE="de-pavoque-low"
+#VOICE="de-ramona-low"
+
+if [ "$NAME" != "" ]; then
+        echo "$1" | tr -d "\n"| /usr/local/share/piper/piper -m /usr/local/share/piper-voices/voice-$VOICE/$VOICE.onnx -f $NAME 2>/dev/null
+        play $NAME 2>/dev/null
+        rm -f $NAME
+fi
