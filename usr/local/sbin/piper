@@ -1,0 +1,9 @@
+#!/bin/bash
+
+NAME=$(mktemp)
+
+if [ "$NAME" != "" ]; then 
+	echo "$1" | /usr/local/share/piper/piper -m /usr/local/share/piper-voices/voice-de-thorsten-low/de-thorsten-low.onnx -f $NAME 2>/dev/null
+	play $NAME 2>/dev/null
+	rm -f $NAME
+fi 
