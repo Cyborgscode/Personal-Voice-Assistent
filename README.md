@@ -55,7 +55,7 @@ dbus-tools
 
 Via RPM REPO:
 
-create /etc/yum.repos.de/pva with this content:
+create /etc/yum.repos.d/pva with this content:
 
 ```
 [pva]
