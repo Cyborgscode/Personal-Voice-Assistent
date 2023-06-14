@@ -100,6 +100,7 @@ Source: https://github.com/rhasspy/piper
 
 Support for piper TTS has been added. You need the following directory structure:
 
+```
 /usr/local/share/piper
 ├── espeak-ng-data
 └── piper
@@ -115,6 +116,7 @@ Support for piper TTS has been added. You need the following directory structure
 │   ├── de-thorsten-low.onnx.json
 │   └── MODEL_CARD
 ...
+```
 
 Piper TTS is 100% local, so we have no privacy issues. 
 
