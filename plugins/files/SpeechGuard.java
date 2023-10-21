@@ -93,7 +93,6 @@ public class SpeechGuard extends Plugin {
 	public void run() {
 	
 		try {
-			String[] disks;
 			boolean inform = false;
 			Long now = (new Date()).getTime()/1000;
 			
