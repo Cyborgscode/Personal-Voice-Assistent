@@ -45,7 +45,7 @@ mbrola             (found on github)
 espeak
 vosk               (found on github)
 sox                (needed in case you want to make use of GTTS)
-openssl 1.x+       (used to communicate with the PVA TLS server)
+openssl            (used to communicate with the PVA TLS server / works with 1.x and 3.x)
 dbus-tools
 ```
 
