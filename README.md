@@ -456,7 +456,9 @@ Keyword-Sentences in Human Response Simulation:
 "das funtioniert"
 "das funtioniert nicht"
 "wie ist dein name"
+"wie heißt du"
 
+With the "Nightprotection" commit, you can configure a timeinterval when reactions are not played. It's usefull if you assistent runs 24h a day.
 
 Keywords in Bot Reaction: " Keyword " + content
 
