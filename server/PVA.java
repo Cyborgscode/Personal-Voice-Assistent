@@ -1267,8 +1267,6 @@ public class PVA {
 								
 			}
 
-
-
 			// for speed resons, we got often used content in variables.
 			keyword = config.get("conf","keyword");
 
@@ -1431,7 +1429,34 @@ public class PVA {
 				}
 			}
 			
-			if ( temp.size() > 0 ) {
+			boolean nightprotection = false;
+			if ( config.get("conf","nightprotection").trim().toLowerCase().equals("on") ) {
+				try {
+					String[] times = config.get("conf","nighttime").split("-");
+					if ( times.length == 2 ) {
+						String[] nightprotection_start = times[0].split(":");
+						String[] nightprotection_end   = times[1].split(":");
+
+						long sh = Long.parseLong( nightprotection_start[0] );
+						long sm = Long.parseLong( nightprotection_start[1] );
+						long eh = Long.parseLong( nightprotection_end[0] );
+						long em = Long.parseLong( nightprotection_end[1] );
+						Calendar cnow = Calendar.getInstance(); 
+						
+						long h = cnow.get(Calendar.HOUR_OF_DAY);
+						long m = cnow.get(Calendar.MINUTE);
+				
+						if ( h >= sh && m >= sm && ( h < eh || ( h == eh && m <= em ) ) )  
+							nightprotection = true;		
+		
+					} else log("sorry, you messed up the time intervall for nightprotection! "+ config.get("conf","nighttime"));
+				} catch (Exception e) {
+					log("Sorry, you messed up the time intervall for nightprotection! "+ e);
+					e.printStackTrace();
+				}
+			}
+
+			if ( temp.size() > 0 && !nightprotection ) {
 				Reaction r = null;
 				String lastr = dos.readFile(getHome()+"/.cache/pva/reaction.last");
 				// lastr == "" means, it did not exist				
@@ -1443,7 +1468,7 @@ public class PVA {
 					say( r.answere.replaceAll("%KEYWORD", keyword ),true);
 
 				dos.writeFile( getHome()+"/.cache/pva/reaction.last" , r.answere );
-			}
+			} else if (  temp.size() > 0 && nightprotection ) log("Silentmode active - Reaction surpressed");
 			
 			StringHash cgpt = config.get("chatgpt");
 			if ( !wort(keyword) ) {
