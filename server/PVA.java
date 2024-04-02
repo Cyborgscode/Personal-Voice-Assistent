@@ -80,7 +80,7 @@ public class PVA {
 				if ( o.startsWith("Source Output #") ) {
 					det = o.replaceAll("^.*#","").trim();
 				}
-				if ( o.contains("node.name = \"ALSA Capture\"") ) {
+				if ( o.toLowerCase().contains("node.name = \"alsa_capture.python3.11\"") ) {
 					pa_outputid  = det;
 					break;
 				}
