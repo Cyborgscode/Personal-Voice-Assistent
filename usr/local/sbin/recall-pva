@@ -3,15 +3,18 @@
 # Support for Linux am Dienstag RECALL Plugin
 # https://github.com/Cyborgscode/Linux-Recall-in-bash
 
-BILDER=$(cat $HOME/.config/recall/path)
 
-if [ "$BILDER" == "" ]; then 
+CONFIG=$HOME/.config/recall/config
+
+source $CONFIG
+
+if [ "$STORAGELOCATION" == "" ]; then 
 	exit 1;
 fi 
 
 SUCHE=$1
 
-TREFFER=$(grep -l -i "$SUCHE" $BILDER/*txt| sed -e "s/\.txt$//g")
+TREFFER=$(grep -l -i "$SUCHE" $STORAGELOCATION/*txt| sed -e "s/\.txt$//g")
 
 # Eye of Gnome is a GNOME Imageviewer
 
