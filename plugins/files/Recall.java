@@ -53,7 +53,7 @@ public class Recall extends Plugin {
 	
 	// getActionCodes() should return an empty String[], if we do not handle Actions
 
-	public String[] getActionCodes() {  return "RECALLSEARCH:RECALLERASE".split(":"); };
+	public String[] getActionCodes() {  return "RECALLSEARCH:RECALLERASE:RECALLINFO".split(":"); };
 	public boolean execute(Command cf, String rawtext) { 
 		try {
 			if ( ! dos.fileExists( pva.getHome()+"/.config/recall/config" ) ) {
@@ -112,12 +112,7 @@ public class Recall extends Plugin {
 			} else if ( cf.command.equals("RECALLERASE") ) { 
 				
 				File path = new File( pathname );
-				
-				// System.out.println("Recall Path="+ pathname ) );
-				
 		                File[] entries = path.listFiles();
-		                
-       				// System.out.println("Recall entries="+ entries.length );
 		       	        if ( entries != null && entries.length > 2 ) {
 
 					for(int i=0;i< entries.length; i++) {
@@ -126,7 +121,6 @@ public class Recall extends Plugin {
 						entries[i].delete();
 					
 					}
-
 				
 				} else {
 					// System.out.println("Recall NODATA");
@@ -134,7 +128,36 @@ public class Recall extends Plugin {
 					return true;
 				}
 			
-			} else return false; // if we did not handle this code, tell the app, as it can try another plugin.
+			} else if ( cf.command.equals("RECALLINFO") ) { 
+				
+				File path = new File( pathname );
+		                File[] entries = path.listFiles();
+		                long size = 0;
+		                int einheit = 0;
+		       	        if ( entries != null && entries.length > 2 ) {
+	
+					for(int i=0;i< entries.length; i++) {
+						
+						size += entries[i].length();
+					}
+				
+					String[] einheiten = "Bytes:Kilobyte:Megabyte:Gigabyte:Terabyte:Petabyte:Exabyte".split(":");
+					while ( size / 1024 > 1024 ) {
+						size = size / 1024;
+						einheit++;
+					}
+
+					// System.out.println("Recall SIZE");
+					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLSIZE").replaceAll("<TERM1>", size+" "+einheiten[einheit] ) );
+					return true;
+				
+				} else {
+					// System.out.println("Recall NODATA");
+					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLNODATA") );
+					return true;
+				}
+			
+			}else return false; // if we did not handle this code, tell the app, as it can try another plugin.
 	
 			return true; // ok, we handled it and the app can stop searching for plugins to handle it.
 		}  catch (Exception localException) {
