@@ -75,7 +75,7 @@ public class Recall extends Plugin {
 					return true;
 				}
 
-				String pathname = dos.readFile( pva.getHome()+"/.config/recall/path" ).trim();
+				String pathname = dos.readFile( pva.getHome()+"/.config/recall/config" ).trim();
 				if ( !pathname.endsWith("/") ) {
 					pathname += "/";
 				}
