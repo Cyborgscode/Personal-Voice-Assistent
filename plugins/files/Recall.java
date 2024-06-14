@@ -53,9 +53,31 @@ public class Recall extends Plugin {
 	
 	// getActionCodes() should return an empty String[], if we do not handle Actions
 
-	public String[] getActionCodes() {  return "RECALLSEARCH".split(":"); };
+	public String[] getActionCodes() {  return "RECALLSEARCH:RECALLERASE".split(":"); };
 	public boolean execute(Command cf, String rawtext) { 
 		try {
+			if ( ! dos.fileExists( pva.getHome()+"/.config/recall/config" ) ) {
+				// System.out.println("Recall not installed: "+ pva.getHome()+"/.config/recall/path");
+				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLNOTINSTALLED") );
+				return true;
+			}
+			String[] config = dos.readFile( pva.getHome()+"/.config/recall/config" ).trim().split("\n");
+			String pathname = "";
+			for(String c : config) {
+				if ( c.startsWith("STORAGELOCATION=") ) {
+					pathname = c.replaceAll("STORAGELOCATION=","").trim();
+				}
+			}
+					
+			if ( !pathname.endsWith("/") ) {
+				pathname += "/";
+			}
+
+			if ( pathname.isEmpty() ) {
+				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLNOTINSTALLED") );
+				return true;
+			}
+
 			if ( cf.command.equals("RECALLSEARCH") ) {
 
 				String subtext = rawtext.trim();
@@ -69,16 +91,6 @@ public class Recall extends Plugin {
 					return true;
 				}
 		
-				if ( ! dos.fileExists( pva.getHome()+"/.config/recall/path" ) ) {
-					// System.out.println("Recall not installed: "+ pva.getHome()+"/.config/recall/path");
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLNOTINSTALLED") );
-					return true;
-				}
-
-				String pathname = dos.readFile( pva.getHome()+"/.config/recall/config" ).trim();
-				if ( !pathname.endsWith("/") ) {
-					pathname += "/";
-				}
 
 				File path = new File( pathname );
 				
@@ -90,6 +102,31 @@ public class Recall extends Plugin {
 		       	        if ( entries != null && entries.length > 2 ) {
 					// System.out.println("Recall Call recall-pva "+subtext);
 					dos.readPipe("recall-pva '"+ subtext +"'");
+				
+				} else {
+					// System.out.println("Recall NODATA");
+					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLNODATA") );
+					return true;
+				}
+			
+			} else if ( cf.command.equals("RECALLERASE") ) { 
+				
+				File path = new File( pathname );
+				
+				// System.out.println("Recall Path="+ pathname ) );
+				
+		                File[] entries = path.listFiles();
+		                
+       				// System.out.println("Recall entries="+ entries.length );
+		       	        if ( entries != null && entries.length > 2 ) {
+
+					for(int i=0;i< entries.length; i++) {
+					
+						System.out.println("delete recall file "+ entries[i].getName() );
+						entries[i].delete();
+					
+					}
+
 				
 				} else {
 					// System.out.println("Recall NODATA");
