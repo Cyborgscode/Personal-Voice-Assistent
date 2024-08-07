@@ -49,6 +49,15 @@ openssl            (used to communicate with the PVA TLS server / works with 1.x
 dbus-tools
 ```
 
+Optional dependencies:
+
+```
+ffmpeg
+fswebcam
+gnome-screenshot
+```
+
+
 # JAVA deps have been removed to prepare for distro packaging
 
 ### How to install:
@@ -739,3 +748,4 @@ TBH: the usability of freetalk-mode is limited. If your super hard to yourself a
 Now you can decide how hard it shall be to use ChatGPT in your environment. See the default ChatGPT config for details.
 
 With **0.3.0** of ai.py we got conversation mode. This means, old data gets send with the new data as history, so chatgpt has context of what it answered.
+
