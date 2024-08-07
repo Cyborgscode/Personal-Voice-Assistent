@@ -20,6 +20,8 @@ import com.mpatric.mp3agic.*;
 import server.Server;
 import plugins.Plugins;
 import utils.Tools;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter; 
 
 public class PVA {
 
@@ -43,7 +45,8 @@ public class PVA {
 	static MetacacheTask mt;
 	static Plugins pls;
 	static Server server;
-	
+	static AIMessages aimsgs = new AIMessages();
+
 	static String text = "";
 	static String text_raw = "";
 	static int mbxid = 1;
@@ -104,7 +107,10 @@ public class PVA {
 				// log ( "pactl set-source-output-mute "+ pa_outputid +" 1" );
 				dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 1");
 			}
-			exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
+			
+			dos.writeFile( getHome()+"/.cache/pva/lastoutput", text );
+			
+			exec( (config.get("app","say").replace("%VOICE", config.get("conf","lCFang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
 						
 			if ( !pa_outputid.isEmpty() ) {
 				// enable the node again... or we will never hear from our pva again ;)
@@ -119,6 +125,45 @@ public class PVA {
 		say( text, true );
 	}
 
+	// JSON Object is given by LLM, but the org.json package can't be shipped with distros, so we need to do it ourself, so .. don't wonder it's messy ;)
+
+	public static String parseJSON(String json,String model) {
+	
+		json=json.replaceAll("\\\\.","");
+		
+		String[] pairs = json.split("(\",\"|},\")");
+					
+		String answere = "";
+					
+		for(String pair: pairs) {
+//			log( "pair = "+ pair);
+										
+			if ( pair.contains(":") ) {
+				String[] data = pair.split(":",2);
+				if ( data.length > 1 ) {	
+
+					String key = data[0].replaceAll("\"","");
+					String value = data[1];
+												
+//					log("key="+ key +"\nvalue="+ value );
+
+					if ( key.endsWith("\"") ) key = key.substring(0,key.indexOf("\"")-1);
+					if ( value.endsWith("\"") ) value = value.substring(0,value.indexOf("\"",1)-1);
+
+//					log("key="+ key +"\nvalue="+ value );
+												
+					if ( key.equals("response") || key.equals("content") ) {
+						answere = value.substring(1).replaceAll("\\n","\n");
+						aimsgs.addMessage(new AIMessage("assistant", model, answere ));
+					}
+				}
+				if ( answere == null ) answere = "";
+			} 
+		}
+
+		return answere;
+		
+	}
 
 	// Speakers tend to pronounce 1746 as a year, not 1.746.
 	// we translate this to a numberformat most speakers understand better.
@@ -1270,6 +1315,21 @@ public class PVA {
 			// for speed resons, we got often used content in variables.
 			keyword = config.get("conf","keyword");
 
+			// init AI
+			
+			
+			StringHash ai = config.get("ai");
+			if ( ai != null ) {
+				HTTP.apihost = ai.get("host");
+				HTTP.apiport = ai.get("port");
+				HTTP.get("/api/tags");
+
+				String answere = HTTP.post("/api/generate","{\"model\": \"llava:latest\", \"prompt\": \"\\nGenerate a title following these rules:\\n    - The title should be based on the prompt at the end\\n    - Keep it in the same language as the prompt\\n    - The title needs to be less than 30 characters\\n    - Use only alphanumeric characters and spaces\\n    - Just write the title, NOTHING ELSE\\n\\n```PROMPT\\nHallo\\n```\", \"stream\": false}");
+				log("INIT AI: "+ answere );	
+				aimsgs.addMessage(new AIMessage("user", "User", "Hallo" ));
+
+			}
+
 			// here MAIN really starts
 
 			PVA pva = new PVA();
@@ -1341,7 +1401,7 @@ public class PVA {
 			
 			// Format to parse "{text:"spoken text"}"
 		
-//			log("handleInput: text="+ extText);
+			// log("handleInput: text="+ extText);
 		
 			if ( extText.contains(":") ) {
 				if ( extText.split(":").length > 1 ) {
@@ -1469,6 +1529,56 @@ public class PVA {
 
 				dos.writeFile( getHome()+"/.cache/pva/reaction.last" , r.answere );
 			} else if (  temp.size() > 0 && nightprotection ) log("Silentmode active - Reaction surpressed");
+			
+			StringHash ai = config.get("ai");
+			boolean aiportreachable = false;
+			String nt = dos.readPipe("env LANG=C netstat -lna");
+						
+			if ( ! nt.isEmpty() ) 
+				for(String a: nt.split("\n") )
+					if ( a.matches( ".*:"+ ai.get("port") +".*LISTEN.*" ) ) aiportreachable = true;
+					
+			if ( !wort(keyword) ) {
+
+				// we need a sentence detection against the noise
+				if ( ai != null ) {
+				
+					if ( ai.get("enable").equals("true") && aiportreachable ) {
+						// check a: no reaction happend + freetalk mode + more than 3 words are used
+						// OR
+						// check b: keyword mode is enabled and keyword is in textblock
+					
+						if ( ( temp.size() == 0 && ai.get("mode").equals("freetalk") && text.trim().split(" ").length > 3 ) ||
+						     ( ai.get("mode").equals("keyword") && wort( ai.get("keyword") ) ) ) {
+						
+							if ( ai.get("mode").equals("keyword") && wort( ai.get("keyword") ) ) 
+								text = text.substring( text.indexOf(ai.get("keyword"))+ ai.get("keyword").length() ).trim();
+						
+							if ( ( ( ai.get("mode").equals("freetalk") && checkMediaPlayback() ) || !ai.get("mode").equals("freetalk") ) && text.trim().length()>0 ) {
+					
+//								log("ai:send:" + text);
+
+								HTTP.apihost = ai.get("host");
+								HTTP.apiport = ai.get("port");
+								
+								aimsgs.addMessage(new AIMessage("user", "User", text ));
+								
+//								log("messages = "+ aimsgs.toJSON() );
+
+								String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ aimsgs.toJSON() +"}");
+								if ( answere != null ) {
+																	
+									answere = parseJSON(answere,ai.get("model")).trim();
+									log("we got back:" + answere);
+								
+									say( answere,true );
+									reaction = true;
+								}
+							}
+						} 
+					} else if ( ai.get("bin") == null ) log("no config for ai  found");
+				} else if ( debug > 2 ) log("no ai config");
+			}
 			
 			StringHash cgpt = config.get("chatgpt");
 			if ( !wort(keyword) ) {
@@ -1830,6 +1940,10 @@ public class PVA {
 						cf = parseCommand( read );
 						writeLastArg = false;
 					}
+				}
+
+				if ( cf.command.equals("REPEATLASTOUTPUT") ) {
+					say( dos.readFile( getHome()+"/.cache/pva/lastoutput" ) );
 				}
 				
 				// create caches
@@ -3073,13 +3187,154 @@ public class PVA {
 						}
 					}
 				}
+
+				// LLM Support
 				
+				if ( cf.command.equals("AICLEARHISTORY") ) {
+				
+					aimsgs.clear();
+					reaction = true;
+					say( texte.get( config.get("conf","lang_short"), "AIHISTORYCLEARED" ) );
+
+				}
+
+				if ( cf.command.equals("AIIDENTIFYCAM") || cf.command.equals("AIIDENTIFYCAMFREE") || cf.command.equals("AIIDENTIFYCAMDESKTOP") ) {
+
+					if ( ai != null && ai.get("enable").equals("true") && aiportreachable ) {
+
+						HTTP.apihost = ai.get("host");
+						HTTP.apiport = ai.get("port");
+						
+						String bimages = "";
+						String content = "";
+						
+						dos.readPipe("rm -f /tmp/webcam.jpg");
+						
+						// log("text="+text_raw.replace(""+keyword+"",""));
+						
+						aimsgs.clear();
+						
+						if (  cf.command.equals("AIIDENTIFYCAM") ) {
+
+								dos.readPipe("fswebcam -d "+ ai.get("device") +" -r "+ ai.get("resolution") +" --jpeg "+ ai.get("quality") +" --no-banner /tmp/webcam.jpg");
+								bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+								content = ai.get("languageprompt")+texte.get( config.get("conf","lang_short"), "AIIDENTIFYIMAGE" );
+
+						} else if (  cf.command.equals("AIIDENTIFYCAMFREE") ) {
+
+								dos.readPipe("fswebcam -d "+ ai.get("device") +" -r "+ ai.get("resolution") +" --jpeg "+ ai.get("quality") +" --no-banner /tmp/webcam.jpg");
+								bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+								content = ai.get("languageprompt")+text_raw.replace(""+keyword+"","");
+								
+						} else if ( cf.command.equals("AIIDENTIFYCAMDESKTOP") ) {
+
+								dos.readPipe("gnome-screenshot -f /tmp/webcam.jpg");
+								bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+								content = ai.get("languageprompt")+text_raw.replace(""+keyword+"","");
+						}
+
+						String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ 
+							"[{\"role\": \"user\", \"model\":\"User\",\"date\":\""+
+								LocalDateTime.now().format( DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss") )+
+							"\",\"content\":\""+ content +"\",\"images\": ["+ bimages +"]}]}");
+
+						if ( answere != null ) {
+								
+							answere = parseJSON(answere,ai.get("model")).trim();
+							
+							if ( ! answere.isEmpty() ) {
+								if ( debug > 1 ) log("we got back:" + answere);
+								say( answere,true );
+								reaction = true;
+							}
+						}
+				
+					} else if ( !aiportreachable ) {
+					
+						say( texte.get( config.get("conf","lang_short"), "AIUNAVAILABLE" ) );	
+					
+					}
+				}
+
+				if ( cf.command.equals("AIIDENTIFYIMAGE") ) {
+
+					if ( ai != null && ai.get("enable").equals("true") && aiportreachable ) {
+
+						HTTP.apihost = ai.get("host");
+						HTTP.apiport = ai.get("port");
+						
+						String[] pics = dos.readFile(getHome()+"/.cache/pva/search.pics.cache").split(config.get("conf","splitter"));
+						
+						String bimages = "";
+						
+						for(String image: pics) {
+							bimages += ",\""+ dos.readPipe("base64 -w 0 "+ image).trim() +"\"";
+						}
+						// remove leading ","
+						bimages = bimages.substring(1);
+
+						String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ 
+							"[{\"role\": \"user\", \"model\":\"User\",\"date\":\""+
+								LocalDateTime.now().format( DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss") )+
+							"\",\"content\":\""+ texte.get( config.get("conf","lang_short"), "AIIDENTIFYIMAGE" ) +"\",\"images\": ["+ bimages +"]}]}");
+
+						if ( answere != null ) {
+								
+							answere = parseJSON(answere,ai.get("model")).trim();
+							
+							if ( ! answere.isEmpty() ) {
+								if ( debug > 1 ) log("we got back:" + answere);
+								say( answere,true );
+								reaction = true;
+							}
+
+						}
+				
+					} else if ( !aiportreachable ) {
+					
+						say( texte.get( config.get("conf","lang_short"), "AIUNAVAILABLE" ) );	
+					
+					}
+				}
+
 				if ( !reaction ) {
 					
 //					log("no internal reaction yet, lets test plugins to handle it.");	
 					
 					reaction = pls.handlePluginAction(cf, text);
 				}
+	
+				if ( !reaction && ai != null && ai.get("enable").equals("true") && ai.get("mode").equals("gapfiller") && aiportreachable ) {
+					if ( checkMediaPlayback() && text.trim().length()>0 ) {
+					
+						log("ai:send:" + text);
+								
+						HTTP.apihost = ai.get("host");
+						HTTP.apiport = ai.get("port");
+								
+						aimsgs.addMessage(new AIMessage("user", "User", text ));
+								
+//						log("messages = "+ aimsgs.toJSON() );
+
+						String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ aimsgs.toJSON() +"}");
+						if ( answere != null ) {
+								
+							answere = parseJSON(answere,ai.get("model")).trim();							
+
+							if ( ! answere.isEmpty() ) {
+
+								if ( debug > 1 ) log("we got back:" + answere);
+								say( answere,true );
+								reaction = true;
+							}
+
+						} else {
+							log("ai:error:call to api failed with NULL");
+						}
+					}
+
+				} else if ( debug > 2 ) log("no ai support");
+
 
 				if ( !reaction && cgpt != null && cgpt.get("enable").equals("true") && cgpt.get("bin") != null && cgpt.get("mode").equals("gapfiller") ) {
 					if ( checkMediaPlayback() && text.trim().length()>0 ) {
@@ -3202,4 +3457,62 @@ class AppResult {
 		this.keywordrelevance = kr;
 
 	}	
+}
+
+class AIMessages {
+
+	Vector aimsgs = new Vector<AIMessage>();
+
+	public void addMessage(AIMessage a) {
+		aimsgs.add( a );
+	}
+	
+	public String toJSON() {
+	
+		String res = "[";
+		
+		for(int i=0; i < this.aimsgs.size(); i++) {
+			
+			 AIMessage msg = (AIMessage)this.aimsgs.get(i);
+
+			 res += msg.toJSON();
+			 
+			 if ( i < (this.aimsgs.size()-1) ) res += ",";
+		}
+	
+		res += "]";
+		
+		return res;
+	}
+	
+	public void clear() {
+		this.aimsgs.clear();
+	}
+	
+}
+	
+class AIMessage {
+
+	public String role = "";
+	public String model = "";
+	public String date = "";
+	public String content = "";	
+	
+	public AIMessage( String r, String m, String c ) {
+
+		this.role = r;
+		this.model = m;
+		this.date = LocalDateTime.now().format( DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss") );
+		this.content = c;
+	
+	}
+	
+	public String toJSON() {
+	
+//		{"role": "user", "model": "User", "date": "2024/08/06 21:25:01", "content": "Hallo"}
+		
+		return 	"{\"role\":\""+ role +"\",\"model\":\""+ model +"\",\"date\":\""+ date +"\",\"content\":\""+ content +"\"}";		
+	
+	}
+
 }
