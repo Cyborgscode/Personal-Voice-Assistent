@@ -749,3 +749,61 @@ Now you can decide how hard it shall be to use ChatGPT in your environment. See 
 
 With **0.3.0** of ai.py we got conversation mode. This means, old data gets send with the new data as history, so chatgpt has context of what it answered.
 
+## LLM support via Alpaca 
+
+To have LLM support, you need to install OLLAMA yourself of use ALPACA to install and run it for you.
+Those LLM run fully localized, so there is no dataprotection issue at hand nor an internet connection required.
+
+**WARNING** a LLM consumes a shitload of memory. You will run into Out-of-Memory-Issues if you have less than 16 GB installed!
+
+Most config options are decribed above for ChatGTP except:
+
+ai:"port","11435"
+ai:"host","localhost"
+
+post and host descripte where the OLLAMA Server can befound, which does not need to be 127.0.0.1, if you have a company and want only one AI server.
+
+Use Alapca to install the model you want and add the ID here:
+
+ai:"model","llava:latest"
+
+For IMAGERecognition features, you need to specify the video device, resolution and jpeg quality you want you images taken with. The image will be stored in /tmp/webcam.jpg
+
+ai:"device","/dev/video1"
+ai:"resolution","1920x1080"
+ai:"quality","70"
+
+The "AI" server tends to answere image describtions in english, so we tell it to use german instead. Change it to any language you want.
+
+ai:"languageprompt","antworte in deutsch."
+
+If you have a webcam installed, you can tell your assistant to identify objects for you, images you found via a picture search ( see above ) or analyse your desktop for you:
+
+command:"was ist auf dem bild zu sehen","AIIDENTIFYIMAGE","",""
+command:"was ist auf den bildern zu sehen","AIIDENTIFYIMAGE","",""
+command:"was halte ich in die kamera","AIIDENTIFYCAM","",""
+command:"kamerabild","AIIDENTIFYCAMFREE","",""
+command:"was|siehst|du|auf|desktop","AIIDENTIFYCAMDESKTOP","",""
+command:"was|siehst|du|auf|bildschirm","AIIDENTIFYCAMDESKTOP","",""
+command:"wer|ist|auf|bildschirm","AIIDENTIFYCAMDESKTOP","",""
+command:"was|ist|auf|bildschirm","AIIDENTIFYCAMDESKTOP","",""
+command:"was siehst du","AIIDENTIFYCAM","",""
+command:"wen siehst du","AIIDENTIFYCAM","",""
+
+remove the chat history. The history start new every PVA startup. If you had analysied some images, the "ai" is confused with it's old 
+answeres, so from time to time, starting over fresh helps:
+
+command:"neues gespräch","AICLEARHISTORY","",""
+
+As these commands are only the trigger, you can add questions or restrictions as you like. 
+
+Example:
+
+"was siehst du?" => describe the cam picture
+"was siehst du beschreibe mir das objekt im vordergrund genauer " => describe the cam picture and analyse the object in front specifically.
+
+"was siehst du auf dem linken bildschirm aus welchem Film stammt das bild" => describe the left part of the desktop. 
+
+If you have more than one display connected to your pc and your not precise ind what you want to be analysied, you may end up with a description of the menu card from a restaurant in cleveland ;)
+
+Have fun with it :)
