@@ -773,6 +773,11 @@ ai:"device","/dev/video1"
 ai:"resolution","1920x1080"
 ai:"quality","70"
 
+if we capture a desktop and crop as filled with a resolution, the image will be cropped to it. THis makes it easier to analyse the image,
+as normaly the entire screen would be cropped. This has been added for multidisplay setups, which confuse the recognition service a bit.
+
+ai:"crop","1920x1080+0+0"
+
 The "AI" server tends to answere image describtions in english, so we tell it to use german instead. Change it to any language you want.
 
 ai:"languageprompt","antworte in deutsch."
