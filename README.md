@@ -751,14 +751,14 @@ With **0.3.0** of ai.py we got conversation mode. This means, old data gets send
 
 ## LLM support via Alpaca 
 
-To have LLM support, you need to install OLLAMA yourself of use ALPACA to install and run it for you.
+To have LLM support, you need to install OLLAMA yourself [default] or use ALPACA to install and run it for you.
 Those LLM run fully localized, so there is no dataprotection issue at hand nor an internet connection required.
 
 **WARNING** a LLM consumes a shitload of memory. You will run into Out-of-Memory-Issues if you have less than 16 GB installed!
 
 Most config options are decribed above for ChatGTP except:
 
-ai:"port","11435"
+ai:"port","11434"
 ai:"host","localhost"
 
 post and host descripte where the OLLAMA Server can befound, which does not need to be 127.0.0.1, if you have a company and want only one AI server.
@@ -782,20 +782,29 @@ The "AI" server tends to answere image describtions in english, so we tell it to
 
 ai:"languageprompt","antworte in deutsch."
 
+Example of installed and aliased models:
+
+ai:"models","normal=llava-llama3:latest,mond=moondream:1.8b-v2-fp16,lava=llava:latest"
+
 If you have a webcam installed, you can tell your assistant to identify objects for you, images you found via a picture search ( see above ) or analyse your desktop for you:
+
+command:"sprachmodell wechseln zu .*","AISWAPMODEL","",""
+command:"künstliche intelligenz wechsel zu .*","AISWAP","",""
 
 command:"was ist auf dem bild zu sehen","AIIDENTIFYIMAGE","",""
 command:"was ist auf den bildern zu sehen","AIIDENTIFYIMAGE","",""
 command:"was halte ich in die kamera","AIIDENTIFYCAM","",""
 command:"kamerabild","AIIDENTIFYCAMFREE","",""
-command:"was|siehst|du|auf|desktop","AIIDENTIFYCAMDESKTOP","",""
-command:"was|siehst|du|auf|bildschirm","AIIDENTIFYCAMDESKTOP","",""
-command:"wer|ist|auf|bildschirm","AIIDENTIFYCAMDESKTOP","",""
-command:"was|ist|auf|bildschirm","AIIDENTIFYCAMDESKTOP","",""
+command:"was|siehst|du|auf|desktop","AIIDENTIFYDESKTOP","",""
+command:"was|siehst|du|auf|bildschirm","AIIDENTIFYDESKTOP","",""
+command:"wer|ist|auf|ganzem|bildschirm","AIIDENTIFYFULLDESKTOP","",""
+command:"was|ist|auf|ganzem|bildschirm","AIIDENTIFYFULLDESKTOP","",""
+command:"wer|ist|auf|bildschirm","AIIDENTIFYDESKTOP","bildschirm",""
+command:"was|ist|auf|bildschirm","AIIDENTIFYDESKTOP","bildschirm",""
 command:"was siehst du","AIIDENTIFYCAM","",""
 command:"wen siehst du","AIIDENTIFYCAM","",""
 
-remove the chat history. The history start new every PVA startup. If you had analysied some images, the "ai" is confused with it's old 
+Remove the chat history. The history start new every PVA startup. If you had analysied some images, the "ai" is confused with it's old 
 answeres, so from time to time, starting over fresh helps:
 
 command:"neues gespräch","AICLEARHISTORY","",""
