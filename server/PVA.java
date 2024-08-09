@@ -1677,6 +1677,26 @@ public class PVA {
 					}
 				}
 
+				if ( cf.command.equals("AISWAP") ) {
+
+					String[] aliases = config.get("ai","aliases").split(",");
+					if ( cf.terms.size() > 0 ) {
+						String newmode = ((String)cf.terms.get(0)).trim();
+						
+						for(String a : aliases ) {
+							String[] opts = a.split("=");
+							if ( opts[0].trim().equals( newmode )  ) {
+								log( "ai:swap: "+ config.get("ai","mode") + " => "+ opts[1].trim() ) ;
+								config.put("ai","mode", opts[1].trim() );
+								reaction = true;
+							}
+						}
+				
+					} else {
+						say( texte.get( config.get("conf","lang_short"), "SYNTAXERROR") );
+					}
+				}
+				
 				if ( cf.command.equals("CHATGPTSWAP") ) {
 
 					String[] aliases = config.get("chatgpt","aliases").split(",");
