@@ -3218,6 +3218,30 @@ public class PVA {
 
 				}
 
+				if ( cf.command.equals("AISWAPMODEL") ) {
+				
+					if ( ai != null && ai.get("enable").equals("true") && aiportreachable ) {
+
+						String[] aliases = config.get("ai","models").split(",");
+						if ( cf.terms.size() > 0 ) {
+							String newmode = ((String)cf.terms.get(0)).trim();
+							
+							for(String a : aliases ) {
+								String[] opts = a.split("=");
+								if ( opts[0].trim().equals( newmode )  ) {
+									log( "ai:swapmodel: "+ config.get("ai","model") + " => "+ opts[1].trim() ) ;
+									config.put("ai","model", opts[1].trim() );
+									reaction = true;
+								}
+							}
+					
+						} else {
+							say( texte.get( config.get("conf","lang_short"), "SYNTAXERROR") );
+						}
+					}
+		
+				}
+				
 				if ( cf.command.equals("AIIDENTIFYCAM") || cf.command.equals("AIIDENTIFYCAMFREE") || cf.command.equals("AIIDENTIFYDESKTOP") || cf.command.equals("AIIDENTIFYFULLDESKTOP") ) {
 
 					if ( ai != null && ai.get("enable").equals("true") && aiportreachable ) {
