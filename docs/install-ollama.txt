@@ -1,0 +1,10 @@
+
+Follow the instructions on this page:
+
+https://ollama.com/download/linux
+
+and PULL at least "llava:latest".
+
+If you have issues installing your models, you can use Alpaca zu do it for you and than steal the .ollama directory and move it to /usr/share/ollama/ as decribed here:
+
+https://marius.bloggt-in-braunschweig.de/2024/08/09/alpaca-ollama-und-wie-man-es-missbrauchen-kann/
