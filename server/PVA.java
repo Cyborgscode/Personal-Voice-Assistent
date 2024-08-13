@@ -152,7 +152,7 @@ public class PVA {
 
 //					log("key="+ key +"\nvalue="+ value );
 												
-					if ( key.equals("response") || key.equals("content") ) {
+					if ( ( key.equals("response") || key.equals("content") ) && value.trim().length() > 1 ) {
 						answere = value.substring(1).replaceAll("\\n","\n");
 						aimsgs.addMessage(new AIMessage("assistant", model, answere ));
 					}
