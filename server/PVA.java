@@ -3244,7 +3244,7 @@ public class PVA {
 				
 				if ( cf.command.equals("AIIDENTIFYMODEL") ) {
 				
-					say( texte.get( config.get("conf","lang_short"), "AIRESPONSEMODEL" ).replaceAll("<TERM1>", ""+ ai.get("model") ));
+					say( texte.get( config.get("conf","lang_short"), "AIRESPONSEMODEL" ).replaceAll("<TERM1>", ai.get("model") ));
 					
 				}				
 
