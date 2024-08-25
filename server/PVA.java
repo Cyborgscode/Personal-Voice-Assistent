@@ -3242,6 +3242,12 @@ public class PVA {
 		
 				}
 				
+				if ( cf.command.equals("AIIDENTIFYMODEL") ) {
+				
+					say( texte.get( config.get("conf","lang_short"), "AIRESPONSEMODEL" ).replaceAll("<TERM1>", ""+ ai.get("model") ));
+					
+				}				
+
 				if ( cf.command.equals("AIIDENTIFYCAM") || cf.command.equals("AIIDENTIFYCAMFREE") || cf.command.equals("AIIDENTIFYDESKTOP") || cf.command.equals("AIIDENTIFYFULLDESKTOP") ) {
 
 					if ( ai != null && ai.get("enable").equals("true") && aiportreachable ) {
