@@ -3248,10 +3248,18 @@ public class PVA {
 				
 				if ( cf.command.equals("AIIDENTIFYMODEL") ) {
 				
-					say( texte.get( config.get("conf","lang_short"), "AIRESPONSEMODEL" ).replaceAll("<TERM1>", ai.get("model") ));
+					if ( ai.get("imagemodel").isEmpty() ) {
+
+						say( texte.get( config.get("conf","lang_short"), "AIRESPONSEMODELSOLO" ).replaceAll("<TERM1>", ai.get("model") ));
+						
+					} else {
+						
+						say( texte.get( config.get("conf","lang_short"), "AIRESPONSEMODEL" ).replaceAll("<TERM1>", ai.get("model")).replaceAll("<TERM2>", ai.get("imagemodel")) );
+
+					}
 					
 				}				
-
+					
 				if ( cf.command.equals("AIIDENTIFYCAM") || cf.command.equals("AIIDENTIFYCAMFREE") || cf.command.equals("AIIDENTIFYDESKTOP") || cf.command.equals("AIIDENTIFYFULLDESKTOP") ) {
 
 					if ( ai != null && ai.get("enable").equals("true") && aiportreachable ) {
@@ -3303,14 +3311,19 @@ public class PVA {
 						}
 
 
-						String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ 
+						dos.readPipe("rm -f /tmp/webcam.jpg /tmp/webcam-cropped.jpg");
+
+						String model = ai.get("model");
+						if ( !ai.get("imagemodel").isEmpty() ) model = ai.get("imagemodel");
+
+						String answere = HTTP.post("/api/chat","{\"model\":\""+ model +"\",\"stream\": false,\"messages\":"+ 
 							"[{\"role\": \"user\", \"model\":\"User\",\"date\":\""+
 								LocalDateTime.now().format( DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss") )+
 							"\",\"content\":\""+ content +"\",\"images\": ["+ bimages +"]}]}");
 
 						if ( answere != null ) {
 								
-							answere = parseJSON(answere,ai.get("model")).trim();
+							answere = parseJSON(answere,model).trim();
 							
 							if ( ! answere.isEmpty() ) {
 								if ( debug > 1 ) log("we got back:" + answere);
@@ -3343,14 +3356,18 @@ public class PVA {
 						// remove leading ","
 						bimages = bimages.substring(1);
 
-						String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ 
+						String model = ai.get("model");
+						if ( !ai.get("imagemodel").isEmpty() ) model = ai.get("imagemodel");
+
+
+						String answere = HTTP.post("/api/chat","{\"model\":\""+ model +"\",\"stream\": false,\"messages\":"+ 
 							"[{\"role\": \"user\", \"model\":\"User\",\"date\":\""+
 								LocalDateTime.now().format( DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss") )+
 							"\",\"content\":\""+ texte.get( config.get("conf","lang_short"), "AIIDENTIFYIMAGE" ) +"\",\"images\": ["+ bimages +"]}]}");
 
 						if ( answere != null ) {
 								
-							answere = parseJSON(answere,ai.get("model")).trim();
+							answere = parseJSON(answere, model ).trim();
 							
 							if ( ! answere.isEmpty() ) {
 								if ( debug > 1 ) log("we got back:" + answere);
