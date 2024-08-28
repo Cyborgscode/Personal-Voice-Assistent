@@ -3266,7 +3266,9 @@ public class PVA {
 
 						HTTP.apihost = ai.get("host");
 						HTTP.apiport = ai.get("port");
-						
+						if ( !ai.get("apitimeout").isEmpty() )
+							HTTP.timeout = Integer.parseInt( ai.get("apitimeout") );
+
 						String bimages = "";
 						String content = "";
 						
@@ -3345,6 +3347,8 @@ public class PVA {
 
 						HTTP.apihost = ai.get("host");
 						HTTP.apiport = ai.get("port");
+						if ( !ai.get("apitimeout").isEmpty() )
+							HTTP.timeout = Integer.parseInt( ai.get("apitimeout") );
 						
 						String[] pics = dos.readFile(getHome()+"/.cache/pva/search.pics.cache").split(config.get("conf","splitter"));
 						
@@ -3398,7 +3402,9 @@ public class PVA {
 								
 						HTTP.apihost = ai.get("host");
 						HTTP.apiport = ai.get("port");
-								
+						if ( !ai.get("apitimeout").isEmpty() )
+							HTTP.timeout = Integer.parseInt( ai.get("apitimeout") );
+						
 						aimsgs.addMessage(new AIMessage("user", "User", text ));
 								
 //						log("messages = "+ aimsgs.toJSON() );
