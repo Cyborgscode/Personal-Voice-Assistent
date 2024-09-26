@@ -40,7 +40,7 @@ public class HTTP {
 
 //                                System.out.println("readPage: pre read " + dis.available() );
 
-                                if ( dis.available() > 0 || firstread ) {
+                                if ( ( dis.available() > 0 || firstread ) && offset < len ) {
 
 					got = dis.read(buffer,offset,len-offset);
 //                                      System.out.println("readPage: read = "+got);
