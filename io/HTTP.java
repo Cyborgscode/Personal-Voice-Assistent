@@ -41,20 +41,21 @@ public class HTTP {
 //                                System.out.println("readPage: pre read " + dis.available() );
 
                                 if ( dis.available() > 0 || firstread ) {
-                                        got = dis.read(buffer,offset,len-offset);
+
+					got = dis.read(buffer,offset,len-offset);
 //                                      System.out.println("readPage: read = "+got);
                                         offset += got;
 
                                         firstread = false;
 
-                                        if ( offset == len ) {
+                                        if ( offset >= len ) {
 
                                                 result += new String(buffer);
                                                 offset = 0;
                                         }
                                 } else break;
 
-                        } while ( got > 0 );
+                        } while ( got > 0);
 
 //                      System.out.println("readPage: finish reading normally");
 
