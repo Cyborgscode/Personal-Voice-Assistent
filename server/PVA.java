@@ -1538,7 +1538,7 @@ public class PVA {
 			boolean aiportreachable = false;
 			String nt = dos.readPipe("env LANG=C netstat -lna");
 						
-			if ( ! nt.isEmpty() ) 
+			if ( ! nt.isEmpty() && ai!=null) 
 				for(String a: nt.split("\n") )
 					if ( a.matches( ".*:"+ ai.get("port") +".*LISTEN.*" ) ) aiportreachable = true;
 					
