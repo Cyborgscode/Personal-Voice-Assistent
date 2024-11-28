@@ -2,8 +2,7 @@
 >
 > PVA is coded by Marius Schwarz in 2021-2024
 >
-> This software is free. You can copy it, use it or modify it, as long as the result is also published on this condition.
-> You only need to refer to this original version in your own readme / license file. 
+> with help of the contributors on GitHub.
 >
 > */
 
