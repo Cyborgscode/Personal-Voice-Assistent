@@ -1,0 +1,43 @@
+#!/bin/bash
+
+NOCACHE=0
+
+if [ "$1" == "--nocache" ]; then
+	NOCACHE=1
+	shift
+fi 
+
+TEXT=$(echo "$2" | sed -r 's/\.([^ $])/\1/g' | sed -r 's/,([^ $])/ komma \1/g')
+
+if ! [[ "$TEXT" =~ !$ ]]; then
+	if ! [[ "$TEXT" =~ \?$ ]]; then
+		if ! [[ "$TEXT" =~ \.$ ]]; then
+			TEXT="$TEXT."
+		fi
+	fi
+fi
+
+HASH=$(echo "$1$TEXT"| sha256sum | sed -e "s/ .*$//g")
+	
+if [ -e $HOME/.cache/pva/audio/$HASH.mp3 ];then
+
+	play $HOME/.cache/pva/audio/$HASH.mp3  tempo 1 >/dev/null 2>/dev/null
+
+else 
+
+	port=$(env LANG=C netstat -lnap| grep -c 127.0.0.1:7860.*LISTEN)
+	if [ "$port" -eq 0 ]; then
+		echo "starting F5-TTS service"
+		f5-tts_infer-gradio &
+		sleep 16
+	fi
+
+	echo "$HOME/.cache/pva/audio/$HASH.mp3"
+	genfile=$(f5tts.py $1 "$2"|grep -v Loaded)
+	
+	if [ "$NOCACHE" -eq "0" ]; then 
+		lame -V 5 -b 64 -B 224 $genfile $HOME/.cache/pva/audio/$HASH.mp3 >/dev/null 2>/dev/null
+	fi
+	rm -f $genfile
+	
+fi
