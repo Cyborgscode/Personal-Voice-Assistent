@@ -184,6 +184,18 @@ Just replace de5 in "say" with your prefered language and don't forget to transl
 
 If you need help with mbrola: https://marius.bloggt-in-braunschweig.de/2021/03/24/mbrola-etwas-bessere-sprachsynthese/
 
+## F5-TTS support 
+
+PVA does now support a way to use a local F5-TTS speechserver, which creates soundoutput with a voice of your choice, no cloud service required.
+You need tons of python files and a massive amount of datafiles ( app. 5 GB ), that get installed  by the installer, but the results
+are unbelieveable in some situations. If you wanne have PVA answere your requests with the voice of the Terminator, than sample 10s of his voice
+and transcribe the text into a txt file .. that's it.
+
+German speakers need a special sample set, more in the f5tts scripts, to make it work. The sample set has some bugs, so the creation of very short sentences has some issues atm. The english ones work way better.
+
+No additional commands are required, because it's just one new voiceoutput of many already integrated. You can use "benutze ... sprachausgabe". Check file "14-sprachausgaben.conf" for more.
+
+
 ## Python3 + Pip3 + Portaudio:
 
 ```pip3 install sounddevice```
@@ -818,16 +830,5 @@ Example:
 "was siehst du auf dem linken bildschirm aus welchem Film stammt das bild" => describe the left part of the desktop. 
 
 If you have more than one display connected to your pc and your not precise in what you want to be analysied, you may end up with a description of the menu card from a restaurant in cleveland ;)
-
-## F5-TTS support 
-
-PVA does now support a way to use a local F5-TTS speechserver, which creates soundoutput with a voice of your choice, no cloud service required.
-You need tons of python files and a massive amount of datafiles ( app. 5 GB ), that get installed  by the installer, but the results
-are unbelieveable in some situations. If you wanne have PVA answere your requests with the voice of the Terminator, than sample 10s of his voice
-and transcribe the text into a txt file .. that's it.
-
-German speakers need a special sample set, more in the f5tts scripts, to make it work. The sample set has some bugs, so the creation of very short sentences has some issues atm. The english ones work way better.
-
-No additional commands are required, because it's just one new voiceoutput of many already integrated. You can use "benutze ... sprachausgabe". Check file "14-sprachausgaben.conf" for more.
 
 Have fun with it :)
