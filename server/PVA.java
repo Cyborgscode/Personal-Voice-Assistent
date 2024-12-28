@@ -2198,7 +2198,7 @@ public class PVA {
 							
 							if ( i == 0) text += line0.replaceAll("<TERM1>", line );
 							if ( i == 2) text += line2.replaceAll("<TERM1>", line );
-							if ( i == 3) text += line3.replaceAll("<TERM1>", line.replace("+","").replace("(",  texte.get( config.get("conf","lang_short"), "upto") ).replace(")","")
+							if ( i == 3) text += line3.replaceAll("<TERM1>", line.replace("+","").replace("(",  " "+ texte.get( config.get("conf","lang_short"), "upto") +" " ).replace(")","")
 										                             .replaceAll("°C", texte.get( config.get("conf","lang_short"), "°C")  ) ) ;
 							if ( i == 4) text += line4.replaceAll("<TERM1>", line.replaceAll("km/h", texte.get( config.get("conf","lang_short"), "km/h") ).replaceAll("m/s", texte.get( config.get("conf","lang_short"), "m/s") ) );
 							if ( i == 6) text += line6.replaceAll("<TERM1>", line.replace("mm", texte.get( config.get("conf","lang_short"), "mm") ) );
