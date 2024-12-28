@@ -100,7 +100,7 @@ You need to checkout gsay, change your config to use gsay as "say" app and insta
 
 i.e. Fedora: `dnf install gtts`
 
-#gsay caches created phrases to minimize the contact to Googleservers, but at least once per sentence to speak, it will need to contact it. 
+#gsay caches created phrases to minimize the contact to Googleservers, but at least once per sentence you speak, it will need to contact it. 
 
 ## Piper TTS 
 
