@@ -94,7 +94,7 @@ public class DiskFree extends Plugin {
 				
 					if ( i >0 ) {
 									
-						if ( ! disk.contains("tmpfs") ) {
+						if ( ! disk.contains("tmpfs") && ! disk.contains("squashfs") ) {
 					
 							// removes all <spaces> until we have just one <space> so we can split them
 														
