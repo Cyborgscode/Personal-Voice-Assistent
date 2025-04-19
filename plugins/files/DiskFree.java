@@ -106,7 +106,9 @@ public class DiskFree extends Plugin {
 								long free = 0;
 								String unit = "";
 								if ( spalten[4].length() > 1 ) {
-									free = Long.parseLong( spalten[4].substring(0, spalten[4].length()-1 ) );
+									if ( spalten[4].contains(",") ) {
+									     free = Long.parseLong( spalten[4].substring(0, spalten[4].indexOf(",") ) );
+									} else free = Long.parseLong( spalten[4].substring(0, spalten[4].length()-1 ) );
 									unit = spalten[4].substring( spalten[4].length()-1, spalten[4].length() );
 								}
 								if ( unit.equals("") && free == 0 ) {
