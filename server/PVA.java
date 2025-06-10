@@ -165,6 +165,16 @@ public class PVA {
 		
 	}
 
+	static String filterAIThinking(String answere) {
+	
+		if ( answere.contains("003cthink003e") ) {
+			int abis = answere.indexOf("003c/think003e")+"003c/think003e".length();
+			if ( abis >= 0 ) 
+				answere = answere.substring( abis );
+		}
+		return answere.replaceAll("\\*\\*","").replaceAll("\\*","\"");
+	}
+	
 	// Speakers tend to pronounce 1746 as a year, not 1.746.
 	// we translate this to a numberformat most speakers understand better.
 
@@ -1572,7 +1582,10 @@ public class PVA {
 								String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ aimsgs.toJSON() +"}");
 								if ( answere != null ) {
 																	
-									answere = parseJSON(answere,ai.get("model")).trim();
+									// Filter für Denkprozesse
+									
+									answere = filterAIThinking(parseJSON(answere,ai.get("model")).trim());
+
 									log("we got back:" + answere);
 								
 									say( answere,true );
@@ -3323,9 +3336,11 @@ public class PVA {
 								LocalDateTime.now().format( DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss") )+
 							"\",\"content\":\""+ content +"\",\"images\": ["+ bimages +"]}]}");
 
+						if ( debug > 1 ) log("we got back(2):" + answere);
+						
 						if ( answere != null ) {
 								
-							answere = parseJSON(answere,model).trim();
+							answere = filterAIThinking(parseJSON(answere,model).trim());
 							
 							if ( ! answere.isEmpty() ) {
 								if ( debug > 1 ) log("we got back:" + answere);
@@ -3363,7 +3378,6 @@ public class PVA {
 						String model = ai.get("model");
 						if ( !ai.get("imagemodel").isEmpty() ) model = ai.get("imagemodel");
 
-
 						String answere = HTTP.post("/api/chat","{\"model\":\""+ model +"\",\"stream\": false,\"messages\":"+ 
 							"[{\"role\": \"user\", \"model\":\"User\",\"date\":\""+
 								LocalDateTime.now().format( DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss") )+
@@ -3371,10 +3385,11 @@ public class PVA {
 
 						if ( answere != null ) {
 								
-							answere = parseJSON(answere, model ).trim();
+							answere = filterAIThinking(parseJSON(answere, model )).trim();
 							
 							if ( ! answere.isEmpty() ) {
-								if ( debug > 1 ) log("we got back:" + answere);
+								if ( debug > 1 ) log("we got back(3):" + answere);
+								
 								say( answere,true );
 								reaction = true;
 							}
@@ -3412,14 +3427,15 @@ public class PVA {
 						String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ aimsgs.toJSON() +"}");
 						if ( answere != null ) {
 								
-							answere = parseJSON(answere,ai.get("model")).trim();							
-
+							answere = filterAIThinking(parseJSON(answere,ai.get("model"))).trim();							
 							if ( ! answere.isEmpty() ) {
 
-								if ( debug > 1 ) log("we got back:" + answere);
+								if ( debug > 1 ) log("we got back(4):" + answere);
+
 								say( answere,true );
 								reaction = true;
 							}
+
 
 						} else {
 							log("ai:error:call to api failed with NULL");
