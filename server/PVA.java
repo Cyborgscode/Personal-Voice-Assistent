@@ -1330,17 +1330,28 @@ public class PVA {
 			keyword = config.get("conf","keyword");
 
 			// init AI
-			
-			
+						
 			StringHash ai = config.get("ai");
 			if ( ai != null ) {
-				HTTP.apihost = ai.get("host");
-				HTTP.apiport = ai.get("port");
-				HTTP.get("/api/tags");
 
-				String answere = HTTP.post("/api/generate","{\"model\": \""+ ai.get("model")+"\", \"prompt\": \"\\nGenerate a title following these rules:\\n    - The title should be based on the prompt at the end\\n    - Keep it in the same language as the prompt\\n    - The title needs to be less than 30 characters\\n    - Use only alphanumeric characters and spaces\\n    - Just write the title, NOTHING ELSE\\n\\n```PROMPT\\nHallo\\n```\", \"stream\": false}");
-				log("INIT AI: "+ answere );	
-				aimsgs.addMessage(new AIMessage("user", "User", "Hallo" ));
+                boolean aiportreachable = false;
+	            String nt = dos.readPipe("env LANG=C netstat -lna");
+                                                
+        	    if ( ! nt.isEmpty() && ai != null )
+					for(String a: nt.split("\n") )
+						if ( ai.get("port")!=null && a.matches( ".*:"+ ai.get("port") +".*LISTEN.*" ) ) aiportreachable = true;
+
+				if ( aiportreachable ) {
+					HTTP.apihost = ai.get("host");
+					HTTP.apiport = ai.get("port");
+					HTTP.get("/api/tags");
+	
+					String answere = HTTP.post("/api/generate","{\"model\": \""+ ai.get("model")+"\", \"prompt\": \"\\nGenerate a title following these rules:\\n    - The title should be based on the prompt at the end\\n    - Keep it in the same language as the prompt\\n    - The title needs to be less than 30 characters\\n    - Use only alphanumeric characters and spaces\\n    - Just write the title, NOTHING ELSE\\n\\n```PROMPT\\nHallo\\n```\", \"stream\": false}");
+					log("INIT AI: "+ answere );	
+					aimsgs.addMessage(new AIMessage("user", "User", "Hallo" ));
+				} else {
+					 log("AI Init failed - no ai service detected");
+				}
 
 			}
 
