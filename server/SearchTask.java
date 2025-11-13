@@ -23,13 +23,13 @@ class SearchTask extends Thread {
 	
 	public void run() {
 		try {
-		
-			dos.writeFile( pva.getHome()+"/.cache/pva/cache.musik", pva.suche( pva.config.get("path","music"), "*",pva.config.get("conf","musicfilepattern") ) );
-				
-			pva.say( pva.texte.get( pva.config.get("conf","lang_short"), cf.command) );
-
-
-
+			String result = pva.suche( pva.config.get("path","music"), "*",pva.config.get("conf","musicfilepattern") );
+			// if we got aborted, we don't overwrite the old cache
+			if ( ! this.interrupted() ) {
+				dos.writeFile( pva.getHome()+"/.cache/pva/cache.musik", result );
+				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), cf.command) );
+			}			
+			
 		} catch (Exception localException) {
 		}
 	}
