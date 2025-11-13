@@ -2433,9 +2433,9 @@ public class PVA {
 								String[] filenames = dos.readFile(getHome()+"/.cache/pva/music.stats").split("\n");
 								for(String filename : filenames ) {
 									if ( sm.get( filename ) != null ) {
-										sm.put(filename, new Long( sm.get(filename).longValue() +1 ) );
+										sm.put(filename, sm.get(filename).longValue() +1L  );
 									} else {
-										sm.put(filename, new Long(1) );
+										sm.put(filename, 1L );
 									}
 								}
 
