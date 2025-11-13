@@ -773,10 +773,10 @@ public class PVA {
 	}
 
 	static String _suche(String start,String suchwort,String type) {
-/*
-		if (isInterrupted()) 
+		
+		// adaption for java 21 decreation of Thread.stop()
+		if ( st == null || st.interrupted() ) 
 			return "";
-*/
 			
 		File file = new File(start);
                 File[] entries = file.listFiles();
@@ -2013,7 +2013,10 @@ public class PVA {
 						say( texte.get( config.get("conf","lang_short"), "EVERYTHINGISOK" ) );
 
 					} else {
-						st.stop();
+						// THREAD.stop() has been deprecated
+						st.interrupt();
+						// give search time to stop
+						Thread.sleep(1000);
 						st = null;
 						say( texte.get( config.get("conf","lang_short"), "ABORTEDCREATIONOFMETADATA" ) );
 					}
