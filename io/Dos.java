@@ -209,6 +209,16 @@ public class Dos {
         return false;
     }
 
+    public boolean isDir(String filename) {
+    	File file = new File(filename);
+    	return file.isDirectory();
+    }
+
+    public boolean isFile(String filename) {
+    	File file = new File(filename);
+    	return file.isFile();
+    }
+	
     public boolean isLink(String filename) {
         File file = new File(filename);
         return isLink(file);
@@ -250,3 +260,4 @@ public class Dos {
     }
 
 }
+
