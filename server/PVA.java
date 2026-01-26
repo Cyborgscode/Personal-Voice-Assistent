@@ -10,6 +10,7 @@ You only need to refer to this original version in your own readme / license fil
 package server;
 
 import java.util.*;
+import java.util.Base64.*;
 import java.io.*;
 import io.*;
 import hash.*;
@@ -148,7 +149,7 @@ public class PVA {
 //					log("key="+ key +"\nvalue="+ value );
 
 					if ( key.endsWith("\"") ) key = key.substring(0,key.indexOf("\"")-1);
-					if ( value.endsWith("\"") ) value = value.substring(0,value.indexOf("\"",1)-1);
+					if ( value.endsWith("\"") ) value = value.substring(0,value.indexOf("\"",1));
 
 //					log("key="+ key +"\nvalue="+ value );
 												
@@ -174,7 +175,7 @@ public class PVA {
 		}
 		return answere.replaceAll("\\*\\*","").replaceAll("\\*","\"");
 	}
-	
+
 	// Speakers tend to pronounce 1746 as a year, not 1.746.
 	// we translate this to a numberformat most speakers understand better.
 
@@ -202,7 +203,7 @@ public class PVA {
 	}
 
 	static void exec(String cmd, boolean wait) throws IOException {
-//	log( cmd );
+		if ( debug > 2 ) log( cmd );
 		try {
 			Process p = Runtime.getRuntime().exec( cmd );
 			if ( wait ) {
@@ -777,7 +778,7 @@ public class PVA {
 		// adaption for java 21 decreation of Thread.stop()
 		if ( st == null || st.interrupted() ) 
 			return "";
-			
+
 		File file = new File(start);
                 File[] entries = file.listFiles();
 		String filename ="";
@@ -937,7 +938,7 @@ public class PVA {
 				}
 			}
 		}
-				
+		
 		if ( ! dos.readPipe( "pgrep -f "+ config.get("audioplayer","pname").replaceAll( config.get("conf","splitter")," ") ).trim().isEmpty()  && !config.get("audioplayer","status").isEmpty() ) {
 		String[] result = dos.readPipe( config.get("audioplayer","status").replaceAll(config.get("conf","splitter")," "),true).split("\n");
 			for(String x : result ) {
@@ -1330,16 +1331,16 @@ public class PVA {
 			keyword = config.get("conf","keyword");
 
 			// init AI
-						
+			
 			StringHash ai = config.get("ai");
 			if ( ai != null ) {
 
-                boolean aiportreachable = false;
-	            String nt = dos.readPipe("env LANG=C netstat -lna");
+                        	boolean aiportreachable = false;
+	                        String nt = dos.readPipe("env LANG=C netstat -lna");
                                                 
-        	    if ( ! nt.isEmpty() && ai != null )
-					for(String a: nt.split("\n") )
-						if ( ai.get("port")!=null && a.matches( ".*:"+ ai.get("port") +".*LISTEN.*" ) ) aiportreachable = true;
+                                if ( ! nt.isEmpty() && ai != null )
+                                        for(String a: nt.split("\n") )
+                                                if ( ai.get("port")!=null && a.matches( ".*:"+ ai.get("port") +".*LISTEN.*" ) ) aiportreachable = true;
 
 				if ( aiportreachable ) {
 					HTTP.apihost = ai.get("host");
@@ -1559,9 +1560,9 @@ public class PVA {
 			boolean aiportreachable = false;
 			String nt = dos.readPipe("env LANG=C netstat -lna");
 						
-			if ( ! nt.isEmpty() && ai!=null) 
+			if ( ! nt.isEmpty() && ai != null ) 
 				for(String a: nt.split("\n") )
-					if ( a.matches( ".*:"+ ai.get("port") +".*LISTEN.*" ) ) aiportreachable = true;
+					if ( ai.get("port")!=null && a.matches( ".*:"+ ai.get("port") +".*LISTEN.*" ) ) aiportreachable = true;
 					
 			if ( !wort(keyword) ) {
 
@@ -1592,11 +1593,11 @@ public class PVA {
 
 								String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ aimsgs.toJSON() +"}");
 								if ( answere != null ) {
-																	
+																									
 									// Filter für Denkprozesse
-									
+		
 									answere = filterAIThinking(parseJSON(answere,ai.get("model")).trim());
-
+									
 									log("we got back:" + answere);
 								
 									say( answere,true );
@@ -1724,7 +1725,7 @@ public class PVA {
 						say( texte.get( config.get("conf","lang_short"), "SYNTAXERROR") );
 					}
 				}
-				
+
 				if ( cf.command.equals("CHATGPTSWAP") ) {
 
 					String[] aliases = config.get("chatgpt","aliases").split(",");
@@ -2225,7 +2226,7 @@ public class PVA {
 							
 							if ( i == 0) text += line0.replaceAll("<TERM1>", line );
 							if ( i == 2) text += line2.replaceAll("<TERM1>", line );
-							if ( i == 3) text += line3.replaceAll("<TERM1>", line.replace("+","").replace("(",  " "+ texte.get( config.get("conf","lang_short"), "upto") +" " ).replace(")","")
+							if ( i == 3) text += line3.replaceAll("<TERM1>", line.replace("+","").replace("(", " "+ texte.get( config.get("conf","lang_short"), "upto") +" " ).replace(")","")
 										                             .replaceAll("°C", texte.get( config.get("conf","lang_short"), "°C")  ) ) ;
 							if ( i == 4) text += line4.replaceAll("<TERM1>", line.replaceAll("km/h", texte.get( config.get("conf","lang_short"), "km/h") ).replaceAll("m/s", texte.get( config.get("conf","lang_short"), "m/s") ) );
 							if ( i == 6) text += line6.replaceAll("<TERM1>", line.replace("mm", texte.get( config.get("conf","lang_short"), "mm") ) );
@@ -2436,7 +2437,7 @@ public class PVA {
 								String[] filenames = dos.readFile(getHome()+"/.cache/pva/music.stats").split("\n");
 								for(String filename : filenames ) {
 									if ( sm.get( filename ) != null ) {
-										sm.put(filename, sm.get(filename).longValue() +1L  );
+										sm.put(filename, sm.get(filename).longValue() + 1L  );
 									} else {
 										sm.put(filename, 1L );
 									}
@@ -3271,7 +3272,7 @@ public class PVA {
 						}
 					}
 		
-				}
+				}	
 				
 				if ( cf.command.equals("AIIDENTIFYMODEL") ) {
 				
@@ -3295,7 +3296,7 @@ public class PVA {
 						HTTP.apiport = ai.get("port");
 						if ( !ai.get("apitimeout").isEmpty() )
 							HTTP.timeout = Integer.parseInt( ai.get("apitimeout") );
-
+							
 						String bimages = "";
 						String content = "";
 						
@@ -3308,13 +3309,15 @@ public class PVA {
 						if (  cf.command.equals("AIIDENTIFYCAM") ) {
 
 								dos.readPipe("fswebcam -d "+ ai.get("device") +" -r "+ ai.get("resolution") +" --jpeg "+ ai.get("quality") +" --no-banner /tmp/webcam.jpg");
-								bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+								// bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+								bimages = "\""+ Base64.getEncoder().encodeToString( dos.readFileRaw("/tmp/webcam.jpg") ).trim() +"\"";
 								content = ai.get("languageprompt")+texte.get( config.get("conf","lang_short"), "AIIDENTIFYIMAGE" );
 
 						} else if (  cf.command.equals("AIIDENTIFYCAMFREE") ) {
 
 								dos.readPipe("fswebcam -d "+ ai.get("device") +" -r "+ ai.get("resolution") +" --jpeg "+ ai.get("quality") +" --no-banner /tmp/webcam.jpg");
-								bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+//								bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+								bimages = "\""+ Base64.getEncoder().encodeToString( dos.readFileRaw("/tmp/webcam.jpg") ).trim() +"\"";
 								content = ai.get("languageprompt")+text_raw.replace(""+keyword+"","");
 								
 						} else if ( cf.command.equals("AIIDENTIFYDESKTOP") ) {
@@ -3323,11 +3326,13 @@ public class PVA {
 
 								if ( ai.get("crop").isEmpty() ) {
 						
-									bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+//									bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+									bimages = "\""+ Base64.getEncoder().encodeToString( dos.readFileRaw("/tmp/webcam.jpg") ).trim() +"\"";
 								
 								} else {
 									dos.readPipe("convert \"/tmp/webcam.jpg\"  -crop "+ ai.get("crop") +" /tmp/webcam-cropped.jpg");
-									bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam-cropped.jpg").trim() +"\"";
+//									bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam-cropped.jpg").trim() +"\"";
+									bimages = "\""+ Base64.getEncoder().encodeToString( dos.readFileRaw("/tmp/webcam.jpg") ).trim() +"\"";
 								}
 									
 								content = ai.get("languageprompt")+text_raw.replace(""+keyword+"","");
@@ -3335,7 +3340,8 @@ public class PVA {
 
 								dos.readPipe("gnome-screenshot -f /tmp/webcam.jpg");
 
-								bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+//								bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
+								bimages = "\""+ Base64.getEncoder().encodeToString( dos.readFileRaw("/tmp/webcam.jpg") ).trim() +"\"";
 								content = ai.get("languageprompt")+text_raw.replace(""+keyword+"","");
 						}
 
@@ -3351,11 +3357,11 @@ public class PVA {
 							"\",\"content\":\""+ content +"\",\"images\": ["+ bimages +"]}]}");
 
 						if ( debug > 1 ) log("we got back(2):" + answere);
-						
+
 						if ( answere != null ) {
-								
+
 							answere = filterAIThinking(parseJSON(answere,model).trim());
-							
+								
 							if ( ! answere.isEmpty() ) {
 								if ( debug > 1 ) log("we got back:" + answere);
 								say( answere,true );
@@ -3384,7 +3390,8 @@ public class PVA {
 						String bimages = "";
 						
 						for(String image: pics) {
-							bimages += ",\""+ dos.readPipe("base64 -w 0 "+ image).trim() +"\"";
+//							bimages += ",\""+ dos.readPipe("base64 -w 0 "+ image).trim() +"\"";
+							bimages += ",\""+ Base64.getEncoder().encodeToString( dos.readFileRaw( image ) ).trim() +"\"";
 						}
 						// remove leading ","
 						bimages = bimages.substring(1);
@@ -3433,7 +3440,7 @@ public class PVA {
 						HTTP.apiport = ai.get("port");
 						if ( !ai.get("apitimeout").isEmpty() )
 							HTTP.timeout = Integer.parseInt( ai.get("apitimeout") );
-						
+															
 						aimsgs.addMessage(new AIMessage("user", "User", text ));
 								
 //						log("messages = "+ aimsgs.toJSON() );
@@ -3450,10 +3457,11 @@ public class PVA {
 								reaction = true;
 							}
 
-
 						} else {
 							log("ai:error:call to api failed with NULL");
 						}
+					} else {
+						log("ai:error:mediaplayback detected");
 					}
 
 				} else if ( debug > 2 ) log("no ai support");
