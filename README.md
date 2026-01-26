@@ -1,6 +1,6 @@
 > /*
 >
-> PVA is coded by Marius Schwarz in 2021-2024
+> PVA is coded by Marius Schwarz in 2021-2026
 >
 > with help of the contributors on GitHub.
 >
