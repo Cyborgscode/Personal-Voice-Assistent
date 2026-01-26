@@ -19,7 +19,9 @@ Feel free to adopt it to your perfect assistent or your best friend, as there is
 
 PVA is capable of reading emails, making calls, answering phone calls, plays music & videos, searches for documents and media files, does a personal TOP list of favorite music ( requires genre metadata in your mp3 files -> Picard is your friend ), survails your pc for you or writes email if needed.
 
-Nothing of this requires any AI. 
+At the beginning I wrote "Nothing of this requires any AI." that is still true for the listed above, but we support local or external LLM/"AI" services now, so...
+
+Nothing of this requires any AI, but some of the newer features use local or external LLM services.
 
 If used in default mode, it won't rat your personal data out to a company, except for the weatherreport, which you can disable.
 
