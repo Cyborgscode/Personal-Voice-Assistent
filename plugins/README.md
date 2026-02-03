@@ -58,7 +58,7 @@ This way, you can make use of any inbuild functionality and don't need to buid s
 
 **execute(command,text_raw)** returns, if this plugin processed this command or not.
  
-Handling is easy: check if "command" if your commandkeyword and act accordingly.
+Handling is easy: check if "command" is your commandkeyword and act accordingly.
 
 You return "true" if you handled it.
 You return "false" if you DID NOT HANDLE it OR if you handled a GLOBAL CODE, which i.e. could be a general silence call or reset. 
