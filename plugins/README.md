@@ -47,9 +47,11 @@ What you do here depends on your plugin. Not all Plugins need to run tasks, but 
 You need to add those commandkeywords to your config, so PVA can add texts, responses etc. I.E. for LoadTask this is:
   
 command:"schalte|warnung|aus","SILENCELOADWARNING",""
+
 command:"schalte|warnung|ein","UNSILENCELOADWARNING",""
 
 text:"de","HEALTHRESPONSETURNEDOFF","es erfolgen keine weiteren audiowarnungen mehr"
+
 text:"de","HEALTHRESPONSETURNEDON","Sprachwarnungen eingeschaltet"
 
 As all config directories are dropin style, just put everything in a unique named config file i.e. /etc/pva/conf.d/20-loadtask.conf
