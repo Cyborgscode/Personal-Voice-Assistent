@@ -1,3 +1,14 @@
+/*
+	This code was 98%  engineered by gemma3.. it failed miserable for the last 2% without the plugin would not work at all :D
+
+	The plugin tries to open the users Firefox history, but this only works, if firefox is not running. 
+
+	The places.sqlite database is locked when firefox runs. 
+
+	So, take this as an example and not as a sensible working plugin .. a working config is in the users config directory
+
+*/
+
 package plugins.files;
 
 import plugins.Plugin;
