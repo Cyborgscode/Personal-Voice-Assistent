@@ -56,6 +56,7 @@ Optional dependencies:
 ffmpeg
 fswebcam
 gnome-screenshot
+https://github.com/xerial/sqlite-jdbc
 ```
 
 
