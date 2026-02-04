@@ -1,3 +1,9 @@
+04.02.2026
+
+if you need sqlite support for the firefox history plugin, you need this jar or any other sqlite implementation
+
+https://github.com/xerial/sqlite-jdbc
+
 11.07.2022 :
 
 added OPENSSL for SSL encrypted com between pva.py and PVA server
@@ -19,4 +25,4 @@ javac PVA.java -cp "$CP:."
 
 for special releases:
 
-javac --release 8 PVA.java -cp "$CP:."
+javac --release 11 PVA.java -cp "$CP:."
