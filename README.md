@@ -452,11 +452,13 @@ it adds those randomly loaded songs to the end of the current playlist.
 You find those keywords defined in the textsection:
 
 `text:"de","PLAYMUSICRANDOM",".*(zufällig).*"`
+
 `text:"de","PLAYMUSICRADD",".*(noch|dazu).*"`
 
 in english:
 
 `text:"en","PLAYMUSICRANDOM",".*(random).*"`
+
 `text:"en","PLAYMUSICRADD",".*(add).*"`
 
 As you see, it's a Regular Expression, which is a mighty tool to match patterns in texts. If you know how to use them, you can have a lot of fun here,
