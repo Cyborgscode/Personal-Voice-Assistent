@@ -88,7 +88,9 @@ class Vosk extends Thread {
 				// AudioLoop : if recognizer does not find anything in the buffer, nothing happens.
 				
 				while ((bytesRead = microphone.read(data, 0, CHUNK_SIZE)) != -1) {
-				
+					if (isInterrupted()) {
+						return;
+					}
 					if ( recognizer.acceptWaveForm(data, bytesRead) ) {
 						String text = recognizer.getResult().replace("'", "");
 						//Execute the command
