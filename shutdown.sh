@@ -52,10 +52,3 @@ fi
 
 # PVA will shutdown now , which will call Plugin-Shutdown as well.
 
-# old fashion way to stop it ...
-
-PID=$(/usr/bin/pgrep -f ./pva.py)
-kill -9 $PID
-
-PID=$(/usr/bin/pgrep -f ":. pva -m")
-kill -9 $PID
