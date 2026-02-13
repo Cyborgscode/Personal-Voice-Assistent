@@ -1,6 +1,4 @@
-
 package server;
-
 
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -27,6 +25,8 @@ class Vosk extends Thread {
 
 	Dos dos = new Dos();
 	String modelPath = "model"; // Default model path
+	Model model;
+	Recognizer recognizer;
 	
 	public Vosk(PVA pva) {
 		this.pva = pva;
@@ -34,8 +34,34 @@ class Vosk extends Thread {
 	
 	void log(String x) { System.out.println(x); }
 
+	boolean ignore = false;
+	boolean switching = false;
+
 	public void interrupt() {
-                Thread.currentThread().interrupt();
+		if (!isInterrupted() && ignore==false) {
+			ignore = true;
+			log("Vosk:interrupt():interrupting myself");
+	                super.interrupt();
+	        } else log("Vosk:interrupt():already interrupted");
+	}
+	
+	public boolean switchModel(String newmodel) {
+		log("VOSK:switchModel:"+ newmodel);
+		modelPath = newmodel;
+		try {
+			switching = true;
+//			recognizer.close();
+//			model.close();
+			model = new Model(modelPath);
+			recognizer = new Recognizer(model, 16000);
+			log("VOSK:switched model");
+			switching = false;
+			return true;
+		} catch (Exception e) {
+			log("VOSK:FAILED TO SWITCH MODEL");
+			e.printStackTrace();
+			return false;
+		}
 	}
 	
 	public void run() {
@@ -71,27 +97,34 @@ class Vosk extends Thread {
 			microphone.open(format,CHUNK_SIZE);
 			microphone.start();
 
-			Model model = new Model(modelPath);
-			Recognizer recognizer = new Recognizer(model, 16000);
-			
+			model = new Model(modelPath);
+			recognizer = new Recognizer(model, 16000);
+
+/*			
 			// Register a shutdown hook for graceful termination
 	                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 		                microphone.close();
         		        System.out.println("Recording stopped.");
         	        }));
-
+*/
 			while ( true ) {
-				if (isInterrupted()) {
+				if (isInterrupted() || ignore) {
+					log("VOSK: aborting task");
+					microphone.close();
+					recognizer.close();
 					return;
 				}
 
 				// AudioLoop : if recognizer does not find anything in the buffer, nothing happens.
 				
 				while ((bytesRead = microphone.read(data, 0, CHUNK_SIZE)) != -1) {
-					if (isInterrupted()) {
+					if (isInterrupted() || ignore) {
+						log("VOSK: aborting task in microphone loop");
+						microphone.close();
+						recognizer.close();
 						return;
 					}
-					if ( recognizer.acceptWaveForm(data, bytesRead) ) {
+					if ( !switching &&  recognizer.acceptWaveForm(data, bytesRead) ) {
 						String text = recognizer.getResult().replace("'", "");
 						//Execute the command
 						if ( !text.trim().contains("\"text\" : \"\"" ) ) 
@@ -108,9 +141,4 @@ class Vosk extends Thread {
 			// nothing we can do
 		}
 	}
-}
-
-
-	
-
-	
+}	
