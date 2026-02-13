@@ -88,6 +88,7 @@ public class Dos {
                                 while ( s.indexOf("\"")>=0 ) {
   //                                    System.out.println( "in="+s ) ;
                                         String arg = zwischen( s , "\"", "\"" );
+									    if ( arg == null ) arg = s;
                                         params.put("<ARG"+c+">", arg );
                                         if ( ! regExOverride ) {
                                                 s = s.replaceAll( "\""+arg+"\"", "<ARG"+c+">" );
@@ -98,6 +99,7 @@ public class Dos {
                                 while ( s.indexOf("'")>=0 && s.indexOf("'", s.indexOf("'")+1)>s.indexOf("'") ) {
 //	                                System.out.println( "in="+s ) ;
                                         String arg = zwischen( s , "'", "'" );
+									    if ( arg == null ) arg = s;
                                         params.put("<ARG"+c+">", arg );
                                         if ( ! regExOverride ) {
                                                 s = s.replaceAll( "'"+arg+"'", "<ARG"+c+">" );
@@ -260,4 +262,5 @@ public class Dos {
     }
 
 }
+
 
