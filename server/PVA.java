@@ -1,6 +1,6 @@
 /*
 
-PVA is coded by Marius Schwarz since 2021
+PVA is coded by Marius Schwarz and others since 2021
 
 This software is free. You can copy it, use it or modify it, as long as the result is also published on this condition.
 You only need to refer to this original version in your own readme / license file. 
@@ -41,6 +41,7 @@ public class PVA {
 	static StringHash timers	  	= new StringHash();
 	static Vector<String> categories  	= new Vector<String>();
 	static TimerTask tt;
+	static Vosk vosk;
 	static IMAPTask it;
 	static SearchTask st;
 	static MetacacheTask mt;
@@ -1376,6 +1377,11 @@ public class PVA {
 			it = new IMAPTask(pva);
 			it.start();
 
+			log("start Vosk");
+			
+			vosk = new Vosk(pva);
+			vosk.start();
+
 			log("start PluginLoader");
 			
 			pls = new Plugins(pva);
@@ -1400,6 +1406,8 @@ public class PVA {
 			
 			tt.interrupt();
 			it.interrupt();
+			vosk.interrupt();
+			
 			Thread.currentThread().interrupt();
 
 			log("PVA:main:shutdown2");
@@ -1751,8 +1759,6 @@ public class PVA {
 						say( texte.get( config.get("conf","lang_short"), "SYNTAXERROR") );
 					}
 				}
-
-
 			
 				// The so called Star Trek part :) 
 				if ( cf.command.equals("AUTHORIZE") ) {
