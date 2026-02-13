@@ -40,8 +40,6 @@ To run it, you need at least:
 
 ```
 python3
-pip3
-portaudio
 mbrola             (found on github)
 espeak
 vosk               (found on github)
@@ -201,27 +199,7 @@ No additional commands are required, because it's just one new voiceoutput of ma
 
 ## Python3 + Pip3 + Portaudio:
 
-```pip3 install sounddevice```
-
-ATTN: do not install it as user, if you wanne install it systemwide ( see below on "Installation" )
-
-```sudo dnf install python3-pyaudio espeak```
-
-## Vosk:
-
-On your desktop you can directly install vosk :
-
-```pip3 install vosk```
-
-ATTN: do not install it as user, if you wanna install it systewide ( see below on "Installation" )
-
-If you wanna run this on a Pinephone, as recently demonstrated, you need atleast this BETA version:
-
-```pip3 install https://github.com/alphacep/vosk-api/releases/download/v0.3.30/vosk-0.3.30-py3-none-linux_aarch64.whl```
-
-check if there is a newer version, before you run this command.
-
-Demonstration: http://static.bloggt-in-braunschweig.de/Pinephone-PVA-TEST1.mp4
+no longer required
 
 ## Getting the right language model:
 
@@ -244,8 +222,6 @@ PVA is now fully aware of freedesktop directorystructures and makes use of it.
 Become root, sudo alone is not enough!
 
 use `sudo -i` or `sudo su` or just `su` if you still have a root password.
-
-```pip3 install sounddevice vosk```
 
 # NOTE: If you wanna do development work on this, your repo should be located somewhere else, as you will move files out of the repo directories and git won't like that ;)
 
@@ -339,7 +315,6 @@ lrwxrwxrwx. 1 root root    18 20. Dez 17:44  model -> vosk-model-de-0.21
 -rw-rw-r--. 1 root root 55337 26. Jan 10:50  PVA.class
 -rw-r--r--. 1 root root 14214 20. Dez 17:27  pva.conf.default
 -rw-r--r--. 1 root root 99253 26. Jan 10:50  PVA.java
--rwxrwxr-x. 1 root root  2512 20. Dez 21:55  pva.py
 -rwxr-xr-x. 1 root root   970 20. Jan 18:42  pvatrayicon.py
 -rw-rw-r--. 1 root root   421 26. Jan 10:50  Reaction.class
 -rw-rw-r--. 1 root root  4963 23. Jul 2021   README.txt
