@@ -43,6 +43,7 @@ python3
 mbrola             (found on github)
 espeak
 vosk               (found on github)
+libvosk            (found in your distro i.E. in Fedora vosk-api[-devel])
 sox                (needed in case you want to make use of GTTS)
 openssl            (used to communicate with the PVA TLS server / works with 1.x and 3.x)
 dbus-tools
