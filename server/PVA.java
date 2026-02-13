@@ -84,7 +84,13 @@ public class PVA {
 				if ( o.startsWith("Source Output #") ) {
 					det = o.replaceAll("^.*#","").trim();
 				}
+				// legacy
 				if ( o.toLowerCase().contains("node.name = \"alsa_capture.python3.") ) {
+					pa_outputid  = det;
+					break;
+				}
+				// Switch to VOSK-JAVA
+				if ( o.toLowerCase().contains("node.name = \"alsa_capture.java") ) {
 					pa_outputid  = det;
 					break;
 				}
