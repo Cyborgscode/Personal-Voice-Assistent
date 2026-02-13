@@ -33,14 +33,3 @@ for the new IMAP Notification Service, we need this package:
 javax.mail package from https://maven.java.net/content/repositories/releases/com/sun/mail/javax.mail/1.6.2/javax.mail-1.6.2.jar
 javax.activation package from https://search.maven.org/artifact/com.sun.activation/javax.activation/1.2.0/jar
 
-Compile instructions change to :
-
-cd /usr/share/pva
-
-CP=""
-for file in lib/*;do  CP="$CP:./$file"; done 
-javac PVA.java -cp "$CP:."
-
-for special releases:
-
-javac --release 11 PVA.java -cp "$CP:."
