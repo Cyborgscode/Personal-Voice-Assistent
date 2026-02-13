@@ -1,6 +1,6 @@
 /*
 
-PVA is coded by Marius Schwarz and others since 2021
+PVA is coded by Marius Schwarz since 2021
 
 This software is free. You can copy it, use it or modify it, as long as the result is also published on this condition.
 You only need to refer to this original version in your own readme / license file. 
@@ -1763,43 +1763,31 @@ public class PVA {
 				// The so called Star Trek part :) 
 				if ( cf.command.equals("AUTHORIZE") ) {
 
-						if ( wort( config.get("code","alpha")) ) {
+						if ( wort( config.get("code","alpha") ) && !config.get("code","alpha").equals("alpha default") ) {
 							String cmd = dos.readFile(getHome()+"/.cache/pva/cmd.last");
 							if ( cmd.equals("exit") ) {
 
 								say( texte.get( config.get("conf","lang_short"), "QUIT") );	
 
-								// shutdown normally, kill python STT process 
+								// shutdown normally
 								server.interrupt();
 
-								String[] e = dos.readPipe("pgrep -i -l -a python").split("\n");
-								for(String a : e ) {
-									if ( a.contains("pva.py") ) {
-										String[] b = a.split(" ");
-										exec("kill "+ b[0] );
-									}
-								}
 							}
 							if ( cmd.equals("autoexit") ) {
 
-								// shutdown normally, kill python STT process 
+								// shutdown normally
 								
 								server.interrupt();
 								
-								String[] e = dos.readPipe("pgrep -i -l -a python").split("\n");
-								for(String a : e ) {
-									if ( a.contains("pva.py") ) {
-										String[] b = a.split(" ");
-										exec("kill "+ b[0] );
-									}
-								}
 							}
+							
+							// works only when run as root, what you shall not do!
 							if ( cmd.equals("compile") ) {
 								say( texte.get( config.get("conf","lang_short"), "RECOMPILING") );	
 								System.out.println( dos.readPipe("compile.sh") );
 							}
 							return;
-						} else if ( wort( config.get("code","beta")) ) {
+						} else if ( wort( config.get("code","beta")) && !config.get("code","beta").equals("beta default") ) {
 							String cmd = dos.readFile(getHome()+"/.cache/pva/cmd.last");
 							if ( cmd.equals("unlockscreen") ) {
 								say( texte.get( config.get("conf","lang_short"), "UNLOCKSCREENRESPONSE") );
@@ -2091,6 +2079,16 @@ public class PVA {
 						say( texte.get( config.get("conf","lang_short"), cf.command+"1").replaceAll("<TERM1>", changeapp.replace("say","Sprachausgabe")).replaceAll("<TERM2>",subtext));
 
 						saveConfig();
+						
+						// And now the new magic ... mu har har
+						
+						if ( changeapp.equals("conf:lang_short|conf:lang") ) {
+							log("stopping Vosk");						
+							vosk.interrupt();
+							log("restart Vosk");
+							vosk = new Vosk(this);
+							vosk.start();
+						}
 						
 					} else {
 						say( texte.get( config.get("conf","lang_short"), cf.command+"2").replaceAll("<TERM1>", subtext ) );
