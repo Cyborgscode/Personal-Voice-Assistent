@@ -916,6 +916,8 @@ public class PVA {
 						sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
 					if ( key.equals("conf") && ( k.equals("lang_short") || k.equals("lang") || k.equals("keyword") || k.equals("hibernate") ) )
 						sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
+					if ( key.equals("vosk") && ( k.equals("model") ) )
+						sb.append( key +":\""+ k +"\",\""+ v +"\"\n" );
 
 				}
 			}
@@ -2076,18 +2078,33 @@ public class PVA {
 								}
 							}
 						} else log( "apps="+ apps.length +" <> values="+ values.length);
-						say( texte.get( config.get("conf","lang_short"), cf.command+"1").replaceAll("<TERM1>", changeapp.replace("say","Sprachausgabe")).replaceAll("<TERM2>",subtext));
+//						say( texte.get( config.get("conf","lang_short"), cf.command+"1").replaceAll("<TERM1>", changeapp.replace("say","Sprachausgabe")).replaceAll("<TERM2>",subtext));
 
 						saveConfig();
 						
 						// And now the new magic ... mu har har
 						
-						if ( changeapp.equals("conf:lang_short|conf:lang") ) {
+						if ( changeapp.equals("conf:lang_short|conf:lang|vosk:model") ) {
+						
+							vosk.switchModel( config.get("vosk","model") );
+						/*
+							JAVA THREADS ARE MORE THAN BROKEN!
+							
 							log("stopping Vosk");						
 							vosk.interrupt();
+							// time to say goodbye 
+							Thread.sleep(1000);
+							vosk.stop();
+							vosk = null;
 							log("restart Vosk");
 							vosk = new Vosk(this);
 							vosk.start();
+							log("Vosk restarted");
+						*/
+
+							say( texte.get( config.get("conf","lang_short"),"VOSKSWITCHED") );
+						} else {
+							say( texte.get( config.get("conf","lang_short"), cf.command+"1").replaceAll("<TERM1>", changeapp.replace("say","Sprachausgabe")).replaceAll("<TERM2>",subtext));
 						}
 						
 					} else {
