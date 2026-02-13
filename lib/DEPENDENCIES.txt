@@ -1,4 +1,7 @@
+
 13.2.2026
+
+removed OPENSSL for SSL encrypted communication between pva.py and PVA server, which is now obsolete.
 
 JNA is now mandatory .. you can find it here:
 
@@ -15,9 +18,13 @@ if you need sqlite support for the firefox history plugin, you need this jar or 
 
 https://github.com/xerial/sqlite-jdbc
 
+License URL:
+
+Apache License 2.0 https://www.apache.org/licenses/LICENSE-2.0.txt 
+
 11.07.2022 :
 
-added OPENSSL for SSL encrypted com between pva.py and PVA server
+added OPENSSL for SSL encrypted communication between pva.py and PVA server
 
 02.07.2022 :
 
