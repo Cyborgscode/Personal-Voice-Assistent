@@ -118,7 +118,7 @@ public class PVA {
 			
 			dos.writeFile( getHome()+"/.cache/pva/lastoutput", text );
 			
-			exec( (config.get("app","say").replace("%VOICE", config.get("conf","lCFang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
+			exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
 						
 			if ( !pa_outputid.isEmpty() ) {
 				// enable the node again... or we will never hear from our pva again ;)
