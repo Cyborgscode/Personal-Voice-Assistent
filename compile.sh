@@ -9,7 +9,7 @@ fi
 if [ "$2" == "-withcustomjna" ]; then
    CP="$3"
 else 
-   if [ "$2" == "-withjnapackaged"; then
+   if [ "$2" == "-withjnapackaged" ]; then
       CP=""
    else 
       CP="/usr/lib/java/jna.jar"
