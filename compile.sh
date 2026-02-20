@@ -6,7 +6,7 @@ else
    cd "$1"
 fi
 
-if [ "$2" == "withsystemjna" ]; then
+if [ "$2" == "-withsystemjna" ]; then
    CP="/usr/lib/java/jna.jar"
 else
    CP=""
