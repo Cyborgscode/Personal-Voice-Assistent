@@ -6,7 +6,12 @@ else
    cd "$1"
 fi
 
-if [ "$2" == "-withcustomjna" ]; then
+if [ "$2" == "clean" ]; then
+	shift 1
+	find . -iname "*.class" -delete
+fi	
+
+if [ "$2" == "-withcustomlibs" ]; then
    CP="$3"
 else 
    if [ "$2" == "-withjnapackaged" ]; then
