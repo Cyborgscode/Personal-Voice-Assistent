@@ -74,20 +74,21 @@ public class MailConnection {
 			store.connect(m.servername, m.username, m.password);
 
 			Folder inbox = store.getFolder("Inbox");
+			inbox.getMessageCount();
 			
-			// System.out.println("No of Unread Messages : " + inbox.getUnreadMessageCount());
+			System.out.println("No of Unread Messages : " + inbox.getUnreadMessageCount());
 			if ( inbox.getUnreadMessageCount() > 0 && !inbox.isOpen() ) {
 				inbox.open(Folder.READ_ONLY);
 
 				Message[] mails = inbox.getMessages();
 				
-//				System.out.println( "Mails im Konto:"+ mails.length );
+				System.out.println( "Mails im Konto:"+ mails.length );
 				
 				if ( mails.length  <  Integer.parseInt( lastseen ) ) lastseen = ""+ mails.length;
 								
 				mails = inbox.search( new FlagTerm(new Flags(Flags.Flag.SEEN),false));
 
-				// System.out.println( "Mails im Konto:"+ mails.length );
+				System.out.println( "Mails im Konto:"+ mails.length );
 			
 				for(Message mail: mails) {
 					Address[] in = mail.getFrom();
