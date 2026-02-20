@@ -9,13 +9,13 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.io.IOException;
 import java.net.Socket;
-
+import java.util.Date;
 
 public class HTTP {
 	
 	public static String apihost = "127.0.0.1";
 	public static String apiport = "80";
-	
+	public static int timeout = 15000;
 	
 	static private String readPage(Socket socket) throws IOException {
                 return readPage(socket,false);
@@ -35,14 +35,15 @@ public class HTTP {
                 int got = 0;
                 boolean firstread = true;
 
+		Date date1 = new Date();
+
                 try {
                         do {
 
 //                                System.out.println("readPage: pre read " + dis.available() );
 
                                 if ( ( dis.available() > 0 || firstread ) && offset < len ) {
-
-					got = dis.read(buffer,offset,len-offset);
+                                        got = dis.read(buffer,offset,len-offset);
 //                                      System.out.println("readPage: read = "+got);
                                         offset += got;
 
@@ -55,12 +56,13 @@ public class HTTP {
                                         }
                                 } else break;
 
-                        } while ( got > 0);
+                        } while ( got > 0 );
 
 //                      System.out.println("readPage: finish reading normally");
 
                 } catch (Exception e) {
-                        System.out.println("Timeout getPage()");
+               		Date date2 = new Date();
+                        System.out.println("Timeout getPage() nach "+  ((date2.getTime()-date1.getTime())/1000) +" sekunden");
                         System.out.println( e.toString() );
                 }
 
@@ -117,11 +119,11 @@ public class HTTP {
 		    out.write(data);
 		    out.flush();
  
-		    socket.setSoTimeout(10000);
+		    socket.setSoTimeout(timeout);
 		    socket.setReceiveBufferSize(200000);
-
+	
 			result = readPage(socket);
-			
+
 			return result;
 			
 		} catch (Exception e) {
@@ -151,7 +153,7 @@ public class HTTP {
 		    out.write("\r\n");
 		    out.flush();
  
-		    socket.setSoTimeout(2000);
+		    socket.setSoTimeout(timeout);
 		    socket.setReceiveBufferSize(200000);
 
 			result = readPage(socket);
