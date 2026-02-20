@@ -1,6 +1,10 @@
 #!/bin/bash
 
-cd /usr/share/pva
+if [ "$1" == "" ]; then
+   cd /usr/share/pva
+else
+   cd "$1"
+fi
 
 // We use our own HTTP Class, which got invented years before java implemented theire own, so we need to focus on our own class files, in case you wonder why this looks unnecessary. It isn't ;)
 // It compiles fines with Java 21. The "--release 11" is just backwards compatibility for older javas. You are free to remove it if you wanne a newer Java
