@@ -6,10 +6,10 @@ else
    cd "$1"
 fi
 
-if [ "$2" == "systemjna" ]; then
-   CP=""
-else
+if [ "$2" == "withsystemjna" ]; then
    CP="/usr/lib/java/jna.jar"
+else
+   CP=""
 fi
 
 # We use our own HTTP Class, which got invented years before java implemented theire own, so we need to focus on our own class files, in case you wonder why this looks unnecessary. It isn't ;)
