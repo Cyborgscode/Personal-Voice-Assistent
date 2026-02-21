@@ -42,7 +42,7 @@ class Vosk extends Thread {
 			THRESHOLD = 150;
 		}
 		try {
-			signalbooster = Integer.parseInt( pva.config.get("vosk","signalbooster") );
+			signalbooster = Float.parseFloat( pva.config.get("vosk","signalbooster") );
 		} catch (NumberFormatException n) {
 			signalbooster = 1;
 		}
