@@ -47,7 +47,6 @@ public class PVA {
 	static MetacacheTask mt;
 	static Plugins pls;
 	static Server server;
-	static AIMessages aimsgs = new AIMessages();
 
 	static String text = "";
 	static String text_raw = "";
@@ -110,77 +109,30 @@ public class PVA {
 				initPulseAudio();
 			}
 		
+
 			if ( !pa_outputid.isEmpty() ) {
 				// Disable output of recording node, to prevent pva from hearing itself
 				// log ( "pactl set-source-output-mute "+ pa_outputid +" 1" );
 				dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 1");
 			}
+
 			
 			dos.writeFile( getHome()+"/.cache/pva/lastoutput", text );
 			
 			exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
-						
+
+
 			if ( !pa_outputid.isEmpty() ) {
 				// enable the node again... or we will never hear from our pva again ;)
 				// log ( "pactl set-source-output-mute "+ pa_outputid +" 0" );
 				dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 0");
 			}
-		
+ 		
 		}
 	}
 
         public static void say(String text) throws IOException {
 		say( text, true );
-	}
-
-	// JSON Object is given by LLM, but the org.json package can't be shipped with distros, so we need to do it ourself, so .. don't wonder it's messy ;)
-
-	public static String parseJSON(String json,String model) {
-	
-		json=json.replaceAll("\\\\.","");
-		
-		String[] pairs = json.split("(\",\"|},\")");
-					
-		String answere = "";
-					
-		for(String pair: pairs) {
-//			log( "pair = "+ pair);
-										
-			if ( pair.contains(":") ) {
-				String[] data = pair.split(":",2);
-				if ( data.length > 1 ) {	
-
-					String key = data[0].replaceAll("\"","");
-					String value = data[1];
-												
-//					log("key="+ key +"\nvalue="+ value );
-
-					if ( key.endsWith("\"") ) key = key.substring(0,key.indexOf("\"")-1);
-					if ( value.endsWith("\"") ) value = value.substring(0,value.indexOf("\"",1));
-
-//					log("key="+ key +"\nvalue="+ value );
-												
-					if ( ( key.equals("response") || key.equals("content") ) && value.trim().length() > 1 ) {
-						answere = value.substring(1).replaceAll("\\n","\n");
-						aimsgs.addMessage(new AIMessage("assistant", model, answere ));
-					}
-				}
-				if ( answere == null ) answere = "";
-			} 
-		}
-
-		return answere;
-		
-	}
-
-	static String filterAIThinking(String answere) {
-	
-		if ( answere.contains("003cthink003e") ) {
-			int abis = answere.indexOf("003c/think003e")+"003c/think003e".length();
-			if ( abis >= 0 ) 
-				answere = answere.substring( abis );
-		}
-		return answere.replaceAll("\\*\\*","").replaceAll("\\*","\"");
 	}
 
 	// Speakers tend to pronounce 1746 as a year, not 1.746.
@@ -1358,7 +1310,7 @@ public class PVA {
 	
 					String answere = HTTP.post("/api/generate","{\"model\": \""+ ai.get("model")+"\", \"prompt\": \"\\nGenerate a title following these rules:\\n    - The title should be based on the prompt at the end\\n    - Keep it in the same language as the prompt\\n    - The title needs to be less than 30 characters\\n    - Use only alphanumeric characters and spaces\\n    - Just write the title, NOTHING ELSE\\n\\n```PROMPT\\nHallo\\n```\", \"stream\": false}");
 					log("INIT AI: "+ answere );	
-					aimsgs.addMessage(new AIMessage("user", "User", "Hallo" ));
+					// aimsgs.addMessage(new AIMessage("user", "User", "Hallo" ));
 				} else {
 					 log("AI Init failed - no ai service detected");
 				}
@@ -1598,27 +1550,10 @@ public class PVA {
 						
 							if ( ( ( ai.get("mode").equals("freetalk") && checkMediaPlayback() ) || !ai.get("mode").equals("freetalk") ) && text.trim().length()>0 ) {
 					
-//								log("ai:send:" + text);
+								log("ai:send:" + text);
 
-								HTTP.apihost = ai.get("host");
-								HTTP.apiport = ai.get("port");
-								
-								aimsgs.addMessage(new AIMessage("user", "User", text ));
-								
-//								log("messages = "+ aimsgs.toJSON() );
+								reaction = pls.handlePluginAction( new Command("DUMMY","AI_SAY","",""), text);
 
-								String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ aimsgs.toJSON() +"}");
-								if ( answere != null ) {
-																									
-									// Filter für Denkprozesse
-		
-									answere = filterAIThinking(parseJSON(answere,ai.get("model")).trim());
-									
-									log("we got back:" + answere);
-								
-									say( answere,true );
-									reaction = true;
-								}
 							}
 						} 
 					} else if ( ai.get("bin") == null ) log("no config for ai  found");
@@ -2087,20 +2022,6 @@ public class PVA {
 						if ( changeapp.equals("conf:lang_short|conf:lang|vosk:model") ) {
 						
 							vosk.switchModel( config.get("vosk","model") );
-						/*
-							JAVA THREADS ARE MORE THAN BROKEN!
-							
-							log("stopping Vosk");						
-							vosk.interrupt();
-							// time to say goodbye 
-							Thread.sleep(1000);
-							vosk.stop();
-							vosk = null;
-							log("restart Vosk");
-							vosk = new Vosk(this);
-							vosk.start();
-							log("Vosk restarted");
-						*/
 
 							say( texte.get( config.get("conf","lang_short"),"VOSKSWITCHED") );
 						} else {
@@ -3267,16 +3188,8 @@ public class PVA {
 					}
 				}
 
-				// LLM Support
+				// LLM Support --> AIStreamer
 				
-				if ( cf.command.equals("AICLEARHISTORY") ) {
-				
-					aimsgs.clear();
-					reaction = true;
-					say( texte.get( config.get("conf","lang_short"), "AIHISTORYCLEARED" ) );
-
-				}
-
 				if ( cf.command.equals("AISWAPMODEL") ) {
 				
 					if ( ai != null && ai.get("enable").equals("true") && aiportreachable ) {
@@ -3330,8 +3243,6 @@ public class PVA {
 						dos.readPipe("rm -f /tmp/webcam.jpg /tmp/webcam-cropped.jpg");
 						
 						// log("text="+text_raw.replace(""+keyword+"",""));
-						
-						aimsgs.clear();
 						
 						if (  cf.command.equals("AIIDENTIFYCAM") ) {
 
@@ -3387,7 +3298,7 @@ public class PVA {
 
 						if ( answere != null ) {
 
-							answere = filterAIThinking(parseJSON(answere,model).trim());
+							answere = Tools.filterAIThinking(Tools.parseJSON(answere).trim());
 								
 							if ( ! answere.isEmpty() ) {
 								if ( debug > 1 ) log("we got back:" + answere);
@@ -3433,7 +3344,7 @@ public class PVA {
 
 						if ( answere != null ) {
 								
-							answere = filterAIThinking(parseJSON(answere, model )).trim();
+							answere = Tools.filterAIThinking(Tools.parseJSON(answere )).trim();
 							
 							if ( ! answere.isEmpty() ) {
 								if ( debug > 1 ) log("we got back(3):" + answere);
@@ -3462,31 +3373,9 @@ public class PVA {
 					if ( checkMediaPlayback() && text.trim().length()>0 ) {
 					
 						log("ai:send:" + text);
-								
-						HTTP.apihost = ai.get("host");
-						HTTP.apiport = ai.get("port");
-						if ( !ai.get("apitimeout").isEmpty() )
-							HTTP.timeout = Integer.parseInt( ai.get("apitimeout") );
-															
-						aimsgs.addMessage(new AIMessage("user", "User", text ));
-								
-//						log("messages = "+ aimsgs.toJSON() );
 
-						String answere = HTTP.post("/api/chat","{\"model\":\""+ ai.get("model")+"\",\"stream\": false,\"messages\":"+ aimsgs.toJSON() +"}");
-						if ( answere != null ) {
-								
-							answere = filterAIThinking(parseJSON(answere,ai.get("model"))).trim();							
-							if ( ! answere.isEmpty() ) {
+						reaction = pls.handlePluginAction( new Command("DUMMY","AI_SAY","",""), text);
 
-								if ( debug > 1 ) log("we got back(4):" + answere);
-
-								say( answere,true );
-								reaction = true;
-							}
-
-						} else {
-							log("ai:error:call to api failed with NULL");
-						}
 					} else {
 						log("ai:error:mediaplayback detected");
 					}
@@ -3543,50 +3432,50 @@ public class PVA {
 			}
 	}
 
-static private class AnalyseMP3 extends Thread {
+	static private class AnalyseMP3 extends Thread {
 
-        private StringBuffer data;
-        private String filename;
-        private TwoKeyHash tk;
+	        private StringBuffer data;
+	        private String filename;
+	        private TwoKeyHash tk;
         
-        public AnalyseMP3(StringBuffer data,String filename,TwoKeyHash tk) {
-                this.data = data;
-                this.filename = filename;
-                this.tk = tk;
-        }
+	        public AnalyseMP3(StringBuffer data,String filename,TwoKeyHash tk) {
+	                this.data = data;
+	                this.filename = filename;
+	                this.tk = tk;
+        	}
 
-        public void run() {
-		tk.put( "proc","counter", ""+ ( Integer.parseInt( tk.get("proc","counter") ) +1 ) );
-		tk.put( "files", filename, "0" );
-//        	if ( debug > 4 ) log("["+ tk.get("proc","counter") +"] Analyse mp3 ... "+ filename );
-        				try {
-						Mp3File mp3file = new Mp3File( filename, false );
-						if (mp3file.hasId3v1Tag()) {
-							ID3v1 id3v1Tag = mp3file.getId3v1Tag();
-							if ( id3v1Tag != null ) 
-								data.append( formatMetadata( filename, id3v1Tag ) );
-						}
+	        public void run() {
+			tk.put( "proc","counter", ""+ ( Integer.parseInt( tk.get("proc","counter") ) +1 ) );
+			tk.put( "files", filename, "0" );
+//      	  	if ( debug > 4 ) log("["+ tk.get("proc","counter") +"] Analyse mp3 ... "+ filename );
+			try {
+				Mp3File mp3file = new Mp3File( filename, false );
+				if (mp3file.hasId3v1Tag()) {
+					ID3v1 id3v1Tag = mp3file.getId3v1Tag();
+					if ( id3v1Tag != null ) 
+						data.append( formatMetadata( filename, id3v1Tag ) );
+				}
+				if (mp3file.hasId3v2Tag()) {
+					ID3v2 id3v2Tag = mp3file.getId3v2Tag();
+					if ( id3v2Tag != null ) 
+						data.append( formatMetadata( filename, id3v2Tag ) );
+				}
 
-						if (mp3file.hasId3v2Tag()) {
-							ID3v2 id3v2Tag = mp3file.getId3v2Tag();
-							if ( id3v2Tag != null ) 
-								data.append( formatMetadata( filename, id3v2Tag ) );
-						}
-					} catch (UnsupportedTagException e) {
-						// Silently ignore faulty files
-					} catch (InvalidDataException e) {
-						// Silently ignore faulty files
-					} catch (IOException e) {
-						// Silently ignore faulty files
-					}
-		tk.put( "proc","counter", ""+ ( Integer.parseInt( tk.get("proc","counter") ) - 1 ) );
-		tk.put( "files", filename, "1" );
-	}
+			} catch (UnsupportedTagException e) {
+			// Silently ignore faulty files
+			} catch (InvalidDataException e) {
+				// Silently ignore faulty files
+			} catch (IOException e) {
+				// Silently ignore faulty files
+			}
+			tk.put( "proc","counter", ""+ ( Integer.parseInt( tk.get("proc","counter") ) - 1 ) );
+			tk.put( "files", filename, "1" );
+		}
+
+	    }
+
 }
-
-}
-
-
+	
 class Reaction {
 
 	public String positives = "";
@@ -3617,60 +3506,4 @@ class AppResult {
 	}	
 }
 
-class AIMessages {
 
-	Vector aimsgs = new Vector<AIMessage>();
-
-	public void addMessage(AIMessage a) {
-		aimsgs.add( a );
-	}
-	
-	public String toJSON() {
-	
-		String res = "[";
-		
-		for(int i=0; i < this.aimsgs.size(); i++) {
-			
-			 AIMessage msg = (AIMessage)this.aimsgs.get(i);
-
-			 res += msg.toJSON();
-			 
-			 if ( i < (this.aimsgs.size()-1) ) res += ",";
-		}
-	
-		res += "]";
-		
-		return res;
-	}
-	
-	public void clear() {
-		this.aimsgs.clear();
-	}
-	
-}
-	
-class AIMessage {
-
-	public String role = "";
-	public String model = "";
-	public String date = "";
-	public String content = "";	
-	
-	public AIMessage( String r, String m, String c ) {
-
-		this.role = r;
-		this.model = m;
-		this.date = LocalDateTime.now().format( DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss") );
-		this.content = c;
-	
-	}
-	
-	public String toJSON() {
-	
-//		{"role": "user", "model": "User", "date": "2024/08/06 21:25:01", "content": "Hallo"}
-		
-		return 	"{\"role\":\""+ role +"\",\"model\":\""+ model +"\",\"date\":\""+ date +"\",\"content\":\""+ content +"\"}";		
-	
-	}
-
-}
