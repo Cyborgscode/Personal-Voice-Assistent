@@ -2,18 +2,21 @@ package utils;
 
 public class Tools {
 
+	static void log(String x) {System.out.println("Tools:"+x);}
+
 	static public String zwischen(String buffer,String vor,String nach) {
 
-                int i1 = buffer.indexOf(vor)+vor.length();
-                int i2 = buffer.indexOf(nach,i1);
+		int i1 = buffer.indexOf(vor);
+		if ( i1 >= 0 ) {
+			i1=i1+vor.length();
+	        int i2 = buffer.indexOf(nach,i1);
 
-                if ( i1 >= 0 && i2 > i1 ) {
+			if ( i1 >= 0 && i2 > i1 ) {
 
-                        return buffer.substring(i1,i2);
-
-                }
-
-                return null;
+	                        return buffer.substring(i1,i2);
+	                }
+		     }
+             return null;
         }
 
 	// JSON Object is given by LLM, but the org.json package can't be shipped with distros, so we need to do it ourself, so .. don't wonder it's messy ;)
@@ -21,7 +24,7 @@ public class Tools {
 	public static String parseJSON(String json) {
 	
 		json=json.replaceAll("\\\\.","");
-		
+
 		String[] pairs = json.split("(\",\"|},\")");
 					
 		String answere = "";
