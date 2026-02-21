@@ -18,6 +18,7 @@ import org.vosk.LibVosk;
 import org.vosk.Model;
 
 import io.Dos;
+import java.lang.NumberFormatException;
 
 class Vosk extends Thread {
 
@@ -28,8 +29,23 @@ class Vosk extends Thread {
 	Model model;
 	Recognizer recognizer;
 	
+	int THRESHOLD = 150; // Alles unter X (RMS) wird ignoriert
+	long silenceStart = -1;
+	float  signalbooster = 1.0
+	long SILENCE_TIMEOUT = 800; // Nach 800ms Stille erzwingen wir ein Ergebnis
+	
 	public Vosk(PVA pva) {
 		this.pva = pva;
+		try {
+			THRESHOLD = Integer.parseInt( pva.config.get("vosk","threshold") );
+		} catch (NumberFormatException n) {
+			THRESHOLD = 150;
+		}
+		try {
+			signalbooster = Integer.parseInt( pva.config.get("vosk","signalbooster") );
+		} catch (NumberFormatException n) {
+			signalbooster = 1.0;
+		}
 	}
 	
 	void log(String x) { System.out.println(x); }
@@ -100,13 +116,6 @@ class Vosk extends Thread {
 			model = new Model(modelPath);
 			recognizer = new Recognizer(model, 16000);
 
-/*			
-			// Register a shutdown hook for graceful termination
-	                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-		                microphone.close();
-        		        System.out.println("Recording stopped.");
-        	        }));
-*/
 			while ( true ) {
 				if (isInterrupted() || ignore) {
 					log("VOSK: aborting task");
@@ -124,15 +133,55 @@ class Vosk extends Thread {
 						recognizer.close();
 						return;
 					}
-					if ( !switching &&  recognizer.acceptWaveForm(data, bytesRead) ) {
-						String text = recognizer.getResult().replace("'", "");
-						//Execute the command
-						if ( !text.trim().contains("\"text\" : \"\"" ) ) 
-							pva.handleInput( text );
+					
+					// an simple noise gate.. safes cpu power AND my nerves
+					
+					long sum = 0;
+				        for (int i = 0; i < bytesRead; i += 2) {
 
-					} // nothing to do, if not rdy
+						// Wir wandeln zwei Bytes in einen Short (PCM 16-bit Little Endian)
+						short sample = (short) ((data[i + 1] << 8) | (data[i] & 0xff));
+						sum += Math.abs(sample);
+
+						// Verstärkungsfaktor (z.B. 1.5 oder 2.0) Default: 1.0 
+						int boosted = (int)(sample * signalbooster); 
+						// Clipping verhindern
+						if (boosted > 32767) boosted = 32767;
+						if (boosted < -32768) boosted = -32768;
+						sample = (short)boosted;
+						// Jetzt wieder zurück in den byte-Puffer schreiben (optional für bessere Erkennung)
+						data[i] = (byte)(sample & 0xff);
+						data[i+1] = (byte)((sample >> 8) & 0xff);
+
+					}
+					double rms = sum / (bytesRead / 2.0);
+
+					// log("VOSK:loop(): rms="+rms+" > "+ THRESHOLD +"?");
+
+				        if (rms > THRESHOLD) {
+						silenceStart = -1; // Es ist laut genug, Timer zurücksetzen
+					
+						if ( !switching &&  recognizer.acceptWaveForm(data, bytesRead) ) {
+							String text = recognizer.getResult().replace("'", "");
+							//Execute the command
+							if ( !text.trim().contains("\"text\" : \"\"" ) ) 
+								pva.handleInput( text );
+	
+						} // nothing to do, if not rdy
+					} else {
+						if (silenceStart == -1) silenceStart = System.currentTimeMillis();
+            
+						// Wenn es lange genug still war (Satzende?), erzwingen wir das Resultat
+						if (System.currentTimeMillis() - silenceStart > SILENCE_TIMEOUT) {
+							String finalResult = recognizer.getFinalResult().replace("'", "");
+							if (!finalResult.trim().contains("\"text\" : \"\"")) {
+								pva.handleInput(finalResult);
+				         		}
+				         	       	silenceStart = -1; // Zurücksetzen für den nächsten Satz
+						}
+					}
 				}
-			
+		
 				// give the mic time to gather more data
 				sleep(100L);
 			}
@@ -141,4 +190,4 @@ class Vosk extends Thread {
 			// nothing we can do
 		}
 	}
-}	
+}
