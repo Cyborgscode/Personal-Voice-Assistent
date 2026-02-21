@@ -31,7 +31,7 @@ class Vosk extends Thread {
 	
 	int THRESHOLD = 150; // Alles unter X (RMS) wird ignoriert
 	long silenceStart = -1;
-	float  signalbooster = 1.0;
+	float  signalbooster = 1;
 	long SILENCE_TIMEOUT = 800; // Nach 800ms Stille erzwingen wir ein Ergebnis
 	
 	public Vosk(PVA pva) {
@@ -44,7 +44,7 @@ class Vosk extends Thread {
 		try {
 			signalbooster = Integer.parseInt( pva.config.get("vosk","signalbooster") );
 		} catch (NumberFormatException n) {
-			signalbooster = 1.0;
+			signalbooster = 1;
 		}
 	}
 	
