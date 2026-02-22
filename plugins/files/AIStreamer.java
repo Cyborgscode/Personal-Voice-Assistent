@@ -175,7 +175,7 @@ public class AIStreamer extends Plugin {
 			
 			aimsgs.addMessage(new AIMessage("assistant", pva.config.get("ai","model"), Tools.filterAIThinking( json.toString() ).trim() ));
 			
-			log("message="+ aimsgs.toJSON());
+			// log("message="+ aimsgs.toJSON());
 	
 		} catch (Exception e) {
 			log(getT("AIS_STREAM_ERR") + e.getMessage());
