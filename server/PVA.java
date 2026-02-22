@@ -110,7 +110,7 @@ public class PVA {
 			}
 		
 
-			if ( !pa_outputid.isEmpty() ) {
+			if ( config.get("vosk","echocancelation").equals("no") &&  !pa_outputid.isEmpty() ) {
 				// Disable output of recording node, to prevent pva from hearing itself
 				// log ( "pactl set-source-output-mute "+ pa_outputid +" 1" );
 				dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 1");
@@ -122,7 +122,7 @@ public class PVA {
 			exec( (config.get("app","say").replace("%VOICE", config.get("conf","lang_short") )+config.get("conf","splitter")+  text ).split(config.get("conf","splitter")), wait);
 
 
-			if ( !pa_outputid.isEmpty() ) {
+			if ( config.get("vosk","echocancelation").equals("no") && !pa_outputid.isEmpty() ) {
 				// enable the node again... or we will never hear from our pva again ;)
 				// log ( "pactl set-source-output-mute "+ pa_outputid +" 0" );
 				dos.readPipe("pactl set-source-output-mute "+ pa_outputid +" 0");
@@ -3376,7 +3376,7 @@ public class PVA {
 
 						reaction = pls.handlePluginAction( new Command("DUMMY","AI_SAY","",""), text);
 
-					} else {
+					} else if ( !checkMediaPlayback() ) {
 						log("ai:error:mediaplayback detected");
 					}
 
