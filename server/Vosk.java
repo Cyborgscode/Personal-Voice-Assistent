@@ -29,23 +29,31 @@ class Vosk extends Thread {
 	Model model;
 	Recognizer recognizer;
 	
-	int THRESHOLD = 150; // Alles unter X (RMS) wird ignoriert
+	int threshold = 150; // Alles unter X (RMS) wird ignoriert
 	long silenceStart = -1;
 	float  signalbooster = 1;
-	long SILENCE_TIMEOUT = 800; // Nach 800ms Stille erzwingen wir ein Ergebnis
+	float runtimebooster = 1;
+	long silenceTimeout = 800; // Nach 800ms Stille erzwingen wir ein Ergebnis
 	
 	public Vosk(PVA pva) {
 		this.pva = pva;
 		try {
-			THRESHOLD = Integer.parseInt( pva.config.get("vosk","threshold") );
+			threshold = Integer.parseInt( pva.config.get("vosk","threshold") );
 		} catch (NumberFormatException n) {
-			THRESHOLD = 150;
+			threshold = 150;
 		}
 		try {
 			signalbooster = Float.parseFloat( pva.config.get("vosk","signalbooster") );
 		} catch (NumberFormatException n) {
 			signalbooster = 1;
+			runtimebooster = signalbooster;
 		}
+		try {
+			silenceTimeout = Long.parseLong( pva.config.get("vosk","silencetimeout") );
+		} catch (NumberFormatException n) {
+			silenceTimeout = 800;
+		}
+		log("VOSK:init(): boost="+ signalbooster +" threshold="+ threshold +" silence="+ silenceTimeout+"ms");
 	}
 	
 	void log(String x) { System.out.println(x); }
@@ -134,31 +142,119 @@ class Vosk extends Thread {
 						return;
 					}
 					
-					// an simple noise gate.. safes cpu power AND my nerves
-					
+					boolean clipping = false;
+					short sample;
+					int boosted;
 					long sum = 0;
+
 				        for (int i = 0; i < bytesRead; i += 2) {
 
 						// Wir wandeln zwei Bytes in einen Short (PCM 16-bit Little Endian)
-						short sample = (short) ((data[i + 1] << 8) | (data[i] & 0xff));
+						sample = (short) ((data[i + 1] << 8) | (data[i] & 0xff));
 						sum += Math.abs(sample);
-
-						// Verstärkungsfaktor (z.B. 1.5 oder 2.0) Default: 1.0 
-						int boosted = (int)(sample * signalbooster); 
-						// Clipping verhindern
-						if (boosted > 32767) boosted = 32767;
-						if (boosted < -32768) boosted = -32768;
-						sample = (short)boosted;
-						// Jetzt wieder zurück in den byte-Puffer schreiben (optional für bessere Erkennung)
-						data[i] = (byte)(sample & 0xff);
-						data[i+1] = (byte)((sample >> 8) & 0xff);
-
 					}
+
 					double rms = sum / (bytesRead / 2.0);
+	
+					// log("VOSK:loop(): rms="+rms+" > "+ threshold +"?");
 
-					// log("VOSK:loop(): rms="+rms+" > "+ THRESHOLD +"?");
+				        if (rms > threshold) {
 
-				        if (rms > THRESHOLD) {
+						if ( pva.config.get("vosk","DRCalgorithm").equals("DRC") ) {
+						
+							float maxSample = 0;
+							int i;
+
+							// 1. Den aktuellen Block auf den Spitzenwert prüfen
+							for (i = 0; i < bytesRead; i += 2) {
+								maxSample = Math.max(maxSample, Math.abs((short) ((data[i + 1] << 8) | (data[i] & 0xff))));
+							}
+	
+							// 2. Clipping-Schutz: Wenn der aktuelle Booster zu laut wäre, sofort hart absenken
+							if (maxSample * runtimebooster > 32767) {
+								runtimebooster = 32767.0f / maxSample;
+							} else {
+								// 3. Recovery: Wenn kein Clipping droht, den Booster schrittweise erhöhen
+								if (runtimebooster < signalbooster) {
+									runtimebooster = Math.min(signalbooster, runtimebooster + 0.1f);
+								}
+							}
+
+						} else if (  pva.config.get("vosk","DRCalgorithm").equals("SCD") ) {
+											
+							// an simple noise gate.. safes cpu power AND my nerves
+						
+							runtimebooster = signalbooster;
+							
+							do {
+								clipping = false;
+								for (int i = 0; i < bytesRead; i += 2) {
+									sample = (short) ((data[i + 1] << 8) | (data[i] & 0xff));
+									// Verstärkungsfaktor (z.B. 1.5 oder 2.0) Default: 1.0 
+									boosted = (int)(sample * runtimebooster); 
+									// detect Clipping 
+									if (boosted > 32767 || boosted < -32768) {
+										clipping = true;
+										continue;
+									}
+								}
+								if ( clipping ) {						
+									runtimebooster = runtimebooster - 0.1f;
+								
+									// Give up. EMERG Exit, otherwise we end up in an endless loop!
+								
+									if ( runtimebooster < 0.1 ) clipping = false;
+								}
+
+							} while ( clipping );
+						} else {
+							// no noisegate at all , simple and plain audio boosting 
+							runtimebooster = signalbooster;
+						}
+											
+						if ( runtimebooster != 1.0f ) {
+																		
+						        for (int i = 0; i < bytesRead; i += 2) {
+
+								// Wir wandeln zwei Bytes in einen Short (PCM 16-bit Little Endian)
+								sample = (short) ((data[i + 1] << 8) | (data[i] & 0xff));
+								
+								// Verstärkungsfaktor (z.B. 1.5 oder 2.0) Default: 1.0 
+								boosted = (int)(sample * runtimebooster); 
+								// Clipping verhindern
+								if (boosted > 32767) {
+									boosted = 32767;
+									clipping = true;
+								}
+								if (boosted < -32768) {
+									boosted = -32768;
+									clipping = true;
+								}
+								sample = (short)boosted;
+								// Jetzt wieder zurück in den byte-Puffer schreiben (optional für bessere Erkennung)
+								data[i] = (byte)(sample & 0xff);
+								data[i+1] = (byte)((sample >> 8) & 0xff);
+	
+							}
+						} else {
+							// Clipping Detection in case no signal boost is active
+						        for (int i = 0; i < bytesRead; i += 2) {
+
+								// Wir wandeln zwei Bytes in einen Short (PCM 16-bit Little Endian)
+								sample = (short) ((data[i + 1] << 8) | (data[i] & 0xff));
+								// Verstärkungsfaktor (z.B. 1.5 oder 2.0) Default: 1.0 
+								boosted = (int)(sample * runtimebooster); 
+								// Clipping verhindern
+								if (boosted > 32767 || boosted < -32768) 
+									clipping = true;
+							}
+		
+						
+						}
+						if ( clipping ) {
+							log("Vosk: Audioclipping detected");
+						}
+
 						silenceStart = -1; // Es ist laut genug, Timer zurücksetzen
 					
 						if ( !switching &&  recognizer.acceptWaveForm(data, bytesRead) ) {
@@ -172,7 +268,7 @@ class Vosk extends Thread {
 						if (silenceStart == -1) silenceStart = System.currentTimeMillis();
             
 						// Wenn es lange genug still war (Satzende?), erzwingen wir das Resultat
-						if (System.currentTimeMillis() - silenceStart > SILENCE_TIMEOUT) {
+						if (System.currentTimeMillis() - silenceStart > silenceTimeout) {
 							String finalResult = recognizer.getFinalResult().replace("'", "");
 							if (!finalResult.trim().contains("\"text\" : \"\"")) {
 								pva.handleInput(finalResult);
