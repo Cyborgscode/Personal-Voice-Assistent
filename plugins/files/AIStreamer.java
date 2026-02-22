@@ -122,7 +122,7 @@ public class AIStreamer extends Plugin {
 
 			String payload = "{\"model\":\"" + pva.config.get("ai", "model") + "\",\"stream\":true,\"messages\":"+ aimsgs.toJSON() +"}";
 	
-			log("AISTreamer:streamFromOllama():"+ payload );
+//			log("AISTreamer:streamFromOllama():"+ payload );
 	
 			payload = HTTP.toUnicode( payload );
 	
@@ -155,7 +155,7 @@ public class AIStreamer extends Plugin {
 					String token = extractResponse(rawJson.toString());
 					rawJson.setLength(0);
 			
-					log("AISTreamer:streamFromOllama(): token = "+ token );
+					// log("AISTreamer:streamFromOllama(): token = "+ token );
 			
 					if (token != null) {
 						sentenceBuf.append(token);
@@ -165,7 +165,7 @@ public class AIStreamer extends Plugin {
 						if (isEndOfSentence(token,sentenceBuf)) {
 		
 							// log("AISTreamer:streamFromOllama(): sentenceBuf = "+ new String( sentenceBuf.toString() ) );
-							json.append( sentenceBuf.toString().trim()+"\n" );
+							json.append( sentenceBuf.toString().trim()+"\\n" );
 							speechQueue.put(sentenceBuf.toString().trim());
 							sentenceBuf.setLength(0);
 						}
