@@ -9,14 +9,14 @@ public class Tools {
 		int i1 = buffer.indexOf(vor);
 		if ( i1 >= 0 ) {
 			i1=i1+vor.length();
-	        int i2 = buffer.indexOf(nach,i1);
+	                int i2 = buffer.indexOf(nach,i1);
 
 			if ( i1 >= 0 && i2 > i1 ) {
 
 	                        return buffer.substring(i1,i2);
 	                }
-		     }
-             return null;
+		}
+                return null;
         }
 
 	// JSON Object is given by LLM, but the org.json package can't be shipped with distros, so we need to do it ourself, so .. don't wonder it's messy ;)
@@ -65,7 +65,7 @@ public class Tools {
 			if ( abis >= 0 ) 
 				answere = answere.substring( abis );
 		}
-		return answere.replaceAll("\\*\\*","").replaceAll("\\*","\"");
+		return answere.replaceAll("\\*\\*","").replaceAll("\\*","");
 	}
 
 
