@@ -42,7 +42,7 @@ public class AIStreamer extends Plugin {
 		return true; 
 	}
 
-	public String[] getActionCodes() { return new String[]{"AI_SAY", "AI_STOP","AICLEARHISTORY"}; }
+	public String[] getActionCodes() { return new String[]{"AI_SAY", "AI_STOP","AICLEARHISTORY","AI_SUMMARIZE"}; }
 
 	public boolean execute(Command cf, String rawtext) {
 	
@@ -52,15 +52,27 @@ public class AIStreamer extends Plugin {
 			triggerStop();
 			// Intent:      SENDERID, CMD, unused,unused, optionaltext 
 			pva.AsyncSendIntent(new Command("AISTREAMER", "STOPSPEECH", "", ""), "");
-			pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-10");
+			pva.AsyncSendIntent(new Command("AISTREAMER", "MOOD_IMPULS", "", ""), "-10");
 			return true;
 		}
 		if (cf.command.equals("AI_SAY")) {
-			pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "5");
+			pva.AsyncSendIntent(new Command("AISTREAMER", "MOOD_IMPULS", "", ""), "5");
 			jobQueue.offer(rawtext);
 			return true;
 		}
-		
+		if (cf.command.equals("AI_SUMMARIZE")) {
+			// Hole den harten System-Prompt aus der Config
+			String systemPrompt = getT("ai_summary_system_prompt");
+	
+			// Request an lokales LLM via io.Dos oder io.HTTP
+			// Wir erzwingen die Kürze durch das Prompt-Design
+			String aiResponse = streamFromOllama(systemPrompt +"\\n"+ rawtext, false) ; 
+	
+			// Loopback zum WikiPlugin (Goal c)
+			pva.AsyncSendIntent(new Command("AISTREAMER", "WIKI_SUMMARY_READY", "", ""), aiResponse);
+			return true;
+		}
+
 		if ( cf.command.equals("AICLEARHISTORY")) {
 			aimsgs.clear();
 			say( getT( "AIHISTORYCLEARED" ) );
@@ -91,8 +103,12 @@ public class AIStreamer extends Plugin {
 	}
 
 	private void streamFromOllama(String prompt) {
+		streamFromOllama( prompt, true );
+	}
+	private String streamFromOllama(String prompt, boolean sayit) {
 		vars.put("status", "streaming");
 		StringBuilder sentenceBuf = new StringBuilder();
+		StringBuilder entireBuf = new StringBuilder();
 		
 		try {
 		
@@ -152,7 +168,8 @@ public class AIStreamer extends Plugin {
 		
 							// log("AISTreamer:streamFromOllama(): sentenceBuf = "+ new String( sentenceBuf.toString() ) );
 							json.append( sentenceBuf.toString().trim()+"\\n" );
-							say(sentenceBuf.toString().trim());
+							if ( sayit ) say(sentenceBuf.toString().trim());
+							entireBuf.append( sentenceBuf.toString().trim() );
 							sentenceBuf.setLength(0);
 						}
 					}
@@ -166,9 +183,13 @@ public class AIStreamer extends Plugin {
 		} catch (Exception e) {
 			log(getT("AIS_STREAM_ERR") + e.getMessage());
 		} finally {
-			if (sentenceBuf.length() > 0) say(sentenceBuf.toString());
+			if (sentenceBuf.length() > 0) {
+				if ( sayit ) say(sentenceBuf.toString());
+				entireBuf.append( sentenceBuf.toString().trim() );
+			}
 			vars.put("status", "idle");
 		}
+		return entireBuf.toString().trim();
 	}
 
 	private String extractResponse(String body) {

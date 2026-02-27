@@ -76,8 +76,7 @@ public class MoodManager extends Plugin {
 
         String lang = pva.config.get("conf", "lang_short");
         String suffix = "";
-
-	log("textdb_key="+ textdb_key+" moodLevel="+moodLevel);
+        String err = "textdb_key="+ textdb_key+" moodLevel="+moodLevel;
 
         if (moodLevel >= 76)      suffix = "_MOOD_IN_LOVE";
         else if (moodLevel >= 51) suffix = "_MOOD_ENTHUSIASTIC";
@@ -104,12 +103,12 @@ public class MoodManager extends Plugin {
         String key = base + "_" + rand;
         String result = pva.texte.get(lang, key);
 
-	log("key="+ key + " => "+ result);
 
         if (result.isEmpty()) {
+            err += " no "+key;
             result = pva.texte.get(lang, base);
             
-            log("key="+ base + " => "+ result);
+//          log("key="+ base + " => "+ result);
             
             lastMoodAnswere.put(base, "0");
         } else {
@@ -117,10 +116,12 @@ public class MoodManager extends Plugin {
         }
 
         if (result.isEmpty()) {
+            err += " no "+base;
             result = pva.texte.get(lang, textdb_key);
             lastMoodAnswere.put(base, "0");
         }
 
+	log(err);
         return result;
     }
 
