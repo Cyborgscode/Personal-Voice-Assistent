@@ -1,5 +1,6 @@
 package plugins.files;
 
+import java.util.Enumeration;
 import plugins.Plugin;
 import server.PVA;
 import hash.StringHash;
@@ -57,11 +58,8 @@ public class MoodManager extends Plugin {
         if (cf.command.equals("MOOD_IMPULS")) {
 		// Hier landet alles, was das System "fühlt"
 		// rawtext ist hier der String-Wert des Impulses (z.B. "5" oder "-10")
-		
-		log("mood-impulse: "+ rawtext);
-		
 		this.setVar("impuls", rawtext);
-		log("MoodManager: Externer Impuls empfangen: " + rawtext + " (Neuer Level: " + moodLevel + ")");
+		if ( pva.debug > 5 ) log("MoodManager: Externer Impuls empfangen: " + rawtext + " (Neuer Level: " + moodLevel + ")");
 		return true;
 	}
         
@@ -90,30 +88,47 @@ public class MoodManager extends Plugin {
 
         String base = textdb_key + suffix;
         
+        int maxVariants = 0;
+        String key = "";
+	Enumeration en = pva.texte.get(lang).keys();
+	while (en.hasMoreElements()) {
+		key = (String) en.nextElement();
+		if (key.startsWith(base+"_")) {
+			maxVariants++;
+		}
+	}
+
         if (lastMoodAnswere.get(base).isEmpty()) lastMoodAnswere.put(base, "0");
         int last = Integer.parseInt(lastMoodAnswere.get(base));
-        
+
         int rand;
         int count = 0;
-        do {
-            rand = (int)(Math.random() * 3) + 1;
-            count++;
-        } while (rand == last && count < 5);
+        String result = "";
+        
+        if ( maxVariants > 1 ) {
+	        do {
+	            rand = (int)(Math.random() * maxVariants) + 1;
+	            count++;
+	        } while (rand == last && count < 15);
 
-        String key = base + "_" + rand;
-        String result = pva.texte.get(lang, key);
-
-
+	        key = base + "_" + rand;
+		result = pva.texte.get(lang, key);
+                lastMoodAnswere.put(base, String.valueOf(rand));
+                if (result.isEmpty()) 
+			err += " no "+key;
+	} else if ( maxVariants == 1 )  {
+	    err += " only one key found";	
+	} else {
+            err += " not enough keys";
+	}
+		
+	
         if (result.isEmpty()) {
-            err += " no "+key;
             result = pva.texte.get(lang, base);
-            
-//          log("key="+ base + " => "+ result);
-            
+//            log("key="+ base + " => "+ result);
             lastMoodAnswere.put(base, "0");
-        } else {
-            lastMoodAnswere.put(key, String.valueOf(rand));
-        }
+        } // else log("selected key = "+ key);
+	
 
         if (result.isEmpty()) {
             err += " no "+base;
@@ -121,7 +136,7 @@ public class MoodManager extends Plugin {
             lastMoodAnswere.put(base, "0");
         }
 
-	log(err);
+	if ( pva.debug > 3 ) log(err);
         return result;
     }
 
@@ -143,7 +158,7 @@ public class MoodManager extends Plugin {
 	public synchronized boolean setVar(String name, String value) {
 	        if (!setFilter.contains(":" + name + ":")) return false;
 	        
-	        log("MoodManager:setVar("+name+","+value+")");
+	        // log("MoodManager:setVar("+name+","+value+")");
 	        
 	        if (name.equals("impuls")) {
 			try {
@@ -176,7 +191,7 @@ public class MoodManager extends Plugin {
 			return "_MOOD_LMAA";
 		}
 
-	        log("MoodManager:getVar("+name+")");
+	        // log("MoodManager:getVar("+name+")");
 
 		if (name.equals("text")) {
 			return getMoodedText( vars.get("textkey") );
