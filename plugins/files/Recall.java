@@ -58,7 +58,7 @@ public class Recall extends Plugin {
 		try {
 			if ( ! dos.fileExists( pva.getHome()+"/.config/recall/config" ) ) {
 				// System.out.println("Recall not installed: "+ pva.getHome()+"/.config/recall/path");
-				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLNOTINSTALLED") );
+				say( getT("RECALLNOTINSTALLED") );
 				return true;
 			}
 			String[] config = dos.readFile( pva.getHome()+"/.config/recall/config" ).trim().split("\n");
@@ -74,7 +74,8 @@ public class Recall extends Plugin {
 			}
 
 			if ( pathname.isEmpty() ) {
-				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLNOTINSTALLED") );
+				say( getT("RECALLNOTINSTALLED") );
+ 				pva.AsyncSendIntent(new Command("RECALL", "MOOD_IMPULS", "", ""), "-1");
 				return true;
 			}
 
@@ -87,7 +88,7 @@ public class Recall extends Plugin {
 				if ( subtext.isEmpty() ) {
 					// System.out.println("Recall parseerror");
 				
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLPARSEERROR") );
+					say( getT("RECALLPARSEERROR") );
 					return true;
 				}
 		
@@ -105,7 +106,7 @@ public class Recall extends Plugin {
 				
 				} else {
 					// System.out.println("Recall NODATA");
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLNODATA") );
+					say( getT("RECALLNODATA") );
 					return true;
 				}
 			
@@ -124,7 +125,7 @@ public class Recall extends Plugin {
 				
 				} else {
 					// System.out.println("Recall NODATA");
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLNODATA") );
+					say( getT("RECALLNODATA") );
 					return true;
 				}
 			
@@ -148,12 +149,12 @@ public class Recall extends Plugin {
 					}
 
 					// System.out.println("Recall SIZE");
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLSIZE").replaceAll("<TERM1>", size+" "+einheiten[einheit] ) );
+					say( getT("RECALLSIZE").replaceAll("<TERM1>", size+" "+einheiten[einheit] ) );
 					return true;
 				
 				} else {
 					// System.out.println("Recall NODATA");
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "RECALLNODATA") );
+					say( getT("RECALLNODATA") );
 					return true;
 				}
 			

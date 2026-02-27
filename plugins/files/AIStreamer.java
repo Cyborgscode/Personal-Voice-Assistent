@@ -21,9 +21,8 @@ import java.net.*;
 public class AIStreamer extends Plugin {
 
 	private final LinkedBlockingQueue<String> jobQueue = new LinkedBlockingQueue<>(5);
-	private final LinkedBlockingQueue<String> speechQueue = new LinkedBlockingQueue<>(50);
-	private volatile boolean abortFlag = false;
 	private HttpURLConnection currentConn = null;
+	private volatile boolean abortFlag = false;
 	static AIMessages aimsgs = new AIMessages();
 
 	public void init(PVA pva) {
@@ -32,7 +31,7 @@ public class AIStreamer extends Plugin {
 		info.put("hasCodes", "yes");
 		info.put("name", "AIStreamer");
 		vars.put("status", "idle");
-		aimsgs.addMessage(new AIMessage("user", "User", "Hallo" ));
+		aimsgs.addMessage(new AIMessage("system", "", pva.config.get("ai","languageprompt") ));
 	}
 
 	public StringHash getPluginInfo() { return info; }
@@ -51,49 +50,36 @@ public class AIStreamer extends Plugin {
 	
 		if (cf.command.equals("AI_STOP")) {
 			triggerStop();
+			// Intent:      SENDERID, CMD, unused,unused, optionaltext 
+			pva.AsyncSendIntent(new Command("AISTREAMER", "STOPSPEECH", "", ""), "");
+			pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-10");
 			return true;
 		}
 		if (cf.command.equals("AI_SAY")) {
+			pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "5");
 			jobQueue.offer(rawtext);
 			return true;
 		}
 		
 		if ( cf.command.equals("AICLEARHISTORY")) {
 			aimsgs.clear();
-			
-			try {
-				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "AIHISTORYCLEARED" ) );
-			} catch (Exception e) {
-				// not much we can do exept 
-				log("AIStreamer:AICLEARHISTORY: pva.say failed for AIHISTORYCLEARED");
-			}
-
+			say( getT( "AIHISTORYCLEARED" ) );
 			return true;
 		}
-	
 		return false;
 	}
 
-	// Hilfsmethode für die Übersetzung
-	private String getT(String key) {
-		return pva.texte.get(pva.config.get("conf", "lang_short"), key);
-	}
-	
 	private void triggerStop() {
 		this.abortFlag = true;
 		this.jobQueue.clear();
-		this.speechQueue.clear();
 		if (currentConn != null) currentConn.disconnect(); // Kappe Ollama-Stream
-		dos.readPipe("killall -9 play"); // Der "Star-Trek" Reset
 		log(getT("AIS_EMERG_STOP")); 
 		vars.put("status", "idle");
 	}
 
 	public void run() {
 		// Speaker-Thread starten (Consumer)
-
-		new Thread(this::speakerLoop).start();
-
+		
 		while (!isInterrupted()) {
 			try {
 				String job = jobQueue.take();
@@ -166,7 +152,7 @@ public class AIStreamer extends Plugin {
 		
 							// log("AISTreamer:streamFromOllama(): sentenceBuf = "+ new String( sentenceBuf.toString() ) );
 							json.append( sentenceBuf.toString().trim()+"\\n" );
-							speechQueue.put(sentenceBuf.toString().trim());
+							say(sentenceBuf.toString().trim());
 							sentenceBuf.setLength(0);
 						}
 					}
@@ -175,34 +161,13 @@ public class AIStreamer extends Plugin {
 			
 			aimsgs.addMessage(new AIMessage("assistant", pva.config.get("ai","model"), Tools.filterAIThinking( json.toString() ).trim() ));
 			
-			// log("message="+ aimsgs.toJSON());
+//			log("message="+ aimsgs.toJSON());
 	
 		} catch (Exception e) {
 			log(getT("AIS_STREAM_ERR") + e.getMessage());
 		} finally {
-			if (sentenceBuf.length() > 0) speechQueue.offer(sentenceBuf.toString());
+			if (sentenceBuf.length() > 0) say(sentenceBuf.toString());
 			vars.put("status", "idle");
-		}
-	}
-
-	private void speakerLoop() {
-		while (!isInterrupted()) {
-			try {
-				String s = speechQueue.take();
-		
-				s = s.replaceAll("^\\* ", ""); // Listen-Sternchen am Anfang weg
-				
-				log("AISTreamer:speakerLoop(): "+ s );
-		
-				if (!abortFlag) {
-					vars.put("status", "speaking");
-					pva.say(s, true); 
-					vars.put("status", "idle");
-				}
-			} catch (Exception e) { 
-				log(getT("AIS_SAY_FAIL"));
-				vars.put("status", "idle");
-			}
 		}
 	}
 
@@ -293,7 +258,7 @@ public class AIStreamer extends Plugin {
 
 			// 6. KLASSISCHE ABKÜRZUNGS-BREMSE (ca., v. Chr., Dr.)
 		
-			String[] checkboxAlpha = new String[]{" ca.","(ca."," v."," dr."," chr."," bzw."," aso."};
+			String[] checkboxAlpha = new String[]{" ca.","(ca."," v."," dr."," chr."," bzw."," aso.","z.B.","z.b."};
 			
 			for(String c : checkboxAlpha) 
 				if ( vorschau.endsWith( c ) || vorschau.endsWith( c+".") ) 

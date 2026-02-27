@@ -53,15 +53,17 @@ public class DiskFree extends Plugin {
 	public boolean execute(Command cf, String rawtext) { 
 		try {
 			if ( cf.command.equals("SILENCEDISKWARNING") ) {
+ 				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-10");
 				log("schalte warnung aus");
 				setVar("silence","yes");
-				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "DISKRESPONSETURNEDOFF") );
+				say( getT("DISKRESPONSETURNEDOFF") );
 	
 			} else if ( cf.command.equals("UNSILENCEDISKWARNING") ) {
-	
+ 				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "10");
+
 				log("schalte warnung ein");
 				setVar("silence","no");
-				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "DISKRESPONSETURNEDON") );
+				say( getT("DISKRESPONSETURNEDON") );
 	
 			} else return false;
 	
@@ -106,6 +108,7 @@ public class DiskFree extends Plugin {
 								long free = 0;
 								String unit = "";
 								if ( spalten[4].length() > 1 ) {
+								
 									if ( spalten[4].contains(",") ) {
 									     free = Long.parseLong( spalten[4].substring(0, spalten[4].indexOf(",") ) );
 									} else free = Long.parseLong( spalten[4].substring(0, spalten[4].length()-1 ) );
@@ -113,10 +116,8 @@ public class DiskFree extends Plugin {
 								}
 								if ( unit.equals("") && free == 0 ) {
 									if ( vars.get("silence").equals("no") && ! warned.get(spalten[6],"full").equals("1") ) {
-										pva.say( 
-											pva.texte.get( 
-												pva.config.get("conf","lang_short"),
-												"DISKWARNINGFULL"
+						 				pva.AsyncSendIntent(new Command("DISKFREE", "MOOD_IMPULS", "", ""), "-10");
+										say( getT( "DISKWARNINGFULL"
 											).replaceAll("<TERM1>", ""+free)
 											 .replaceAll("<TERM2>", "Megabyte")
 											 .replaceAll("<TERM3>", spalten[6])
@@ -125,10 +126,8 @@ public class DiskFree extends Plugin {
 									}
 								} else if ( unit.equals("M") && free < 500 ) {
 									if ( vars.get("silence").equals("no") && ! warned.get(spalten[6],"warn").equals("1") ) {
-										pva.say( 
-											pva.texte.get( 
-												pva.config.get("conf","lang_short"),
-												"DISKWARNINGNEARLY"
+						 				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-5");
+										say( getT( "DISKWARNINGNEARLY"
 											).replaceAll("<TERM1>", ""+free)
 											 .replaceAll("<TERM2>", "Megabyte")
 											 .replaceAll("<TERM3>", spalten[6] )
@@ -137,10 +136,8 @@ public class DiskFree extends Plugin {
 									}
 								} else if ( unit.equals("G") && free < 1 ) {
 									if ( vars.get("silence").equals("no") && ! warned.get(spalten[6],"soon").equals("1") ) { 
-										pva.say( 
-											pva.texte.get( 
-												pva.config.get("conf","lang_short"),
-												"DISKWARNINGSOON"
+						 				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-1");
+										say( getT( "DISKWARNINGSOON"
 											).replaceAll("<TERM1>", ""+free)
 											 .replaceAll("<TERM2>", "Gigabyte")
 											 .replaceAll("<TERM3>", spalten[6] )
@@ -162,11 +159,8 @@ public class DiskFree extends Plugin {
 									content.put("warn","0");
 									content.put("soon","0");
 									if ( vars.get("silence").equals("no") ) 
-										pva.say( 
-											pva.texte.get( 
-												pva.config.get("conf","lang_short"),
-												"DISKWARNINGCLEAR"
-											).replaceAll("<TERM1>", spalten[6] )
+						 				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "10");
+										say( getT( "DISKWARNINGCLEAR" ).replaceAll("<TERM1>", spalten[6] )
 										);
 								}
 							}

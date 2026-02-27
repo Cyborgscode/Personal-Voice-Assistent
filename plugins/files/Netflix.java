@@ -15,10 +15,11 @@ public class Netflix extends Plugin {
 	private String setFilter = "";
 	private TwoKeyHash validValues = new TwoKeyHash(); 
 	
+/*
 	public Netflix() {
 		System.out.println("Class Netflix Constructor called");
 	}
-	
+*/ 	
 	Position pos;
 	boolean kiosk = false;
 	
@@ -88,7 +89,8 @@ public class Netflix extends Plugin {
 					// FS mode can be only valid if we are in playing mode.
 
 					activateNetflixWindow();
-					
+	 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");
+	 									
 					if ( vars.get("fullscreen").equals("no") ) {
 						pos.parse( "pos_fullscreen_on");
 						vars.put("fullscreen","yes");
@@ -107,7 +109,7 @@ public class Netflix extends Plugin {
 				if ( vars.get("playing").equals("no") || kiosk ) {
 				
 					activateNetflixWindow();
-					 
+	 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");					 
 					// now execute the real sequence
 				
 					pos.parse( "pos_mylist");
@@ -122,7 +124,7 @@ public class Netflix extends Plugin {
 				if ( vars.get("playing").equals("no") || kiosk ) {
 
 					activateNetflixWindow();
-					
+	 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");					
 					// now execute the real sequence
 				
 					pos.parse( "pos_start");
@@ -136,7 +138,7 @@ public class Netflix extends Plugin {
 				if ( vars.get("playing").equals("yes") || kiosk ) {
 
 					activateNetflixWindow();
-					
+	 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");
 					// now execute the real sequence
 				
 					pos.parse( "pos_skipintro");
@@ -150,7 +152,8 @@ public class Netflix extends Plugin {
 				if ( vars.get("playing").equals("yes") || kiosk ) {
 
 					activateNetflixWindow();
-					
+	 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");					
+	 				
 					// now execute the real sequence
 				
 					pos.parse( "pos_back");
@@ -167,7 +170,8 @@ public class Netflix extends Plugin {
                                 if ( vars.get("playing").equals("yes") || kiosk ) {
 
                                         activateNetflixWindow();
-
+	 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");
+	 				
                                         // now execute the real sequence
 
                                         pos.parse( "pos_next");
@@ -182,7 +186,8 @@ public class Netflix extends Plugin {
 				if ( vars.get("playing").equals("yes") || kiosk) {
 
 					activateNetflixWindow();
-					
+	 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");
+	 									
 					// now execute the real sequence
 				
 					pos.parse( "pos_play");
@@ -208,7 +213,8 @@ public class Netflix extends Plugin {
 				if ( vars.get("playing").equals("yes") || kiosk ) {
 
 					activateNetflixWindow();
-					
+	 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");
+	 									
 					// now execute the real sequence
 				
 					pos.parse( "pos_forward");
@@ -226,7 +232,8 @@ public class Netflix extends Plugin {
 				if ( vars.get("playing").equals("yes") || kiosk ) {
 
 					activateNetflixWindow();
-					
+	 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");
+	 									
 					// now execute the real sequence
 				
 					pos.parse( "pos_backwards");
@@ -265,6 +272,7 @@ public class Netflix extends Plugin {
 					}
 */
 
+ 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");
 				log("search "+ searchterm);
 				
 				// in case we have an overlay open
@@ -304,6 +312,8 @@ public class Netflix extends Plugin {
 					Thread.sleep(2000L);
 					vars.put("playing","no");
 					vars.put("paused","no");
+	 				pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "1");
+
 				}
 
 				// we are back on the main ui in an unkown state
@@ -353,6 +363,8 @@ public class Netflix extends Plugin {
 	
 			return true; 
 		}  catch (Exception localException) {
+			pva.AsyncSendIntent(new Command("NETFLIX", "MOOD_IMPULS", "", ""), "-10");
+
 			localException.printStackTrace();
 			return true; 
 		}
@@ -393,3 +405,4 @@ class Position {
 }
 
 }
+

@@ -70,11 +70,13 @@ public class SpeechGuard extends Plugin {
 	public boolean execute(Command cf, String rawtext) { 
 		try {
 			if ( cf.command.equals("SHUTUP") ) {
+ 				pva.AsyncSendIntent(new Command("SPEECHGUARD", "MOOD_IMPULS", "", ""), "-10");
 				log("schalte sprache aus");
 				pva.config.put("conf","cantalk","no");
 				vars.put("cantalk","no");
 				time = (new Date()).getTime()/1000 + shutUpFor;
 			} else	if ( cf.command.equals("TALKTOME") ) {
+ 				pva.AsyncSendIntent(new Command("SPEECHGUARD", "MOOD_IMPULS", "", ""), "10");
 				log("schalte sprache ein");
 				pva.config.put("conf","cantalk","yes");
 				vars.put("cantalk","yes");
@@ -93,6 +95,7 @@ public class SpeechGuard extends Plugin {
 	public void run() {
 	
 		try {
+			String[] disks;
 			boolean inform = false;
 			Long now = (new Date()).getTime()/1000;
 			

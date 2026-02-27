@@ -55,27 +55,34 @@ public class LoadTask extends Plugin {
 				
 				Float f = Float.parseFloat( dos.readPipe("cat /proc/loadavg").split(" ")[0].trim() );
 				long  c = Long.parseLong( dos.readPipe("grep -c processor /proc/cpuinfo").trim() );
+
+				// Thanks that you cared for me +1 MOOD
+				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "1");
 					
 				if ( f < 1 ) {
-						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSENOTHINGTODO") );
+						say( getT( "HEALTHRESPONSENOTHINGTODO") );
 				} else if ( f > c ) {
-						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSEHELPHELP") );
+						say( getT( "HEALTHRESPONSEHELPHELP") );
 				} else if ( f > ( c/2 ) ) {
-						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSESOLALA") );
+						say( getT( "HEALTHRESPONSESOLALA") );
 				} else {
-						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSENORMAL") );
+						say( getT( "HEALTHRESPONSENORMAL") );
 				}	
-			
+	
 			} else if ( cf.command.equals("SILENCELOADWARNING") ) {
 				log("schalte warnung aus");
 				setVar("silence","yes");
-				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSETURNEDOFF") );
+				// WTF.. you do not care for me? : -25 MOOD
+				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-15");
+				say( getT( "HEALTHRESPONSETURNEDOFF") );
 	
 			} else if ( cf.command.equals("UNSILENCELOADWARNING") ) {
 	
 				log("schalte warnung ein");
 				setVar("silence","no");
-				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSETURNEDON") );
+				// Finally : -15 MOOD
+				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-15");
+				say( getT( "HEALTHRESPONSETURNEDON") );
 	
 			} else return false; // if we did not handle this code, tell the app, as it can try another plugin.
 	
@@ -120,16 +127,20 @@ public class LoadTask extends Plugin {
 //				log("load="+f+" laststate="+lastState+" time="+time);
 				
 				if ( f > c && ( lastState < c || time > 60 ) ) {
-						if ( vars.get("silence").equals("no") ) pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSEHELPHELP") );
+						// I'm meltung: -25 MOOD
+						pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-25");
+						// we use SPEAK - Intent here because we wanne have it now, not in 20 Seconds, when the queue cleared.
+						
+						if ( vars.get("silence").equals("no") ) pva.AsyncSendIntent(new Command("LOADTASK", "SPEAK", "", ""), getT("HEALTHRESPONSEHELPHELP") );
 						time = 0;
 						inform = true;
 					
 				} else if ( f > ( c*80/100) && ( lastState < ( c*80/100) || time > 60 ) ) {
-						if ( vars.get("silence").equals("no") ) pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSE80P") );
+						if ( vars.get("silence").equals("no") ) pva.AsyncSendIntent(new Command("LOADTASK", "SPEAK", "", ""), getT("HEALTHRESPONSE80P") );
 						time = 0;
 						inform = true;
 				} else if ( f < ( c/2 ) && lastState > (c/2) && inform ) {
-						if ( vars.get("silence").equals("no") ) pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "HEALTHRESPONSEOK") );
+						if ( vars.get("silence").equals("no") ) pva.AsyncSendIntent(new Command("LOADTASK", "SPEAK", "", ""), getT("HEALTHRESPONSEOK") );
 						inform = false;
 				}	
 

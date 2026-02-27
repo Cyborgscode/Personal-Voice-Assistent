@@ -294,7 +294,7 @@ public class Cluster extends Plugin {
 			return;
 		}
 
-		if ( cluster.get("internal_shutdown").equals("true") ) {
+		if ( config.get("internal_shutdown").equals("true") ) {
 
 			// destroy the nodes
 
@@ -385,10 +385,12 @@ public class Cluster extends Plugin {
 	public boolean execute(Command cf, String rawtext) { 
 
 		try {
+
 			if ( cf.command.equals("CLUSTERSTREAMVIDEO") ) {
 			
 				if ( cf.terms.size() < 2 ) {
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERPARSEERROR") );
+	 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-10");
+					say( getT("CLUSTERPARSEERROR") );
 					log("exit execute("+rawtext+")");
 					return false;
 				}
@@ -422,12 +424,14 @@ public class Cluster extends Plugin {
 				                serverinstance.start();
 	
 					} else {
+		 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-5");
 						log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERSTREAMSEARCHERROR").replaceAll("<TERM1>", client ) );
-						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERSTREAMSEARCHERROR").replaceAll("<TERM1>", client ) );
+						say( getT("CLUSTERSTREAMSEARCHERROR").replaceAll("<TERM1>", client ) );
 					}
 				} else {
+	 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-1");
 					log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
 				}
 				
 				return true;
@@ -435,7 +439,7 @@ public class Cluster extends Plugin {
 			} else if ( cf.command.equals("CLUSTERSTREAMDESKTOP") ) {
 			
 				if ( cf.terms.size() < 1 ) {
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERPARSEERROR") );
+					say( getT("CLUSTERPARSEERROR") );
 					log("exit execute("+rawtext+")");
 					return false;
 				}
@@ -443,14 +447,19 @@ public class Cluster extends Plugin {
 				String client = ((String)cf.terms.get(0)).trim();
 				StringHash infos = cluster.get(client);
 				if ( infos != null ) {
-	
+
+					// log( cmds.toString() );	
 					Streaming serverinstance = (Streaming)(new DesktopStreaming( pva, infos,cmds, null ));
 					server.put( client.toLowerCase(), serverinstance);
+					
+					// log( serverinstance.toString() );	
+					
 			                serverinstance.start();
 	
 				} else {
+	 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-5");
 					log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
 				}
 				
 				return true;
@@ -458,7 +467,7 @@ public class Cluster extends Plugin {
 			} else if ( cf.command.equals("CLUSTERSTREAMCAMERA") ) {
 
 				if ( cf.terms.size() < 1 ) {
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERPARSEERROR") );
+					say( getT("CLUSTERPARSEERROR") );
 					log("exit execute("+rawtext+")");
 					return false;
 				}
@@ -470,10 +479,13 @@ public class Cluster extends Plugin {
 					Streaming serverinstance = (Streaming)(new LiveStreaming( pva, infos,cmds, null ));
 					server.put( client.toLowerCase(), serverinstance);
 			                serverinstance.start();
+               				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "5");
+
 	
 				} else {
+	 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-5");
 					log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
-					pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
 				}
 				
 				return true;
@@ -501,6 +513,8 @@ public class Cluster extends Plugin {
 					if ( s!=null && infos.get("streaming").equals("on") ) {
 						log("skip "+ text);
 						s.next();
+				 		pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "1");
+
 						log("skipped "+ text);
 					} else 	log("s="+s+ " and streaming is "+ infos.get("streaming") );
 			
@@ -522,7 +536,6 @@ public class Cluster extends Plugin {
 				}
 						
 				log("stoppe client "+text);
-				
 				StringHash infos = cluster.get(text);
 				if ( infos != null ) {
 					log("streaming stop for client "+ text);
@@ -530,6 +543,9 @@ public class Cluster extends Plugin {
 					if ( s!=null && infos.get("streaming").equals("on") ) {
 						log("stopping "+ text);
 						s.exit();
+						// hat geklappt 
+						pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "5");
+
 						log("stopped "+ text);
 						server.remove(s);
 					} else  log("s="+s+ " and streaming is "+ infos.get("streaming") );
@@ -546,7 +562,9 @@ public class Cluster extends Plugin {
 					text += (String)en.nextElement() +".";
 				}
 
-				pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERLISTCLIENTS").replaceAll("<TERM1>", text ) );
+				say( getT("CLUSTERLISTCLIENTS").replaceAll("<TERM1>", text ) );
+				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "1");
+
 				
 				return true;
 					
@@ -644,9 +662,12 @@ public class Cluster extends Plugin {
 					local( infos, "link_micro_right_new" );
 
 					if ( !infos.get("tsid").matches("^[0-9]+$") || !infos.get("tmid").matches("^[0-9]+$") ) {
-						pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", text ) );
+						say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", text ) );
 					}
-				} else pva.say( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", text ) );
+				} else {
+	 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-10");
+					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", text ) );
+				}
 			
 				donotdisturb = true;
 			
@@ -696,6 +717,8 @@ public class Cluster extends Plugin {
 							// remove local tunnel modules in case it was already connected. This is vital if the client returns later
 							if ( !cluster.get(key,"sid").equals("0") || !cluster.get(key,"mid").equals("0") ) {
 								log("Cluster:run: host down for client "+key+" detected ... removing connection");
+								pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-10");
+
 								// we need to remove the tunnel module
 								local( cluster.get(key), "unload_micro");
 								local( cluster.get(key), "unload_speaker");
@@ -727,6 +750,9 @@ public class Cluster extends Plugin {
 						if ( cluster.get(key,"sid").equals("0") || cluster.get(key,"mid").equals("0") ) {
 				
 							log("Cluster:run: client "+key+" detected and not integrated...trying to setup connection");
+
+ 							pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "5");
+
 				
 							// we do the same as in init, except loading the config for a client, so no more comments here to compactify the source
 					
@@ -808,6 +834,7 @@ public class Cluster extends Plugin {
 
 								}
 							} else {
+				 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-10");
 								log("Cluster:init: unable to connect to client "+ key +" / unable to detect pipewire environment");
 							}
 						}
@@ -817,6 +844,8 @@ public class Cluster extends Plugin {
 			}
 		} catch (Exception localException) {
 			localException.printStackTrace();
+			pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-10");
+
 		}
 	}
 }
