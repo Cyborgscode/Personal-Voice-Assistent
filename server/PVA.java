@@ -20,6 +20,7 @@ import java.util.regex.*;
 import com.mpatric.mp3agic.*;
 import server.Server;
 import plugins.Plugins;
+import plugins.Plugin;
 import utils.Tools;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter; 
@@ -47,6 +48,8 @@ public class PVA {
 	static MetacacheTask mt;
 	static Plugins pls;
 	static Server server;
+ 	static IntentWorker intentWorker;
+
 
 	static String text = "";
 	static String text_raw = "";
@@ -74,7 +77,7 @@ public class PVA {
         }
 
 	private static String pa_outputid = "";
-	
+
 	private static boolean initPulseAudio() {
 	
 		if ( pa_outputid.isEmpty() ) {
@@ -1321,6 +1324,11 @@ public class PVA {
 
 			PVA pva = new PVA();
 
+			log("start IntentQueue");
+			
+			intentWorker = new IntentWorker(pva);
+		        intentWorker.start();
+
 			log("start TimerTask");
 			
 			tt = new TimerTask(pva);
@@ -1339,6 +1347,7 @@ public class PVA {
 			log("start PluginLoader");
 			
 			pls = new Plugins(pva);
+					
 
 			log("PVA:main:init audio");
 
@@ -1552,7 +1561,7 @@ public class PVA {
 					
 								log("ai:send:" + text);
 
-								reaction = pls.handlePluginAction( new Command("DUMMY","AI_SAY","",""), text);
+								reaction = pls.handlePluginAction( new Command("PVA","AI_SAY","",""), text);
 
 							}
 						} 
@@ -3249,14 +3258,14 @@ public class PVA {
 								dos.readPipe("fswebcam -d "+ ai.get("device") +" -r "+ ai.get("resolution") +" --jpeg "+ ai.get("quality") +" --no-banner /tmp/webcam.jpg");
 								// bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
 								bimages = "\""+ Base64.getEncoder().encodeToString( dos.readFileRaw("/tmp/webcam.jpg") ).trim() +"\"";
-								content = ai.get("languageprompt")+texte.get( config.get("conf","lang_short"), "AIIDENTIFYIMAGE" );
+								content = ai.get("imageprompt")+texte.get( config.get("conf","lang_short"), "AIIDENTIFYIMAGE" );
 
 						} else if (  cf.command.equals("AIIDENTIFYCAMFREE") ) {
 
 								dos.readPipe("fswebcam -d "+ ai.get("device") +" -r "+ ai.get("resolution") +" --jpeg "+ ai.get("quality") +" --no-banner /tmp/webcam.jpg");
 //								bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
 								bimages = "\""+ Base64.getEncoder().encodeToString( dos.readFileRaw("/tmp/webcam.jpg") ).trim() +"\"";
-								content = ai.get("languageprompt")+text_raw.replace(""+keyword+"","");
+								content = ai.get("imageprompt")+text_raw.replace(""+keyword+"","");
 								
 						} else if ( cf.command.equals("AIIDENTIFYDESKTOP") ) {
 
@@ -3273,14 +3282,14 @@ public class PVA {
 									bimages = "\""+ Base64.getEncoder().encodeToString( dos.readFileRaw("/tmp/webcam.jpg") ).trim() +"\"";
 								}
 									
-								content = ai.get("languageprompt")+text_raw.replace(""+keyword+"","");
+								content = ai.get("imageprompt")+text_raw.replace(""+keyword+"","");
 						} else if ( cf.command.equals("AIIDENTIFYFULLDESKTOP") ) {
 
 								dos.readPipe("gnome-screenshot -f /tmp/webcam.jpg");
 
 //								bimages = "\""+ dos.readPipe("base64 -w 0 /tmp/webcam.jpg").trim() +"\"";
 								bimages = "\""+ Base64.getEncoder().encodeToString( dos.readFileRaw("/tmp/webcam.jpg") ).trim() +"\"";
-								content = ai.get("languageprompt")+text_raw.replace(""+keyword+"","");
+								content = ai.get("imageprompt")+text_raw.replace(""+keyword+"","");
 						}
 
 
@@ -3374,7 +3383,7 @@ public class PVA {
 					
 						log("ai:send:" + text);
 
-						reaction = pls.handlePluginAction( new Command("DUMMY","AI_SAY","",""), text);
+						reaction = pls.handlePluginAction( new Command("PVA","AI_SAY","",""), text);
 
 					} else if ( !checkMediaPlayback() ) {
 						log("ai:error:mediaplayback detected");
@@ -3474,8 +3483,42 @@ public class PVA {
 
 	    }
 
+	static public String getText(String key) {
+	
+		Plugin mood = pls.getPlugin("MoodManager");
+		if ( mood != null ) {
+			log("moodlevel="+ mood.getVar("level"));
+			log("moodsuffix="+ mood.getVar("suffix"));
+			mood.setVar("textkey",key);
+			return mood.getVar("text");
+		}
+		return texte.get(config.get("conf", "lang_short"),key);
+	}
+
+
+	static public boolean sendIntent(Command cmd, String data){
+		// SyncHandleCommand if it's important to know if the Intent worked
+		log("handle Intent \""+ cmd.command +"\" from "+ cmd.words);
+		return pls.handlePluginAction( cmd, data );
+	
+	}
+
+	static public boolean AsyncSendIntent(Command cmd, String data) {
+		if (intentWorker != null) {
+			log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words);
+			intentWorker.enqueue(cmd, data);
+			return true;
+		}
+		return false;
+	}
 }
 	
+class IntentPacket {
+	public Command cmd;
+	public String data;
+	IntentPacket(Command c, String d) { this.cmd = c; this.data = d; }
+}
+
 class Reaction {
 
 	public String positives = "";
@@ -3504,6 +3547,7 @@ class AppResult {
 		this.keywordrelevance = kr;
 
 	}	
+
 }
 
 
