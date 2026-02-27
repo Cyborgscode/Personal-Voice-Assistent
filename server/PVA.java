@@ -29,7 +29,7 @@ public class PVA {
 
 	static String keyword = "carola";
 
-	static long debug = 0;
+	static public long debug = 0;
 
 	static public TwoKeyHash config   	= new TwoKeyHash();
 	static TwoKeyHash alternatives    	= new TwoKeyHash();
@@ -3505,7 +3505,7 @@ public class PVA {
 
 	static public boolean AsyncSendIntent(Command cmd, String data) {
 		if (intentWorker != null) {
-			log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words);
+			// log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words);
 			intentWorker.enqueue(cmd, data);
 			return true;
 		}
