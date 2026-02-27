@@ -31,6 +31,16 @@ public class Plugins {
 
 	public void init() {
 	       	loadClasses();
+	}
+	
+	public Plugin getPlugin(String name) {
+
+		for(int i = 0; i< pluginsfound ;i++ ) {
+			if (myPlugins[i] != null && myPlugins[i].getPluginInfo().get("name").equals(name)) {
+				return myPlugins[i];
+			}
+		}
+		return null;
 	}        
        
         private boolean loadClasses() {
@@ -102,7 +112,7 @@ public class Plugins {
 //					System.out.println("");
 					
 					if ( wehandleit ) {
-						System.out.println("Plugin "+ info.get("name") + " called => execute("+cf.command+","+ textraw +")");
+						// System.out.println("Plugin "+ info.get("name") + " called => execute("+cf.command+","+ textraw +")");
 						boolean rc = p.execute( cf, textraw );
 						if ( rc ) {
 //							System.out.println("Plugin "+ info.get("name") + " handled it ");
@@ -127,3 +137,4 @@ public class Plugins {
 	}
 	
 }
+
