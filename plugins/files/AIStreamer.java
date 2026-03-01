@@ -20,7 +20,20 @@ import java.net.*;
 
 public class AIStreamer extends Plugin {
 
-	private final LinkedBlockingQueue<String> jobQueue = new LinkedBlockingQueue<>(5);
+	public static class AIJob {
+	    public final String text;
+	    public final String returnIntent;
+	    public final String extra;
+	    public AIJob(String text, String returnIntent, String extra) {
+	        this.text = text;
+	        this.extra = extra;
+	        this.returnIntent = returnIntent;
+	    }
+	}
+
+	
+	private final LinkedBlockingQueue<AIJob> jobQueue = new LinkedBlockingQueue<>(50);
+//	private final LinkedBlockingQueue<String> jobQueue = new LinkedBlockingQueue<>(50);
 	private HttpURLConnection currentConn = null;
 	private volatile boolean abortFlag = false;
 	static AIMessages aimsgs = new AIMessages();
@@ -42,7 +55,7 @@ public class AIStreamer extends Plugin {
 		return true; 
 	}
 
-	public String[] getActionCodes() { return new String[]{"AI_SAY", "AI_STOP","AICLEARHISTORY","AI_SUMMARIZE"}; }
+	public String[] getActionCodes() { return new String[]{"AI_SAY", "AI_STOP","AI_ANSWERE","AICLEARHISTORY","AI_SUMMARIZE"}; }
 
 	public boolean execute(Command cf, String rawtext) {
 	
@@ -51,14 +64,25 @@ public class AIStreamer extends Plugin {
 		if (cf.command.equals("AI_STOP")) {
 			triggerStop();
 			// Intent:      SENDERID, CMD, unused,unused, optionaltext 
-			pva.AsyncSendIntent(new Command("AISTREAMER", "STOPSPEECH", "", ""), "");
-			pva.AsyncSendIntent(new Command("AISTREAMER", "MOOD_IMPULS", "", ""), "-10");
+			pva.AsyncSendIntent(new Command("AISTREAMER", "STOPSPEECH", cf.filter, cf.negative), "");
+			pva.AsyncSendIntent(new Command("AISTREAMER", "MOOD_IMPULS", cf.filter, cf.negative), "-10");
 			return true;
 		}
 		if (cf.command.equals("AI_SAY")) {
 			pva.AsyncSendIntent(new Command("AISTREAMER", "MOOD_IMPULS", "", ""), "5");
-			jobQueue.offer(rawtext);
+			jobQueue.offer(new AIJob(rawtext,cf.filter,cf.negative));
 			return true;
+		}
+		if (cf.command.equals("AI_ANSWERE")) {
+			pva.AsyncSendIntent(new Command("AISTREAMER", "MOOD_IMPULS", "", ""), "5");
+			if ( rawtext.contains("|") ) {
+				String[] x = rawtext.split("\\|");
+				String aiResponse = streamFromOllama( new AIJob(x[1], cf.filter,cf.negative), false); 
+				log("aiResponse="+aiResponse);
+				pva.AsyncSendIntent(new Command("AISTREAMER", cf.filter, "", ""), x[0]+"|"+aiResponse);
+				return true;
+			}
+			return false;
 		}
 		if (cf.command.equals("AI_SUMMARIZE")) {
 			// Hole den harten System-Prompt aus der Config
@@ -66,16 +90,16 @@ public class AIStreamer extends Plugin {
 	
 			// Request an lokales LLM via io.Dos oder io.HTTP
 			// Wir erzwingen die Kürze durch das Prompt-Design
-			String aiResponse = streamFromOllama(systemPrompt +"\\n"+ rawtext, false) ; 
+			String aiResponse = streamFromOllama(new AIJob( systemPrompt +"\\n"+ rawtext, cf.filter,cf.negative) , false) ; 
 	
 			// Loopback zum WikiPlugin (Goal c)
-			pva.AsyncSendIntent(new Command("AISTREAMER", "WIKI_SUMMARY_READY", "", ""), aiResponse);
+			pva.AsyncSendIntent(new Command("AISTREAMER", "WIKI_SUMMARY_READY", cf.filter, cf.negative ), aiResponse);
 			return true;
 		}
 
 		if ( cf.command.equals("AICLEARHISTORY")) {
 			aimsgs.clear();
-			say( getT( "AIHISTORYCLEARED" ) );
+			say( getT( "AIHISTORYCLEARED" ) , cf.filter,cf.negative);
 			return true;
 		}
 		return false;
@@ -94,25 +118,28 @@ public class AIStreamer extends Plugin {
 		
 		while (!isInterrupted()) {
 			try {
-				String job = jobQueue.take();
-			   	log("AISTreamer:run()"+ job );
+				AIJob job = jobQueue.take();
+			   	log("AISTreamer:run()"+ job.text +" > "+ job.returnIntent +" > "+ job.extra );
 				this.abortFlag = false;
 				streamFromOllama( job ); 
 			} catch (InterruptedException e) { break; }
 		}
 	}
 
-	private void streamFromOllama(String prompt) {
+	private void streamFromOllama(AIJob prompt) {
 		streamFromOllama( prompt, true );
 	}
-	private String streamFromOllama(String prompt, boolean sayit) {
+	private String streamFromOllama(AIJob job, boolean sayit) {
+
+		String prompt = job.text;
+
 		vars.put("status", "streaming");
 		StringBuilder sentenceBuf = new StringBuilder();
 		StringBuilder entireBuf = new StringBuilder();
 		
 		try {
 		
-			aimsgs.addMessage(new AIMessage("user", "User", prompt ));
+			aimsgs.addMessage(new AIMessage("user", "User", Tools.filterAIThinking( prompt ) ));
 		
 			URL url = new URL("http://" + pva.config.get("ai", "host") + ":" + pva.config.get("ai", "port") + "/api/chat");
 			currentConn = (HttpURLConnection) url.openConnection();
@@ -168,7 +195,7 @@ public class AIStreamer extends Plugin {
 		
 							// log("AISTreamer:streamFromOllama(): sentenceBuf = "+ new String( sentenceBuf.toString() ) );
 							json.append( sentenceBuf.toString().trim()+"\\n" );
-							if ( sayit ) say(sentenceBuf.toString().trim());
+							if ( sayit ) say(sentenceBuf.toString().trim(),job.returnIntent,job.extra);
 							entireBuf.append( sentenceBuf.toString().trim() );
 							sentenceBuf.setLength(0);
 						}
@@ -184,7 +211,7 @@ public class AIStreamer extends Plugin {
 			log(getT("AIS_STREAM_ERR") + e.getMessage());
 		} finally {
 			if (sentenceBuf.length() > 0) {
-				if ( sayit ) say(sentenceBuf.toString());
+				if ( sayit ) say(sentenceBuf.toString(),job.returnIntent,job.extra);
 				entireBuf.append( sentenceBuf.toString().trim() );
 			}
 			vars.put("status", "idle");

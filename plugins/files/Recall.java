@@ -58,7 +58,7 @@ public class Recall extends Plugin {
 		try {
 			if ( ! dos.fileExists( pva.getHome()+"/.config/recall/config" ) ) {
 				// System.out.println("Recall not installed: "+ pva.getHome()+"/.config/recall/path");
-				say( getT("RECALLNOTINSTALLED") );
+				say( getT("RECALLNOTINSTALLED"), cf.filter,cf.negative  );
 				return true;
 			}
 			String[] config = dos.readFile( pva.getHome()+"/.config/recall/config" ).trim().split("\n");
@@ -74,7 +74,7 @@ public class Recall extends Plugin {
 			}
 
 			if ( pathname.isEmpty() ) {
-				say( getT("RECALLNOTINSTALLED") );
+				say( getT("RECALLNOTINSTALLED"), cf.filter,cf.negative  );
  				pva.AsyncSendIntent(new Command("RECALL", "MOOD_IMPULS", "", ""), "-1");
 				return true;
 			}
@@ -88,7 +88,7 @@ public class Recall extends Plugin {
 				if ( subtext.isEmpty() ) {
 					// System.out.println("Recall parseerror");
 				
-					say( getT("RECALLPARSEERROR") );
+					say( getT("RECALLPARSEERROR"), cf.filter,cf.negative  );
 					return true;
 				}
 		
@@ -106,7 +106,7 @@ public class Recall extends Plugin {
 				
 				} else {
 					// System.out.println("Recall NODATA");
-					say( getT("RECALLNODATA") );
+					say( getT("RECALLNODATA"), cf.filter,cf.negative  );
 					return true;
 				}
 			
@@ -125,7 +125,7 @@ public class Recall extends Plugin {
 				
 				} else {
 					// System.out.println("Recall NODATA");
-					say( getT("RECALLNODATA") );
+					say( getT("RECALLNODATA"), cf.filter,cf.negative  );
 					return true;
 				}
 			
@@ -149,12 +149,12 @@ public class Recall extends Plugin {
 					}
 
 					// System.out.println("Recall SIZE");
-					say( getT("RECALLSIZE").replaceAll("<TERM1>", size+" "+einheiten[einheit] ) );
+					say( getT("RECALLSIZE").replaceAll("<TERM1>", size+" "+einheiten[einheit] ), cf.filter,cf.negative  );
 					return true;
 				
 				} else {
 					// System.out.println("Recall NODATA");
-					say( getT("RECALLNODATA") );
+					say( getT("RECALLNODATA"), cf.filter,cf.negative );
 					return true;
 				}
 			

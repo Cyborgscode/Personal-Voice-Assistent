@@ -56,14 +56,14 @@ public class DiskFree extends Plugin {
  				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-10");
 				log("schalte warnung aus");
 				setVar("silence","yes");
-				say( getT("DISKRESPONSETURNEDOFF") );
+				say( getT("DISKRESPONSETURNEDOFF"), cf.filter,cf.negative );
 	
 			} else if ( cf.command.equals("UNSILENCEDISKWARNING") ) {
  				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "10");
 
 				log("schalte warnung ein");
 				setVar("silence","no");
-				say( getT("DISKRESPONSETURNEDON") );
+				say( getT("DISKRESPONSETURNEDON"), cf.filter,cf.negative );
 	
 			} else return false;
 	
@@ -122,6 +122,12 @@ public class DiskFree extends Plugin {
 											 .replaceAll("<TERM2>", "Megabyte")
 											 .replaceAll("<TERM3>", spalten[6])
 										);
+										say( getT( "DISKWARNINGFULL"
+											).replaceAll("<TERM1>", ""+free)
+											 .replaceAll("<TERM2>", "Megabyte")
+											 .replaceAll("<TERM3>", spalten[6])
+											 ,"MATRIX_RECEIVE_LLM_ANSWERE","DEFAULT"
+										);
 										warned.put( spalten[6], "full", "1");
 									}
 								} else if ( unit.equals("M") && free < 500 ) {
@@ -132,6 +138,12 @@ public class DiskFree extends Plugin {
 											 .replaceAll("<TERM2>", "Megabyte")
 											 .replaceAll("<TERM3>", spalten[6] )
 										);
+										say( getT( "DISKWARNINGNEARLY"
+											).replaceAll("<TERM1>", ""+free)
+											 .replaceAll("<TERM2>", "Megabyte")
+											 .replaceAll("<TERM3>", spalten[6] )
+											 ,"MATRIX_RECEIVE_LLM_ANSWERE","DEFAULT"
+										);
 										warned.put( spalten[6], "warn", "1");
 									}
 								} else if ( unit.equals("G") && free < 1 ) {
@@ -141,6 +153,12 @@ public class DiskFree extends Plugin {
 											).replaceAll("<TERM1>", ""+free)
 											 .replaceAll("<TERM2>", "Gigabyte")
 											 .replaceAll("<TERM3>", spalten[6] )
+										);
+										say( getT( "DISKWARNINGSOON"
+											).replaceAll("<TERM1>", ""+free)
+											 .replaceAll("<TERM2>", "Gigabyte")
+											 .replaceAll("<TERM3>", spalten[6] )
+											 ,"MATRIX_RECEIVE_LLM_ANSWERE","DEFAULT"
 										);
 										warned.put( spalten[6], "soon", "1");
 									}
@@ -160,8 +178,8 @@ public class DiskFree extends Plugin {
 									content.put("soon","0");
 									if ( vars.get("silence").equals("no") ) 
 						 				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "10");
-										say( getT( "DISKWARNINGCLEAR" ).replaceAll("<TERM1>", spalten[6] )
-										);
+										say( getT( "DISKWARNINGCLEAR" ).replaceAll("<TERM1>", spalten[6] ) );
+										say( getT( "DISKWARNINGCLEAR" ).replaceAll("<TERM1>", spalten[6] ), "MATRIX_RECEIVE_LLM_ANSWERE","DEFAULT" );
 								}
 							}
 						}

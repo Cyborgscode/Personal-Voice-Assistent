@@ -37,20 +37,20 @@ public class MoodManager extends Plugin {
     // Korrigierte Signatur gemäß PluginInterface
     public boolean execute(Command cf, String rawtext) {
         if (cf.command.equals("MOOD_QUERY")) {
-		say( getMoodDescription());
+		say( getMoodDescription(), cf.filter,cf.negative );
 		return true;
         }
          // 2. Lob verarbeiten (Mood geht hoch)
         if (cf.command.equals("MOOD_INCREASE")) {
 		// Kurze Bestätigung aus der Text-DB
-		if ( (Math.abs(moodLevel+10)/25 % 4) != ( Math.abs(moodLevel)/25 % 4 ) && moodLevel != 0 )  say(pva.texte.get(pva.config.get("conf", "lang_short"), "MOOD_THANKS"));
+		if ( (Math.abs(moodLevel+10)/25 % 4) != ( Math.abs(moodLevel)/25 % 4 ) && moodLevel != 0 )  say(getT( "MOOD_THANKS"), cf.filter,cf.negative );
 		this.setVar("impuls", "10"); 
 		return true;
         }
 
         // 3. Beleidigung/Kritik verarbeiten (Mood geht runter)
         if (cf.command.equals("MOOD_DECREASE")) {
-		if ( (Math.abs(moodLevel-10)/25 % 4)  != (Math.abs(moodLevel)/25 % 4) && moodLevel != 0 ) say(pva.texte.get(pva.config.get("conf", "lang_short"), "MOOD_GRUMBLE"));
+		if ( (Math.abs(moodLevel-10)/25 % 4)  != (Math.abs(moodLevel)/25 % 4) && moodLevel != 0 ) say(getT("MOOD_GRUMBLE"), cf.filter,cf.negative );
 		this.setVar("impuls", "-10");
         	return true;
         }
@@ -112,7 +112,7 @@ public class MoodManager extends Plugin {
 	        } while (rand == last && count < 15);
 
 	        key = base + "_" + rand;
-		result = pva.texte.get(lang, key);
+		result = pva.texte.get(lang, key );
                 lastMoodAnswere.put(base, String.valueOf(rand));
                 if (result.isEmpty()) 
 			err += " no "+key;
@@ -124,7 +124,7 @@ public class MoodManager extends Plugin {
 		
 	
         if (result.isEmpty()) {
-            result = pva.texte.get(lang, base);
+            result = pva.texte.get(lang, base) ;
 //            log("key="+ base + " => "+ result);
             lastMoodAnswere.put(base, "0");
         } // else log("selected key = "+ key);
@@ -132,7 +132,7 @@ public class MoodManager extends Plugin {
 
         if (result.isEmpty()) {
             err += " no "+base;
-            result = pva.texte.get(lang, textdb_key);
+            result = pva.texte.get(lang, textdb_key );
             lastMoodAnswere.put(base, "0");
         }
 

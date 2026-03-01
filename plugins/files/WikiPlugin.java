@@ -44,18 +44,18 @@ public class WikiPlugin extends Plugin {
 
 	public boolean execute(Command cf, String value) {
 		if (cf.command.equals("WIKI_SEARCH")) {
-			processWikiRequest(value);
+			processWikiRequest(value,cf);
 			return true;
 		}
 
 		if (cf.command.equals("WIKI_SUMMARY_READY")) {
-			say( getT("WIKI_SEARCH_RESULT").replace("<TERM1>", value) );
+			say( getT("WIKI_SEARCH_RESULT").replace("<TERM1>", value), cf.filter,cf.negative );
 			return true;
 		}
 		return false;
 	}
 
-	private void processWikiRequest(String query) {
+	private void processWikiRequest(String query,Command cf) {
 		String lang = pva.config.get("conf", "lang_short");
 		if (lang == null || lang.isEmpty()) lang = "de";
 
@@ -71,7 +71,7 @@ public class WikiPlugin extends Plugin {
 			String response = HTTP.getPageSSL(host, link);
 			
 			if (response == null || response.isEmpty()) {
-				triggerError();
+				triggerError(cf);
 				return;
 			}
 
@@ -82,7 +82,7 @@ public class WikiPlugin extends Plugin {
 //			log("Wiki:payload="+ payload);
 
 			if (payload.contains("\"missing\":\"\"") || payload.contains("\"missing\":true")) {
-				triggerError();
+				triggerError(cf);
 			return;
 }
 
@@ -92,21 +92,21 @@ public class WikiPlugin extends Plugin {
 //				log("Wiki: extract="+extract);
 				
 				if (extract.length() < 10 ) {
-					triggerError();
+					triggerError(cf);
 				} else if (checkAmbiguous(extract)) {
 					String options = extractOptions(extract);
 					
 //					log("Wiki: msg="+ getT("WIKI_AMBIGUOUS_MSG").replace("<OPTIONS>", options));
 					
-					say( getT("WIKI_AMBIGUOUS_MSG").replace("<OPTIONS>", options) );
+					say( getT("WIKI_AMBIGUOUS_MSG").replace("<OPTIONS>", options), cf.filter,cf.negative  );
 					pva.AsyncSendIntent(new Command("WIKIPLUGIN", "MOOD_IMPULS", "", ""), "-2");
 				} else {
 					if (extract.length() > 4000) extract = extract.substring(0, 4000);
 					pva.AsyncSendIntent(new Command("WIKIPLUGIN", "MOOD_IMPULS", "", ""), "5");
-					pva.AsyncSendIntent(new Command("WIKI", "AI_SUMMARIZE", "", ""), extract);
+					pva.AsyncSendIntent(new Command("WIKIPLUGIN", "AI_SUMMARIZE", cf.filter, cf.negative), extract);
 				}
-			} else { triggerError(); }
-		} catch (Exception e) { triggerError(); }
+			} else { triggerError(cf); }
+		} catch (Exception e) { triggerError(cf); }
 	}
 	
 	private boolean checkAmbiguous(String text) {
@@ -122,8 +122,8 @@ public class WikiPlugin extends Plugin {
 		return "etwas Spezifischeres";
 	}
 
-	private void triggerError() {
-		say( getT("WIKINOFERROR") );
+	private void triggerError(Command cf) {
+		say( getT("WIKINOFERROR"), cf.filter,cf.negative  );
 		pva.AsyncSendIntent(new Command("WIKIPLUGIN", "MOOD_IMPULS", "", ""), "-5");
 	}
 }

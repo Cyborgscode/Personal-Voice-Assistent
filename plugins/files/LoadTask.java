@@ -60,13 +60,13 @@ public class LoadTask extends Plugin {
 				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "1");
 					
 				if ( f < 1 ) {
-						say( getT( "HEALTHRESPONSENOTHINGTODO") );
+						say( getT( "HEALTHRESPONSENOTHINGTODO"), cf.filter,cf.negative );
 				} else if ( f > c ) {
-						say( getT( "HEALTHRESPONSEHELPHELP") );
+						say( getT( "HEALTHRESPONSEHELPHELP"), cf.filter,cf.negative  );
 				} else if ( f > ( c/2 ) ) {
-						say( getT( "HEALTHRESPONSESOLALA") );
+						say( getT( "HEALTHRESPONSESOLALA"), cf.filter,cf.negative  );
 				} else {
-						say( getT( "HEALTHRESPONSENORMAL") );
+						say( getT( "HEALTHRESPONSENORMAL"), cf.filter,cf.negative  );
 				}	
 	
 			} else if ( cf.command.equals("SILENCELOADWARNING") ) {
@@ -74,7 +74,7 @@ public class LoadTask extends Plugin {
 				setVar("silence","yes");
 				// WTF.. you do not care for me? : -25 MOOD
 				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-15");
-				say( getT( "HEALTHRESPONSETURNEDOFF") );
+				say( getT( "HEALTHRESPONSETURNEDOFF"), cf.filter,cf.negative  );
 	
 			} else if ( cf.command.equals("UNSILENCELOADWARNING") ) {
 	
@@ -82,7 +82,7 @@ public class LoadTask extends Plugin {
 				setVar("silence","no");
 				// Finally : -15 MOOD
 				pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-15");
-				say( getT( "HEALTHRESPONSETURNEDON") );
+				say( getT( "HEALTHRESPONSETURNEDON"), cf.filter,cf.negative );
 	
 			} else return false; // if we did not handle this code, tell the app, as it can try another plugin.
 	

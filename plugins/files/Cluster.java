@@ -390,7 +390,7 @@ public class Cluster extends Plugin {
 			
 				if ( cf.terms.size() < 2 ) {
 	 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-10");
-					say( getT("CLUSTERPARSEERROR") );
+					say( getT("CLUSTERPARSEERROR") , cf.filter,cf.negative);
 					log("exit execute("+rawtext+")");
 					return false;
 				}
@@ -426,12 +426,12 @@ public class Cluster extends Plugin {
 					} else {
 		 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-5");
 						log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERSTREAMSEARCHERROR").replaceAll("<TERM1>", client ) );
-						say( getT("CLUSTERSTREAMSEARCHERROR").replaceAll("<TERM1>", client ) );
+						say( getT("CLUSTERSTREAMSEARCHERROR").replaceAll("<TERM1>", client ), cf.filter,cf.negative );
 					}
 				} else {
 	 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-1");
 					log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
-					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ), cf.filter,cf.negative );
 				}
 				
 				return true;
@@ -439,7 +439,7 @@ public class Cluster extends Plugin {
 			} else if ( cf.command.equals("CLUSTERSTREAMDESKTOP") ) {
 			
 				if ( cf.terms.size() < 1 ) {
-					say( getT("CLUSTERPARSEERROR") );
+					say( getT("CLUSTERPARSEERROR"), cf.filter,cf.negative );
 					log("exit execute("+rawtext+")");
 					return false;
 				}
@@ -459,7 +459,7 @@ public class Cluster extends Plugin {
 				} else {
 	 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-5");
 					log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
-					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) , cf.filter,cf.negative);
 				}
 				
 				return true;
@@ -467,7 +467,7 @@ public class Cluster extends Plugin {
 			} else if ( cf.command.equals("CLUSTERSTREAMCAMERA") ) {
 
 				if ( cf.terms.size() < 1 ) {
-					say( getT("CLUSTERPARSEERROR") );
+					say( getT("CLUSTERPARSEERROR"), cf.filter,cf.negative );
 					log("exit execute("+rawtext+")");
 					return false;
 				}
@@ -485,7 +485,7 @@ public class Cluster extends Plugin {
 				} else {
 	 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-5");
 					log( pva.texte.get( pva.config.get("conf","lang_short"), "CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
-					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ) );
+					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", client ), cf.filter,cf.negative );
 				}
 				
 				return true;
@@ -562,7 +562,7 @@ public class Cluster extends Plugin {
 					text += (String)en.nextElement() +".";
 				}
 
-				say( getT("CLUSTERLISTCLIENTS").replaceAll("<TERM1>", text ) );
+				say( getT("CLUSTERLISTCLIENTS").replaceAll("<TERM1>", text ) , cf.filter,cf.negative);
 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "1");
 
 				
@@ -662,11 +662,11 @@ public class Cluster extends Plugin {
 					local( infos, "link_micro_right_new" );
 
 					if ( !infos.get("tsid").matches("^[0-9]+$") || !infos.get("tmid").matches("^[0-9]+$") ) {
-						say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", text ) );
+						say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", text ) , cf.filter,cf.negative);
 					}
 				} else {
 	 				pva.AsyncSendIntent(new Command("CLUSTER", "MOOD_IMPULS", "", ""), "-10");
-					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", text ) );
+					say( getT("CLUSTERCLIENTERRORNOTFOUND").replaceAll("<TERM1>", text ) , cf.filter,cf.negative);
 				}
 			
 				donotdisturb = true;
