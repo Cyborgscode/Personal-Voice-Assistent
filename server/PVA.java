@@ -104,8 +104,22 @@ public class PVA {
 	}
 	
 
+	public static String currentIntent = "NONE";
+	public static String currentExtra  = "";
+	
+
 	public static void say(String text, boolean wait) throws IOException {
-		if ( !config.get("conf","cantalk" ).equals("no") ) {
+	
+		if ( currentIntent != "NONE" && !currentIntent.trim().isEmpty() ) {
+
+			dos.writeFile( getHome()+"/.cache/pva/lastoutput", text );
+			
+			Command cmd = new Command("CORE", currentIntent , "", currentExtra);
+
+			AsyncSendIntent( cmd, text.replaceAll(config.get("conf","splitter"),"") );
+			
+
+		} else if ( !config.get("conf","cantalk" ).equals("no") ) {
 			
 			if ( pa_outputid.isEmpty() ) {
 				// just in Case we did not get a valid result before!
@@ -850,7 +864,7 @@ public class PVA {
 		return x;
 	}
 
-	static boolean saveConfig() {
+	static public boolean saveConfig() {
 
 		StringBuffer sb = new StringBuffer(50000); // yes, we think big ;)
 	
@@ -1396,7 +1410,15 @@ public class PVA {
 		}
 	}
 
-	public void handleInput(String extText) throws IOException,InterruptedException  {
+	public synchronized void handleInput(String extText) throws IOException,InterruptedException  {
+	
+		handleInput(extText,"NONE","");
+	}
+	
+	public synchronized void handleInput(String extText,String intent,String extra) throws IOException,InterruptedException  {
+
+			currentIntent = intent;
+			currentExtra  = extra;
 
 			reaction = false;
 
@@ -1561,7 +1583,7 @@ public class PVA {
 					
 								log("ai:send:" + text);
 
-								reaction = pls.handlePluginAction( new Command("PVA","AI_SAY","",""), text);
+								reaction = pls.handlePluginAction( new Command("PVA","AI_SAY",currentIntent,currentExtra), text);
 
 							}
 						} 
@@ -3374,8 +3396,9 @@ public class PVA {
 				if ( !reaction ) {
 					
 //					log("no internal reaction yet, lets test plugins to handle it.");	
-					
-					reaction = pls.handlePluginAction(cf, text);
+					// clone cf for keeping the intentdata intact!
+
+					reaction = pls.handlePluginAction(new Command("CORE", cf.command, currentIntent,currentExtra), text);
 				}
 	
 				if ( !reaction && ai != null && ai.get("enable").equals("true") && ai.get("mode").equals("gapfiller") && aiportreachable ) {
@@ -3383,7 +3406,7 @@ public class PVA {
 					
 						log("ai:send:" + text);
 
-						reaction = pls.handlePluginAction( new Command("PVA","AI_SAY","",""), text);
+						reaction = pls.handlePluginAction( new Command("PVA","AI_SAY",currentIntent,currentExtra), text);
 
 					} else if ( !checkMediaPlayback() ) {
 						log("ai:error:mediaplayback detected");
@@ -3498,14 +3521,43 @@ public class PVA {
 
 	static public boolean sendIntent(Command cmd, String data){
 		// SyncHandleCommand if it's important to know if the Intent worked
-		log("handle Intent \""+ cmd.command +"\" from "+ cmd.words);
+		log("handle Intent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
 		return pls.handlePluginAction( cmd, data );
 	
 	}
 
 	static public boolean AsyncSendIntent(Command cmd, String data) {
 		if (intentWorker != null) {
-			// log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words);
+			log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
+			intentWorker.enqueue(cmd, data);
+			return true;
+		}
+		return false;
+	}
+
+	static public boolean AsyncSendIntent(String sender, String intent, String data) {
+		Command cmd = new Command( sender, intent, "","");
+		if (intentWorker != null) {
+			log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
+			intentWorker.enqueue(cmd, data);
+			return true;
+		}
+		return false;
+	}
+	static public boolean AsyncSendIntent(String sender, String intent, String data,String answereWith) {
+		Command cmd = new Command( sender, intent, answereWith, "");
+		if (intentWorker != null) {
+			log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
+			intentWorker.enqueue(cmd, data);
+			return true;
+		}
+		return false;
+	}
+
+	static public boolean AsyncSendIntent(String sender, String intent, String data,String answereWith,String extra) {
+		Command cmd = new Command( sender, intent, answereWith, extra);
+		if (intentWorker != null) {
+			log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
 			intentWorker.enqueue(cmd, data);
 			return true;
 		}
