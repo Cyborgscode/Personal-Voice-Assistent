@@ -28,4 +28,9 @@ public class Command {
 			this.terms = t;
 		} else	this.terms = new Vector();
 	}
+	
+	public String toString() {
+		return words+":"+command+":"+filter+":"+negative;
+	}
 }
+
