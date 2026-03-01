@@ -205,7 +205,7 @@ public class HTTP {
 		    SSLSocket socket = createSSLSocket(host, port);
 		    if ( socket != null ) {
 			
-			    socket.setSoTimeout(500);
+			    socket.setSoTimeout(timeout);
 			    socket.setReceiveBufferSize(200000);
 			
 //	 		log("getOutputStream");
@@ -224,10 +224,11 @@ public class HTTP {
 			    }
 	    		    out.write("User-Agent: PVA/latest / PVA-WikiPlugin/1.0 (https://github.com/Cyborgscode/Personal-Voice-Assistent;)\r\n");
 			    out.write("Accept-Encoding: identity\r\n");
-			    out.write("Accept: */*\r\n");
+			    if ( !header.contains("Accept:") ) 
+				    out.write("Accept: */*\r\n");
 			    out.write("Connection: keep-alive\r\n");
 			    out.write("Content-Language: de-DE\r\n"); 
-
+			    
 			    if ( !header.isEmpty() ) 
 			    	out.write( header+ "\r\n");
 			    out.write("\r\n");
@@ -236,6 +237,8 @@ public class HTTP {
 //				log("finish sending data");
 
 			    result = readPage(socket); 
+			
+				socket.close();
 			
 //			log( "http.Got: "+ result );
 			
@@ -266,11 +269,11 @@ public class HTTP {
 		    out.write("\r\n");
 		    out.flush();
  
-		    socket.setSoTimeout(1000);
+		    socket.setSoTimeout(timeout);
 		    socket.setReceiveBufferSize(200000);
 		    			
 		    result = readPage(socket);
-		    			
+		    socket.close();			
 			// log( "http.Got: "+ result );
 			
 			return result;
@@ -306,7 +309,7 @@ public class HTTP {
 		    socket.setReceiveBufferSize(200000);
 
 			result = readPage(socket);
-			
+			socket.close();
 			return result;
 			
 		} catch (Exception e) {
@@ -347,7 +350,7 @@ public class HTTP {
 		    socket.setReceiveBufferSize(200000);
 	
 			result = readPage(socket);
-
+			socket.close();
 			return result;
 			
 		} catch (Exception e) {
@@ -381,11 +384,11 @@ public class HTTP {
 		    out.write( data );
 		    out.flush();
  
-		    socket.setSoTimeout(1000);
+		    socket.setSoTimeout(timeout);
 		    socket.setReceiveBufferSize(200000);
 		    
 		    result = readPage(socket);
-		    
+		    socket.close();
 			// log( "http.Got: "+ result );
 			
 			return result;
@@ -416,33 +419,90 @@ public class HTTP {
 	} 
 	public static String postSSL(String host,String url, String data, int port, String header) {
 		String result ="";
-		 
 		try {
 			
 			SSLSocket socket = createSSLSocket(host,port);
 			if ( socket != null ) {
 
-				socket.setSoTimeout(1000);
+				socket.setSoTimeout(timeout);
 				socket.setReceiveBufferSize(200000);
 				
 				Writer out = new OutputStreamWriter(socket.getOutputStream());
 
-//				log( "POST "+ url +" HTTP/1.1\r\n" + "Host: "+host+"\r\n"+ header+"\r\n"+ "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: "+data.length()+"\r\n");
+				// log( "POST "+ url +" HTTP/1.1\r\n" + "Host: "+host+"\r\n"+ header+"\r\n"+ "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: "+data.length()+"\r\n");
 		    
 				out.write("POST "+url+" HTTP/1.1\r\n");
 				if ( port == 443 ) {
 					out.write("Host: "+host+"\r\n");
 				} else  out.write("Host: "+host+":"+port+"\r\n");
+				
+				// log(header+"\r\n");
+				
 				if ( !header.isEmpty() ) 
 					out.write(header+"\r\n");
-				out.write("Content-Type: application/x-www-form-urlencoded\r\n");
+					
+				if ( !header.contains("Content-Type:") )
+					out.write("Content-Type: application/x-www-form-urlencoded\r\n");
 				out.write("Content-Length: "+data.length()+"\r\n");
+	
 				out.write("\r\n");
 				out.write( data );
 				out.flush();
 		 
 				result = readPage(socket);						
+				socket.close();
+//				log( "http.postSSL: "+ result );
+			
+				return result;
 				
+			} else return "";
+			
+		} catch (Exception e) {
+				e.printStackTrace();
+				log( "http.exception: "+ e.toString()+"\n"+ e.getCause() +"\n" +e.getMessage() );
+				return e.toString()+"\n"+ e.getCause() +"\n" +e.getMessage() ;
+		}
+	}
+	public static String putSSL(String host,String url, String data, String header) {
+		return putSSL(host, url, data, 443, header);
+	}
+	
+	public static String putSSL(String host,String url, String data, int port, String header) {
+		String result ="";
+		try {
+			SSLSocket socket = createSSLSocket(host,port);
+			if ( socket != null ) {
+
+				socket.setSoTimeout(timeout);
+				socket.setReceiveBufferSize(200000);
+				
+				Writer out = new OutputStreamWriter(socket.getOutputStream());
+
+				// log( "PUT "+ url +" HTTP/1.1\r\n" + "Host: "+host+"\r\n"+ header+"\r\n"+ "Content-Type: application/x-www-form-urlencoded\r\nContent-Length: "+data.length()+"\r\n\r\n"+data);
+		    
+				out.write("PUT "+url+" HTTP/1.1\r\n");
+				if ( port == 443 ) {
+					out.write("Host: "+host+"\r\n");
+				} else  out.write("Host: "+host+":"+port+"\r\n");
+				
+				// log(header+"\r\n");
+				
+				if ( !header.isEmpty() ) 
+					out.write(header+"\r\n");
+					
+				if (!header.toLowerCase().contains("content-type:")) {
+					out.write("Content-Type: application/json; charset=utf-8\r\n");
+				}
+					
+//				out.write("Content-Length: "+ data.length()+"\r\n");
+				out.write("Content-Length: "+ data.getBytes("UTF-8").length+"\r\n");
+	
+				out.write("\r\n");
+				out.write( data );
+				out.flush();
+		 
+				result = readPage(socket);						
+				socket.close();				
 //				log( "http.postSSL: "+ result );
 			
 				return result;
