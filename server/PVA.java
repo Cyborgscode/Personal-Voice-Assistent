@@ -1327,7 +1327,8 @@ public class PVA {
 	
 					String answere = HTTP.post("/api/generate","{\"model\": \""+ ai.get("model")+"\", \"prompt\": \"\\nGenerate a title following these rules:\\n    - The title should be based on the prompt at the end\\n    - Keep it in the same language as the prompt\\n    - The title needs to be less than 30 characters\\n    - Use only alphanumeric characters and spaces\\n    - Just write the title, NOTHING ELSE\\n\\n```PROMPT\\nHallo\\n```\", \"stream\": false}");
 					log("INIT AI: "+ answere );	
-					// aimsgs.addMessage(new AIMessage("user", "User", "Hallo" ));
+					// aimsgs.addMessage(new AIMessage("user", ai.get("model"), "Hallo" ));
+
 				} else {
 					 log("AI Init failed - no ai service detected");
 				}
@@ -3528,7 +3529,7 @@ public class PVA {
 
 	static public boolean AsyncSendIntent(Command cmd, String data) {
 		if (intentWorker != null) {
-			log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
+			// log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
 			intentWorker.enqueue(cmd, data);
 			return true;
 		}
@@ -3538,7 +3539,7 @@ public class PVA {
 	static public boolean AsyncSendIntent(String sender, String intent, String data) {
 		Command cmd = new Command( sender, intent, "","");
 		if (intentWorker != null) {
-			log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
+			// log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
 			intentWorker.enqueue(cmd, data);
 			return true;
 		}
@@ -3547,7 +3548,7 @@ public class PVA {
 	static public boolean AsyncSendIntent(String sender, String intent, String data,String answereWith) {
 		Command cmd = new Command( sender, intent, answereWith, "");
 		if (intentWorker != null) {
-			log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
+			// log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
 			intentWorker.enqueue(cmd, data);
 			return true;
 		}
@@ -3557,7 +3558,7 @@ public class PVA {
 	static public boolean AsyncSendIntent(String sender, String intent, String data,String answereWith,String extra) {
 		Command cmd = new Command( sender, intent, answereWith, extra);
 		if (intentWorker != null) {
-			log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
+			// log("handle ASYNCIntent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
 			intentWorker.enqueue(cmd, data);
 			return true;
 		}
