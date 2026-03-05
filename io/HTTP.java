@@ -194,8 +194,12 @@ public class HTTP {
 		return result;
 	}
 
+	public static String getPageSSL(String host,String link,int port,String header ) {
+	
+		return getPageSSL( host, link, port, header, false);
+	}
 
-	public static String getPageSSL(String host,String link,int port,String header) {
+	public static String getPageSSL(String host,String link,int port,String header, boolean returnheaders ) {
 		String result ="";
 		 
 		try {
@@ -217,7 +221,7 @@ public class HTTP {
 			    out.write("GET "+link+" HTTP/1.1\r\n");
 			    if ( port == 443 ) {
 				    out.write("Host: "+host+"\r\n");
-	    			    //log( "GET "+link+" HTTP/1.1\r\n" + "Host: "+host+"\r\n"+ header+"\r\n" );
+	    			    // log( "GET "+link+" HTTP/1.1\r\n" + "Host: "+host+"\r\n"+ header+"\r\n" );
 			    } else {
 			    	    out.write("Host: "+host+":"+port+"\r\n");
 			    	    //log( "GET "+link+" HTTP/1.1\r\n" + "Host: "+host+":"+port+"\r\n"+ header+"\r\n" );
@@ -236,7 +240,7 @@ public class HTTP {
  
 //				log("finish sending data");
 
-			    result = readPage(socket); 
+			    result = readPage(socket,returnheaders); 
 			
 				socket.close();
 			
