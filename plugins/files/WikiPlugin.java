@@ -103,7 +103,7 @@ public class WikiPlugin extends Plugin {
 				} else {
 					if (extract.length() > 4000) extract = extract.substring(0, 4000);
 					pva.AsyncSendIntent(new Command("WIKIPLUGIN", "MOOD_IMPULS", "", ""), "5");
-					pva.AsyncSendIntent(new Command("WIKIPLUGIN", "AI_SUMMARIZE", cf.filter, cf.negative), extract);
+					pva.AsyncSendIntent(new Command("WIKIPLUGIN", "AI_SUMMARIZE", "WIKI_SUMMARY_READY", cf.negative), extract);
 				}
 			} else { triggerError(cf); }
 		} catch (Exception e) { triggerError(cf); }

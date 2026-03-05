@@ -44,7 +44,7 @@ public class AIStreamer extends Plugin {
 		info.put("hasCodes", "yes");
 		info.put("name", "AIStreamer");
 		vars.put("status", "idle");
-		aimsgs.addMessage(new AIMessage("system", "", pva.config.get("ai","languageprompt") ));
+		aimsgs.addMessage(new AIMessage("system", pva.config.get("ai","model"), pva.config.get("ai","systemprompt") ));
 	}
 
 	public StringHash getPluginInfo() { return info; }
@@ -55,12 +55,18 @@ public class AIStreamer extends Plugin {
 		return true; 
 	}
 
-	public String[] getActionCodes() { return new String[]{"AI_SAY", "AI_STOP","AI_ANSWERE","AICLEARHISTORY","AI_SUMMARIZE"}; }
+	public String[] getActionCodes() { return new String[]{"AI_RETURN_DATA","AI_SAY", "AI_STOP","AI_ANSWERE","AICLEARHISTORY","AI_SUMMARIZE"}; }
 
 	public boolean execute(Command cf, String rawtext) {
 	
-		log("AISTreamer:"+ cf.command +" => "+ rawtext);
+		log("AISTreamer:"+ cf.toString() +" => "+ rawtext);
 	
+		if (cf.command.equals("AI_RETURN_DATA")) {
+			pva.AsyncSendIntent(new Command("AISTREAMER", "MOOD_IMPULS", "", ""), "1");
+			String aiResponse = streamFromOllama( new AIJob(rawtext, cf.filter,cf.negative), false,"data","PVA"); 
+			log(aiResponse);
+			return true;
+		}
 		if (cf.command.equals("AI_STOP")) {
 			triggerStop();
 			// Intent:      SENDERID, CMD, unused,unused, optionaltext 
@@ -82,6 +88,13 @@ public class AIStreamer extends Plugin {
 				pva.AsyncSendIntent(new Command("AISTREAMER", cf.filter, "", ""), x[0]+"|"+aiResponse);
 				return true;
 			}
+			if ( cf.negative.contains("|") ) {
+				String[] x = cf.negative.split("\\|");
+				String aiResponse = streamFromOllama( new AIJob( rawtext, cf.filter,cf.negative), false); 
+				log("aiResponse="+aiResponse);
+				pva.AsyncSendIntent(new Command("AISTREAMER", cf.filter, "", cf.negative), aiResponse);
+				return true;
+			}
 			return false;
 		}
 		if (cf.command.equals("AI_SUMMARIZE")) {
@@ -93,7 +106,7 @@ public class AIStreamer extends Plugin {
 			String aiResponse = streamFromOllama(new AIJob( systemPrompt +"\\n"+ rawtext, cf.filter,cf.negative) , false) ; 
 	
 			// Loopback zum WikiPlugin (Goal c)
-			pva.AsyncSendIntent(new Command("AISTREAMER", "WIKI_SUMMARY_READY", cf.filter, cf.negative ), aiResponse);
+			pva.AsyncSendIntent(new Command("AISTREAMER", cf.filter, "", cf.negative ), aiResponse);
 			return true;
 		}
 
@@ -119,27 +132,30 @@ public class AIStreamer extends Plugin {
 		while (!isInterrupted()) {
 			try {
 				AIJob job = jobQueue.take();
-			   	log("AISTreamer:run()"+ job.text +" > "+ job.returnIntent +" > "+ job.extra );
+			   	log("AISTreamer:run():"+ job.text +" > "+ job.returnIntent +" > "+ job.extra );
 				this.abortFlag = false;
 				streamFromOllama( job ); 
 			} catch (InterruptedException e) { break; }
 		}
 	}
 
-	private void streamFromOllama(AIJob prompt) {
-		streamFromOllama( prompt, true );
+	private String streamFromOllama(AIJob prompt) {
+		return streamFromOllama( prompt, true , "user", pva.config.get("ai","model") );
 	}
-	private String streamFromOllama(AIJob job, boolean sayit) {
+	private String streamFromOllama(AIJob prompt, boolean sayit) {
+		return streamFromOllama( prompt, sayit , "user", pva.config.get("ai","model") );
+	}
+	private String streamFromOllama(AIJob job, boolean sayit, String role,String model) {
 
 		String prompt = job.text;
-
+		
 		vars.put("status", "streaming");
 		StringBuilder sentenceBuf = new StringBuilder();
 		StringBuilder entireBuf = new StringBuilder();
 		
 		try {
 		
-			aimsgs.addMessage(new AIMessage("user", "User", Tools.filterAIThinking( prompt ) ));
+			aimsgs.addMessage(new AIMessage(role, model, Tools.filterAIThinking( prompt ) ));
 		
 			URL url = new URL("http://" + pva.config.get("ai", "host") + ":" + pva.config.get("ai", "port") + "/api/chat");
 			currentConn = (HttpURLConnection) url.openConnection();
@@ -183,19 +199,17 @@ public class AIStreamer extends Plugin {
 		
 					String token = extractResponse(rawJson.toString());
 					rawJson.setLength(0);
-			
+		
 					// log("AISTreamer:streamFromOllama(): token = "+ token );
 			
 					if (token != null) {
 						sentenceBuf.append(token);
-		
 //						log("AISTreamer:streamFromOllama(): sentenceBuf = "+ sentenceBuf.toString() );
-			   
 						if (isEndOfSentence(token,sentenceBuf)) {
-		
 							// log("AISTreamer:streamFromOllama(): sentenceBuf = "+ new String( sentenceBuf.toString() ) );
-							json.append( sentenceBuf.toString().trim()+"\\n" );
-							if ( sayit ) say(sentenceBuf.toString().trim(),job.returnIntent,job.extra);
+							String teilstring =  sentenceBuf.toString().trim();
+							json.append( teilstring +"\\n" );
+							if ( sayit && !teilstring.startsWith("#") ) say( teilstring,job.returnIntent,job.extra);
 							entireBuf.append( sentenceBuf.toString().trim() );
 							sentenceBuf.setLength(0);
 						}
@@ -211,10 +225,36 @@ public class AIStreamer extends Plugin {
 			log(getT("AIS_STREAM_ERR") + e.getMessage());
 		} finally {
 			if (sentenceBuf.length() > 0) {
-				if ( sayit ) say(sentenceBuf.toString(),job.returnIntent,job.extra);
-				entireBuf.append( sentenceBuf.toString().trim() );
+				String teilstring = sentenceBuf.toString();
+				if ( sayit && !teilstring.startsWith("#") ) say( teilstring,job.returnIntent,job.extra);
+				entireBuf.append( teilstring.trim() );
 			}
 			vars.put("status", "idle");
+		}
+		String ret = entireBuf.toString().trim();
+		if ( ret.startsWith("#") ) {
+		
+			/*
+				#INTENT#DATA
+				#INTENT#EXTRADATA#DATA
+				#INTENT#EXTRADATA#INTENT#DATA
+			*/
+		
+			ret = (ret+" ").substring(1);
+			log("ret=|"+ret+"|");
+		
+			String[] args = ret.split("#");
+			if ( args.length == 2 ) {
+				pva.AsyncSendIntent(new Command("AISTREAMER", args[0], "AI_RETURN_DATA" , ""), args[1]);
+			} else if ( args.length == 3 ) {
+				pva.AsyncSendIntent(new Command("AISTREAMER", args[0], "AI_RETURN_DATA" , args[1]), args[2]);
+			} else if ( args.length == 4 ) {
+				pva.AsyncSendIntent(new Command("AISTREAMER", args[0], args[2] , args[1]), args[3]);
+			} else {
+				pva.AsyncSendIntent(new Command("AISTREAMER", "AI_RETURN_DATA" ,"", ""), "#ERROR#could not parse output.");
+				log("NO CLUE WHAT THE LLM WANTED TO SAY WITH THIS: "+ ret );
+			}
+			return "";
 		}
 		return entireBuf.toString().trim();
 	}

@@ -7,6 +7,8 @@ import hash.StringHash;
 import data.Command;
 import utils.Tools;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MatrixPlugin extends Plugin {
 
@@ -22,6 +24,7 @@ public class MatrixPlugin extends Plugin {
 	private String adminid = "";
 	private String sinceToken = null; // Token for incremental sync
 	private long lastSave = 0;
+	private String aitrigger = "";
 	
 	
 	public void init(PVA pva) {
@@ -124,11 +127,19 @@ public class MatrixPlugin extends Plugin {
 				cf.negative = joinroom+"|";
 			}
 			
+			if ( value.contains("|")) {
+				String[] parts = value.split("\\|", 2);
+				sendMessage(parts[0], "->"+ parts[1]+" "+ value);
+				return true;
+			}
+			
 			if ( cf.negative.contains("|")) {
 				String[] parts = cf.negative.split("\\|", 2);
 				sendMessage(parts[0], "->"+ parts[1]+" "+ value);
 				return true;
-			} else log(name+":MATRIX_RECEIVE_LLM_ANSWERE: ups.. no delimiter in IntentExtra: "+cf.negative+" => "+ value);
+			} 
+			
+			log(name+":MATRIX_RECEIVE_LLM_ANSWERE: ups.. no delimiter in IntentExtra or Value: "+cf.negative+" --- "+ value);
 		}
 
 		return false;
@@ -142,6 +153,7 @@ public class MatrixPlugin extends Plugin {
 		deviceID = pva.config.get("matrix", "device");
 		joinroom = pva.config.get("matrix","joinroom");
 		adminid = pva.config.get("matrix","adminid");
+		aitrigger = pva.config.get("matrix","aitrigger");
 						
 		sinceToken = pva.config.get("config","matrix_since");
 		if ( sinceToken.isEmpty() ) sinceToken = null;
@@ -162,14 +174,13 @@ public class MatrixPlugin extends Plugin {
 
 			// {"user_id":"@carola:linuxphones.de","access_token":"#####","home_server":"linuxphones.de","device_id":"DMLTRNLNGL","well_known":{"m.homeserver":{"base_url":"https://linuxphones.de/"}}}
 			
-			log("Matrix session="+session);
+			// log("Matrix session="+session);
 
 			if ( session == null || session.isEmpty() ) {
 				log("MatrixPlugin: login failed - "+ session );
 				return;
-			}
+			} else log("MatrixPlugin: LOGIN OK");
 			
-
 			// --- DATABASE ROW CHECK & REPAIR ---
 			String myFullId = "@" + user + ":" + hs;
 			String encodedId = myFullId.replace("@", "%40").replace(":", "%3A");
@@ -232,11 +243,31 @@ public class MatrixPlugin extends Plugin {
 
 	private String escapeJSON(String text) {
 		if (text == null) return "";
-		return text.replace("\\", "\\\\")  // Backslashes zuerst!
-	           .replace("\"", "\\\"")  // Anführungszeichen
-	           .replace("\n", "\\n")   // Echte Zeilenumbrüche
-	           .replace("\r", "");     // Carriage Return entfernen
-	}
+		while ( text.indexOf("\\\\") >= 0 ) text = text.replace("\\\\","\\");
+		text = text.replace("\\n", "\n");
+		
+		// 2. SCHRITT: Sauber für JSON verpacken (Single Escaping)
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < text.length(); i++) {
+		        char c = text.charAt(i);
+		        switch (c) {
+		            case '"':  sb.append("\\\""); break;
+		            case '\\': sb.append("\\\\"); break;
+		            case '\n': sb.append("\\n");  break; // DAS HIER ist der korrekte JSON-Umbruch!
+		            case '\r': break; // einfach wegwerfen
+		            default:
+				if (c < ' ') {
+					// Verhindert Steuercode-Fehler in JSON
+					String t = "000" + Integer.toHexString(c);
+					sb.append("\\u").append(t.substring(t.length() - 4));
+				} else {
+		                	sb.append(c);
+				}
+			}
+		}
+		return sb.toString();
+    	}
+
 	public boolean sendMessage(String roomId, String text) {
 
 		// 1. Eindeutige ID für diesen Sende-Versuch (Beschleunigt die Verarbeitung)
@@ -392,7 +423,16 @@ public class MatrixPlugin extends Plugin {
 				String currentRoomId = joinSection.substring(pos + 1, endId); 
 				
 				// 2. Den Bereich für DIESEN Raum isolieren (bis zum nächsten Raum oder Ende)
-				int nextRoom = joinSection.indexOf("\"!", endId);
+				
+				Pattern pattern = Pattern.compile("(?<!:)\"!");
+				Matcher matcher = pattern.matcher(joinSection);
+
+				int nextRoom = -1;
+				if (matcher.find(endId)) {
+					nextRoom = matcher.start();
+				}
+				
+				// FAILED BEI :"! => int nextRoom = joinSection.indexOf("\"!", endId);
 				String roomBlock = (nextRoom != -1) ? joinSection.substring(endId, nextRoom) : joinSection.substring(endId);
 
 				if (roomBlock.contains("\"m.room.encrypted\"")) {
@@ -402,20 +442,38 @@ public class MatrixPlugin extends Plugin {
 
 				// 3. Nur in DIESEM Raum-Block nach Nachrichten suchen
 				if (roomBlock.contains("\"m.room.message\"")) {
-					String msg = Tools.zwischen(roomBlock, "\"body\":\"", "\"");
+				
+					// log("ROOMBLOCK:"+ roomBlock);
+				
+					String startToken = "\"body\":\"";
+					String endRegex = "(?<!\\\\)\""; 
+
+					String msg    = this.zwischen(roomBlock, "\"body\":\"", "(?<!\\\\)\"" );
 					String sender = Tools.zwischen(roomBlock, "\"sender\":\"", "\"");
-						
-					log("Raum [" + currentRoomId + "] | " + sender + ": " + msg);
 						
 					// Jetzt kannst du gezielt in GENAU DIESEM RAUM antworten
 					if ( !sender.contains("@"+user+":"+hs) ) {
 					
-						msg = HTTP.fromUnicode(msg).toLowerCase();
+						log("Raum [" + currentRoomId + "] | " + sender + ": " + msg);
 					
-						if ( ( sender.equals(adminid) && msg.contains(keyword) ) || !msg.contains(keyword) ) {
+						msg = HTTP.fromUnicode(msg);
+						
+						log("msg=|"+msg+"|");
+						
+						while ( msg.contains("\\") ) msg = msg.replace("\\","").trim();
+
+						log("msg=|"+msg+"|");
+						
+						if ( !msg.startsWith("!") ) msg = msg.toLowerCase();
+						
+						if ( !aitrigger.isEmpty() && msg.trim().startsWith(aitrigger) ) {
+								
+							pva.AsyncSendIntent(new Command("MATRIX","AI_ANSWERE", "MATRIX_RECEIVE_LLM_ANSWERE", currentRoomId+"|"+sender), 
+								"Du bist von "+sender +" via dem Matrixchat angesprochen worden. "+ msg.replace(aitrigger,"") );
+						
+						} else if ( ( sender.equals(adminid) && msg.contains(keyword) ) || !msg.contains(keyword) ) {
 						
 							try {
-							
 								pva.handleInput( msg, "MATRIX_RECEIVE_LLM_ANSWERE", currentRoomId+"|"+sender );
 							} catch(Exception e) {
 								// we can't tell it the user .. 
@@ -528,10 +586,12 @@ public class MatrixPlugin extends Plugin {
 				
 					// 1. next_batch Token für den nächsten Aufruf extrahieren
 					sinceToken = extractValue(response, "next_batch");
-					if (response.contains("\"m.room.message\"") || response.contains("\"invite\":{")) {
-						log("Neue Nachricht empfangen!");
-			 			processSyncResponse(response);
-			 		}
+					if ( timeout > 0 ) {
+						if (response.contains("\"m.room.message\"") || response.contains("\"invite\":{")) {
+							log("Neue Nachricht empfangen!");
+				 			processSyncResponse(response);
+				 		}
+				 	}
 				}
 
 			} catch (Exception e) {
@@ -558,6 +618,23 @@ public class MatrixPlugin extends Plugin {
 		if (end == -1) return null; // Schließendes Anführungszeichen fehlt
 	
 		return json.substring(start, end);
+	}
+	
+	public String zwischen(String block, String startToken, String endRegex) {
+	
+		int startPos = block.indexOf(startToken);
+		String msg = null;
+	
+		if (startPos != -1) {
+			int contentStart = startPos + startToken.length();
+			String remaining = block.substring(contentStart);
+	    
+			Matcher m = Pattern.compile(endRegex).matcher(remaining);
+			if (m.find()) {
+				msg = remaining.substring(0, m.start());
+			}
+		}
+		return msg;
 	}
 }
 

@@ -31,13 +31,28 @@ public class MoodManager extends Plugin {
     }
 
     public String[] getActionCodes() {
-        return new String[]{"MOOD_QUERY", "MOOD_INCREASE", "MOOD_DECREASE","MOOD_IMPULS"};
+        return new String[]{"MOOD_QUERY", "MOOD_INCREASE", "MOOD_GET_SUFFIXS","MOOD_GET_SUFFIX","MOOD_GET_LEVEL","MOOD_DECREASE","MOOD_IMPULS"};
     }
 
     // Korrigierte Signatur gemäß PluginInterface
     public boolean execute(Command cf, String rawtext) {
+    
+        log("MOODManager:"+ cf.toString() +" => "+ rawtext);
+    
         if (cf.command.equals("MOOD_QUERY")) {
 		say( getMoodDescription(), cf.filter,cf.negative );
+		return true;
+        }
+	if (cf.command.equals("MOOD_GET_SUFFIXS")) {
+	        pva.AsyncSendIntent(new Command("MOODMANAGER", cf.filter ,"", ""), "MOOD_IN_LOVE,MOOD_ENTHUSIASTIC,MOOD_HAPPY,MOOD_FRIENDLY,MOOD_NEUTRAL,MOOD_GRUMPY,MOOD_ANNOYED,MOOD_SARCASTIC,MOOD_LMAA" );
+		return true;
+        }
+        if (cf.command.equals("MOOD_GET_SUFFIX")) {
+	        pva.AsyncSendIntent(new Command("MOODMANAGER", cf.filter ,"", ""), getSuffix() );
+		return true;
+        }
+        if (cf.command.equals("MOOD_GET_LEVEL")) {
+	        pva.AsyncSendIntent(new Command("MOODMANAGER", cf.filter ,"", ""), ""+ moodLevel );
 		return true;
         }
          // 2. Lob verarbeiten (Mood geht hoch)
@@ -70,22 +85,25 @@ public class MoodManager extends Plugin {
     	return getMoodedText("MOOD");
     }
 
+	private String getSuffix() {
+		String suffix = "";
+		if (moodLevel >= 76)       suffix = "MOOD_IN_LOVE";
+	        else if (moodLevel >= 51)  suffix = "MOOD_ENTHUSIASTIC";
+	        else if (moodLevel >= 26)  suffix = "MOOD_HAPPY";
+	        else if (moodLevel >= 1)   suffix = "MOOD_FRIENDLY";
+	        else if (moodLevel == 0)   suffix = "MOOD_NEUTRAL";
+        	else if (moodLevel >= -25) suffix = "MOOD_GRUMPY";
+        	else if (moodLevel >= -50) suffix = "MOOD_ANNOYED";
+        	else if (moodLevel >= -75) suffix = "MOOD_SARCASTIC";
+        	else                       suffix = "MOOD_LMAA";
+		return suffix;
+	}
+
     private String getMoodedText(String textdb_key) {
 
         String lang = pva.config.get("conf", "lang_short");
-        String suffix = "";
+        String suffix = "_" + getSuffix();
         String err = "textdb_key="+ textdb_key+" moodLevel="+moodLevel;
-
-        if (moodLevel >= 76)      suffix = "_MOOD_IN_LOVE";
-        else if (moodLevel >= 51) suffix = "_MOOD_ENTHUSIASTIC";
-        else if (moodLevel >= 26) suffix = "_MOOD_HAPPY";
-        else if (moodLevel >= 1)  suffix = "_MOOD_FRIENDLY";
-        else if (moodLevel == 0)  suffix = "_MOOD_NEUTRAL";
-        else if (moodLevel >= -25) suffix = "_MOOD_GRUMPY";
-        else if (moodLevel >= -50) suffix = "_MOOD_ANNOYED";
-        else if (moodLevel >= -75) suffix = "_MOOD_SARCASTIC";
-        else                       suffix = "_MOOD_LMAA";
-
         String base = textdb_key + suffix;
         
         int maxVariants = 0;
