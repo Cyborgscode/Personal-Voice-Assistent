@@ -35,6 +35,7 @@ jobs:
 
       - name: Execute Local Compile
         run: |
+          rm -f lib/PLACEHOLDER-* || true
           chmod +x compile.sh
           # Kompiliere alles lokal im Workspace
           ./compile.sh .
