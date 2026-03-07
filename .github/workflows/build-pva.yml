@@ -36,7 +36,7 @@ jobs:
           mkdir -p build_out
 
           # 3. Classpath: System-Libs + unsere frisch geladenen Legacy-Mails
-          SYS_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/sqlite-jdbc.jar"
+          SYS_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/sqlite-jdbc.jar:./libs/*jar"
           
           # 4. Compile: Findet jetzt javax.mail in den geladenen JARs
           find . -name "*.java" > java_files.txt
