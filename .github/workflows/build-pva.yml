@@ -36,12 +36,11 @@ jobs:
           mkdir -p build_out
 
           # 3. Classpath: System-Libs + unsere frisch geladenen Legacy-Mails
-          LEGACY_CP="lib_legacy/javax.mail.jar:lib_legacy/activation.jar"
-          SYS_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/sqlite-jdbc.jar:./libs/*jar"
+          SYS_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/sqlite-jdbc.jar"
           
           # 4. Compile: Findet jetzt javax.mail in den geladenen JARs
           find . -name "*.java" > java_files.txt
-          javac -d build_out -cp "$LEGACY_CP:$SYS_CP:." @java_files.txt
+          javac -d build_out -cp "$SYS_CP:." @java_files.txt
 
           # 5. Klassen zurueckkopieren
           cp -r build_out/* .
