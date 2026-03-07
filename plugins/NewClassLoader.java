@@ -30,6 +30,13 @@ public class NewClassLoader extends ClassLoader {
         super(parent);
     }
 
+
+    @Override
+    protected String findLibrary(String libname) {
+	// JNI Problem fixen
+        return null;
+    }
+
     /**
      * Loads a given class from .class file just like
      * the default ClassLoader. This method could be

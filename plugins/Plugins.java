@@ -26,6 +26,15 @@ public class Plugins {
         
         public Plugins(PVA pva) {
         	this.pva = pva;
+        	
+		try {
+		       // Der HOST lädt die Library, bevor der NewClassLoader startet
+		        System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+		        System.out.println("OpenCV GLOBAL im Host-System geladen.");
+		} catch (UnsatisfiedLinkError e) {
+		        System.err.println("Warnung: OpenCV konnte nicht global geladen werden: " + e.getMessage());
+    		}
+        	
 	        this.init();
         }
 
