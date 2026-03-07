@@ -125,18 +125,73 @@ public class ServerWatchPlugin extends Plugin {
 		}
 	}
 
-	private void sendAlarm(String host, String reason) {
+		private void sendAlarm(String host, String reason) {
 		String msg = "🖥️ ServerWatch [" + host + "]: " + (reason.contains("RECOVERY") ? "✅ Wieder erreichbar." : "⚠️ DOWN! (" + reason + ")");
-		String targetRoom = pva.config.get("matrix", "joinroom");
 		
-		// Über Matrix rausfeuern
+		// 1. Matrix-Benachrichtigung
+		String targetRoom = pva.config.get("matrix", "joinroom");
 		pva.AsyncSendIntent(name, "MATRIX_SENDROOM", targetRoom + "|" + msg);
 		
-		targetRoom = pva.config.get("matrix", "alertroom");
+		String alertRoom = pva.config.get("matrix", "alertroom");
+		if (!alertRoom.isEmpty()) {
+			pva.AsyncSendIntent(name, "MATRIX_SENDROOM", alertRoom + "|" + msg);
+		}
 
-		if ( !targetRoom.isEmpty() ) 
-			pva.AsyncSendIntent(name, "MATRIX_SENDROOM", targetRoom + "|" + msg);
+		// 2. E-Mail an Admin (Nutzt ServerWatch-Config für Empfänger)
+		String adminMail = pva.config.get("serverwatch", "adminmail");
+		if (adminMail != null && !adminMail.isEmpty()) {
+			sendEmail(adminMail, "ServerWatch Alarm: " + host, msg);
+		}
+	}
 
+	private void sendEmail(String to, String subject, String body) {
+		if (to == null || to.isEmpty() || pva.mailboxes == null) return;
+
+		new Thread(() -> {
+			try {
+				String mID = pva.config.get("serverwatch", "mailbox");
+				if (mID == null || mID.isEmpty()) return;
+
+				// 1. Direktzugriff: Wir suchen die EINE Box
+				data.MailboxData md = pva.mailboxes.stream()
+					.filter(m -> m.commonname.equals(mID))
+					.findFirst()
+					.orElse(null);
+
+				// 2. Wenn der Admin gepennt hat: Raus hier
+				if (md == null || md.servername == null || md.servername.isEmpty()) return;
+
+				java.util.Properties props = new java.util.Properties();
+				int smtpPort = (md.port == 143 || md.port <= 0) ? 587 : md.port;
+				
+				props.put("mail.smtp.host", md.servername);
+				props.put("mail.smtp.port", String.valueOf(smtpPort));
+				props.put("mail.smtp.auth", "true");
+				props.put("mail.smtp.starttls.enable", md.secure ? "true" : "false");
+				if (smtpPort == 465) props.put("mail.smtp.ssl.enable", "true");
+
+				final data.MailboxData fMd = md;
+				javax.mail.Session session = javax.mail.Session.getInstance(props, new javax.mail.Authenticator() {
+					protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
+						return new javax.mail.PasswordAuthentication(fMd.username, fMd.password);
+					}
+				});
+
+				javax.mail.internet.MimeMessage msg = new javax.mail.internet.MimeMessage(session);
+				String fromAddr = pva.config.get("serverwatch", "sendalarmfrom");
+				String sender = (fromAddr != null && !fromAddr.isEmpty()) ? fromAddr : md.username;
+				
+				msg.setFrom(new javax.mail.internet.InternetAddress(sender, "PVA ServerWatch"));
+				msg.setRecipient(javax.mail.Message.RecipientType.TO, new javax.mail.internet.InternetAddress(to));
+				msg.setSubject(subject);
+				msg.setText(body, "utf-8");
+
+				javax.mail.Transport.send(msg);
+				log(name + ": Alarm-Mail an " + to + " verschickt.");
+			} catch (Exception e) {
+				log(name + ": SMTP-Abbruch -> " + e.getMessage());
+			}
+		}).start();
 	}
 }
 
