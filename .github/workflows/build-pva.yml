@@ -1,18 +1,43 @@
-name: Build and Package PVA (Using Custom Libs)
+name: Daily Build and Package PVA (Java 17)
 
 on:
-  push:
-    branches: [ main, master ]
+  # 1. Zeitplan: Jeden Tag um 03:00 Uhr UTC (ca. 04:00 Uhr deutsche Zeit)
+  schedule:
+    - cron: '0 3 * * *'
+  
+  # 2. Manueller Trigger (Falls du doch mal sofort ein Paket brauchst)
+  workflow_dispatch:
 
 jobs:
-  build:
+  check_commits:
     runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check.outputs.changed }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      - name: Check for commits in last 24h
+        id: check
+        run: |
+          if [ -n "$(git log --since='24 hours ago' --oneline)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: check_commits
+    # Baut nur, wenn Commits da sind ODER du manuell auf "Run" drückst
+    if: needs.check_commits.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install System Dependencies (Ubuntu Native)
+      - name: Install System Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -21,42 +46,39 @@ jobs:
             libjna-java \
             libopencv-java \
             libxerial-sqlite-jdbc-java \
-            sqlite3
+            sqlite3 \
+            espeak \
+            mbrola
 
-      - name: Set up JDK 21
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
 
       - name: Execute Local Compile
         run: |
-          # 1. Defekten PLACEHOLDER im Workspace entfernen
+          # 1. Bereinigen
           rm -f lib/PLACEHOLDER-* || true
-          # remove ollamas example AItagger
-          rm -rf ollama || true
-          # remove Demo Plugin, which requires sqllite-jars
-          rm -f plugins/files/FirefoxHistoryPlugin.java
-          # 2. Den Ubuntu-Classpath zusammenbauen
+          find . -name "*.class" -delete
+          
+          # 2. Classpath definieren (Ubuntu Standard)
           UBUNTU_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/jakarta.activation.jar:/usr/share/java/jakarta.mail.jar:/usr/share/java/sqlite-jdbc.jar"
           
-          # 3. Dein Script mit den Argumenten füttern:
-          # $1 = Pfad (.)
-          # $2 = -withcustomlibs
-          # $3 = Der zusammengestellte Classpath
+          # 3. Dein Script rufen
           chmod +x compile.sh
           ./compile.sh . -withcustomlibs "$UBUNTU_CP" 2>&1
 
       - name: Prepare Root Distribution (Staging)
         run: |
-          mkdir -p deploy/etc/pva deploy/usr/local/sbin deploy/usr/share/applications deploy/usr/share/pva deploy/var/lib/pva/records
+          mkdir -p deploy/etc deploy/usr/local/sbin deploy/usr/share/applications deploy/usr/share/pva deploy/var/lib/pva/records
           
-          # Spezialitäten verschieben (Reihenfolge!)
+          # Spezialitäten moven
           if [ -d etc/pva ]; then mv etc/pva deploy/etc/; fi
           if [ -d usr/local/sbin ]; then mv usr/local/sbin/* deploy/usr/local/sbin/ || true; fi
           if [ -d desktop ]; then mv desktop/*.desktop deploy/usr/share/applications/ || true; fi
           
-          # Den Rest kopieren
+          # Rest nach /usr/share/pva
           cp -r . deploy/usr/share/pva/
           rm -rf deploy/usr/share/pva/deploy deploy/usr/share/pva/.github deploy/usr/share/pva/.git
 
@@ -67,5 +89,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pva-ready-to-install
+          name: pva-daily-package
           path: pva_root_install.tgz
