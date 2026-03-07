@@ -40,8 +40,6 @@ jobs:
           
           # 4. Compile: Findet jetzt javax.mail in den geladenen JARs
           find . -name "*.java" > java_files.txt
-          pwd
-          tree .
           echo "CLASSPATH: $SYS_CP"
           javac -d build_out -cp "$SYS_CP:." @java_files.txt
 
@@ -70,3 +68,14 @@ jobs:
         with:
           name: pva-install-package
           path: pva_root_install.tgz
+          
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: pva_root_install.tgz
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
