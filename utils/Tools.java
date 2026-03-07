@@ -57,6 +57,15 @@ public class Tools {
 		return answere;
 		
 	}
+	
+	static public boolean isNumber(String str) {
+		try {
+			Double.parseDouble(str);
+			return true;
+		} catch (NumberFormatException e) {
+			return false;
+		}
+	}
 
 	static public String filterAIThinking(String answere) {
 	
