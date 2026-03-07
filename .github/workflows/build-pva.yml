@@ -58,6 +58,7 @@ jobs:
 
       - name: Execute Local Compile
         run: |
+          echo "JUST DO IT, DAMIT"
           # 1. Bereinigen
           rm -f lib/PLACEHOLDER-* || true
           find . -name "*.class" -delete
