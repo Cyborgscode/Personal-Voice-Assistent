@@ -1,73 +1,63 @@
 name: Build and Package PVA (Ubuntu Native)
 
 on:
-	push:
-		branches: [ main, master ]
-	pull_request:
-		branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
 jobs:
-	build:
-		runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest
 
-		steps:
-			- name: Checkout Repository
-			  uses: actions/checkout@v4
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-			- name: Install System Dependencies (Ubuntu Native)
-			  run: |
-				sudo apt-get update
-				# Installation aller benötigten Java-Bibliotheken vom Ubuntu-Repository
-				sudo apt-get install -y \
-					libjakarta-mail-java \
-					libjakarta-activation-java \
-					libjna-java \
-					libopencv-java \
-					libxerial-sqlite-jdbc-java \
-					sqlite3 \
-					espeak \
-					mbrola
+      - name: Install System Dependencies (Ubuntu Native)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libjakarta-mail-java \
+            libjakarta-activation-java \
+            libjna-java \
+            libopencv-java \
+            libxerial-sqlite-jdbc-java \
+            sqlite3 \
+            espeak \
+            mbrola
 
-			- name: Set up JDK 11
-			  uses: actions/setup-java@v4
-			  with:
-				java-version: '11'
-				distribution: 'temurin'
+      - name: Set up JDK 11
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
 
-			- name: Verify Library Paths
-			  run: |
-				# Kurzer Check im Log, ob die Pfade für compile.sh existieren
-				ls -l /usr/share/java/jakarta.mail.jar || echo "Mail JAR not found"
-				ls -l /usr/share/java/opencv.jar || echo "OpenCV JAR not found"
-				ls -l /usr/share/java/sqlite-jdbc.jar || echo "SQLite JDBC JAR not found"
+      - name: Verify Library Paths
+        run: |
+          ls -l /usr/share/java/jakarta.mail.jar || echo "Mail JAR not found"
+          ls -l /usr/share/java/opencv.jar || echo "OpenCV JAR not found"
+          ls -l /usr/share/java/sqlite-jdbc.jar || echo "SQLite JDBC JAR not found"
 
-			- name: Execute Local Compile
-			  run: |
-				# Dein originales compile.sh ausführen
-				# Wir übergeben "." als Pfad, falls dein Script $1 auswertet
-				chmod +x compile.sh
-				./compile.sh .
+      - name: Execute Local Compile
+        run: |
+          chmod +x compile.sh
+          ./compile.sh .
 
-			- name: Prepare Root Distribution
-			  run: |
-				# Wir bauen die Struktur für das Zielsystem (Root /)
-				mkdir -p deploy/usr/share/pva
-				
-				# Kopiere alles ins Paket (Core, Plugins, Libs, Scripte)
-				# Wir lassen den 'deploy' Ordner selbst natürlich weg
-				cp -r . deploy/usr/share/pva/
-				
-				# Optional: Falls du /etc oder /usr/local/bin Files im Repo hast, hier kopieren:
-				# mkdir -p deploy/etc/pva && cp -r etc/* deploy/etc/pva/ || true
+      - name: Prepare Root Distribution
+        run: |
+          mkdir -p deploy/usr/share/pva
+          cp -r . deploy/usr/share/pva/
+          # Deploy-Ordner im Paket selbst entfernen, um Rekursion zu vermeiden
+          rm -rf deploy/usr/share/pva/deploy
 
-			- name: Create Final Tarball
-			  run: |
-				# Wechsel in den deploy-Ordner, damit tar direkt bei 'usr/' startet
-				cd deploy
-				tar -cvzf ../pva_root_dist.tgz usr/
+      - name: Create Final Tarball
+        run: |
+          cd deploy
+          tar -cvzf ../pva_root_dist.tgz usr/
 
-			- name: Upload Build Artifact
-			  uses: actions/upload-artifact@v4
-			  with:
-				name: pva-ubuntu-install-package
-				path: pva_root_dist.tgz
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pva-ubuntu-install-package
+          path: pva_root_dist.tgz
