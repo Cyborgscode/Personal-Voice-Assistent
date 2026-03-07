@@ -47,6 +47,9 @@ jobs:
 
           # 5. Klassen zurueckkopieren
           cp -r build_out/* .
+          # delete temp dirs & files
+          rm -rf build_out
+          rm -f java_files.txt sources.txt
 
       - name: Prepare Root Distribution (Staging)
         run: |
