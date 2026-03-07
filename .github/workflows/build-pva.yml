@@ -81,3 +81,24 @@ jobs:
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Force Create Tag and Release
+        run: |
+          # 1. Lokal den Tag setzen (falls er fehlt)
+          git tag -f latest
+          # 2. Den Tag zum Server pushen (erzwingen)
+          git push -f origin latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update Latest Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: "Latest Development Build"
+          files: pva_root_install.tgz
+          # Das hier macht das Release auf der Startseite sichtbar:
+          make_latest: true
+          # Falls das Release existiert, wird es ueberschrieben:
+          overwrite: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
