@@ -55,11 +55,20 @@ public class AIStreamer extends Plugin {
 		return true; 
 	}
 
-	public String[] getActionCodes() { return new String[]{"AI_RETURN_DATA","AI_SAY", "AI_STOP","AI_ANSWERE","AICLEARHISTORY","AI_SUMMARIZE"}; }
+	public String[] getActionCodes() { return new String[]{"AI_RETURN_DATA","AI_SAY", "AI_STOP","AI_ANSWERE","AI_VISION_ANALYZE","AICLEARHISTORY","AI_SUMMARIZE"}; }
 
 	public boolean execute(Command cf, String rawtext) {
 	
-		log("AISTreamer:"+ cf.toString() +" => "+ rawtext);
+		if ( cf.negative.matches("^[A-Za-z0-9+/]+={0,2}$") && cf.negative.length() % 4 == 0 ) {
+			log("AISTreamer:"+ cf.command +" "+ cf.filter +" => "+ rawtext);
+		} else	log("AISTreamer:"+ cf.toString() +" => "+ rawtext);
+
+		if (cf.command.equals("AI_VISION_ANALYZE")) {
+			String aiResponse = streamFromOllama( new AIJob(rawtext, cf.filter,cf.negative), false); 
+			log("AI_STREAMER: VISION_ANALYZE response="+aiResponse);
+			pva.AsyncSendIntent(new Command("AISTREAMER", cf.filter, "", cf.negative), aiResponse);
+			return true;
+		}
 	
 		if (cf.command.equals("AI_RETURN_DATA")) {
 			pva.AsyncSendIntent(new Command("AISTREAMER", "MOOD_IMPULS", "", ""), "1");
@@ -165,7 +174,14 @@ public class AIStreamer extends Plugin {
 			currentConn.setRequestProperty("Connection", "keep-alive");
 			currentConn.setRequestProperty("User-Agent","PVA/latest");
 
-			String payload = "{\"model\":\"" + pva.config.get("ai", "model") + "\",\"stream\":true,\"messages\":"+ aimsgs.toJSON() +"}";
+			String payload = "{}";
+			
+			if ( job.extra.matches("^[A-Za-z0-9+/]+={0,2}$") && job.extra.length() % 4 == 0 ) {
+				// Könnte Base64 sein
+				payload = "{\"model\":\""+ model +"\",\"stream\": true,\"messages\":"+ 
+					  "[{\"role\": \"user\",\"content\":\""+ prompt +"\",\"images\": [ \""+ job.extra +"\"]}]}";
+							
+			} else  payload = "{\"model\":\""+ pva.config.get("ai", "model") +"\",\"stream\":true,\"messages\":"+ aimsgs.toJSON() +"}";
 	
 //			log("AISTreamer:streamFromOllama():"+ payload );
 	
