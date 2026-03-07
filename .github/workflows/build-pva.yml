@@ -1,4 +1,4 @@
-name: Build and Package PVA (Ubuntu Native)
+name: Build and Package PVA (Java 21 Native)
 
 on:
   push:
@@ -27,37 +27,63 @@ jobs:
             espeak \
             mbrola
 
-      - name: Set up JDK 11
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '21'
           distribution: 'temurin'
-
-      - name: Verify Library Paths
-        run: |
-          ls -l /usr/share/java/jakarta.mail.jar || echo "Mail JAR not found"
-          ls -l /usr/share/java/opencv.jar || echo "OpenCV JAR not found"
-          ls -l /usr/share/java/sqlite-jdbc.jar || echo "SQLite JDBC JAR not found"
 
       - name: Execute Local Compile
         run: |
           chmod +x compile.sh
+          # Kompiliere alles lokal im Workspace
           ./compile.sh .
 
-      - name: Prepare Root Distribution
+      - name: Prepare Root Distribution (Staging)
         run: |
+          # 1. Zielstruktur im 'deploy' Ordner aufbauen
+          mkdir -p deploy/etc
+          mkdir -p deploy/usr/local/sbin
+          mkdir -p deploy/usr/share/applications
           mkdir -p deploy/usr/share/pva
+          mkdir -p deploy/var/lib/pva/records
+
+          # 2. SPEZIALITÄTEN ZUERST VERSCHIEBEN (mv)
+          # So landen sie NICHT im späteren cp -r nach /usr/share/pva
+          
+          # Configs: Schiebt 'etc/pva' nach 'deploy/etc/pva'
+          if [ -d etc/pva ]; then
+            mv etc/pva deploy/etc/
+          fi
+
+          # 'say'-Scripte nach /usr/local/sbin (aus deinem Pfad usr/local/sbin/)
+          if [ -d usr/local/sbin ]; then
+            mv usr/local/sbin/* deploy/usr/local/sbin/ || true
+          fi
+
+          # Desktop-Files nach /usr/share/applications
+          if [ -d desktop ]; then
+            mv desktop/*.desktop deploy/usr/share/applications/ || true
+          fi
+
+          # 3. DEN REST NACH /usr/share/pva KOPIEREN
+          # Da die speziellen Ordner oben weggemoved wurden, kopiert dies nur noch
+          # den Core, Plugins, lib, haarcascades und compile.sh
           cp -r . deploy/usr/share/pva/
-          # Deploy-Ordner im Paket selbst entfernen, um Rekursion zu vermeiden
+
+          # 4. AUFRÄUMEN (GitHub-Reste im Paket entfernen)
           rm -rf deploy/usr/share/pva/deploy
+          rm -rf deploy/usr/share/pva/.github
+          rm -rf deploy/usr/share/pva/.git
 
       - name: Create Final Tarball
         run: |
+          # Packen ab der Wurzel des deploy-Ordners (etc, usr, var)
           cd deploy
-          tar -cvzf ../pva_root_dist.tgz usr/
+          tar -cvzf ../pva_root_install.tgz .
 
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pva-ubuntu-install-package
-          path: pva_root_dist.tgz
+          name: pva-ready-to-install
+          path: pva_root_install.tgz
