@@ -36,10 +36,11 @@ jobs:
           mkdir -p build_out
 
           # 3. Classpath: System-Libs + unsere frisch geladenen Legacy-Mails
-          SYS_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/sqlite-jdbc.jar:./lib/*jar"
+          SYS_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/sqlite-jdbc.jar:./lib/javax.activation-1.2.0.jar:./lib/javax.mail-1.6.2.jar"
           
           # 4. Compile: Findet jetzt javax.mail in den geladenen JARs
           find . -name "*.java" > java_files.txt
+          pwd
           tree .
           echo "CLASSPATH: $SYS_CP"
           javac -d build_out -cp "$SYS_CP:." @java_files.txt
