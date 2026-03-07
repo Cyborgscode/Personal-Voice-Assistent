@@ -33,6 +33,8 @@ jobs:
         run: |
           # 1. Defekten PLACEHOLDER im Workspace entfernen
           rm -f lib/PLACEHOLDER-* || true
+          # remove ollamas example AItagger
+          rm -rf ollama || true
           # remove Demo Plugin, which requires sqllite-jars
           rm -f plugins/files/FirefoxHistoryPlugin.java
           # 2. Den Ubuntu-Classpath zusammenbauen
