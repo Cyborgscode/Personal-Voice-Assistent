@@ -38,7 +38,7 @@ public class PVA {
 	static Vector<Reaction> reactions 	= new Vector<Reaction>();
 	static Vector<Command> commands   	= new Vector<Command>();
 	static Vector<Contact> contacts   	= new Vector<Contact>();
-	static Vector<MailboxData> mailboxes  	= new Vector<MailboxData>();
+	static public Vector<MailboxData> mailboxes  	= new Vector<MailboxData>();
 	static StringHash timers	  	= new StringHash();
 	static Vector<String> categories  	= new Vector<String>();
 	static TimerTask tt;
@@ -3522,8 +3522,13 @@ public class PVA {
 
 	static public boolean sendIntent(Command cmd, String data){
 		// SyncHandleCommand if it's important to know if the Intent worked
-		log("handle Intent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
-		return pls.handlePluginAction( cmd, data );
+		if ( cmd.negative.matches("^[A-Za-z0-9+/]+={0,2}$") && cmd.negative.length() % 4 == 0 ) {
+			log("handle Intent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+", BASE64CONTENT )");		
+		} else {
+			log("handle Intent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
+		}
+		if ( pls != null ) return pls.handlePluginAction( cmd, data );
+		return false;
 	
 	}
 
