@@ -53,6 +53,7 @@ Optional dependencies:
 
 ```
 ffmpeg
+opencv
 fswebcam
 gnome-screenshot
 https://github.com/xerial/sqlite-jdbc
