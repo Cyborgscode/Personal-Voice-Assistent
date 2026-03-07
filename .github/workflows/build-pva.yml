@@ -1,11 +1,8 @@
 name: Daily Build and Package PVA (Java 17)
 
 on:
-  # 1. Zeitplan: Jeden Tag um 03:00 Uhr UTC (ca. 04:00 Uhr deutsche Zeit)
   schedule:
     - cron: '0 3 * * *'
-  
-  # 2. Manueller Trigger (Falls du doch mal sofort ein Paket brauchst)
   workflow_dispatch:
 
 jobs:
@@ -30,7 +27,6 @@ jobs:
 
   build:
     needs: check_commits
-    # Baut nur, wenn Commits da sind ODER du manuell auf "Run" drückst
     if: needs.check_commits.outputs.has_changes == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -58,30 +54,38 @@ jobs:
 
       - name: Execute Local Compile
         run: |
-          echo "JUST DO IT, DAMIT"
-          # 1. Bereinigen
+          # 1. Deine spezifische Saeuberung
           rm -f lib/PLACEHOLDER-* || true
           find . -name "*.class" -delete
           rm -f plugins/files/FirefoxHistoryPlugin.java || true
-          rm -rf ollama || true 
-          # 2. Classpath definieren (Ubuntu Standard)
+          rm -rf ollama || true
+
+          # 2. Build-Zielordner erstellen gegen den ZIP-Schreibfehler
+          mkdir -p build_out
+
+          # 3. Classpath definieren (Ubuntu Standard)
           UBUNTU_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/jakarta.activation.jar:/usr/share/java/jakarta.mail.jar:/usr/share/java/sqlite-jdbc.jar"
-          
-          # 3. Dein Script rufen
-          chmod +x compile.sh
-          ./compile.sh . -withcustomlibs "$UBUNTU_CP" 2>&1
+
+          # 4. Compile: Alle Java-Files finden und nach build_out schreiben
+          find . -name "*.java" > java_files.txt
+          javac -d build_out -cp "$UBUNTU_CP:." @java_files.txt
+
+          # 5. Klassen zurueckkopieren fuer das Staging
+          cp -r build_out/* .
 
       - name: Prepare Root Distribution (Staging)
         run: |
           mkdir -p deploy/etc deploy/usr/local/sbin deploy/usr/share/applications deploy/usr/share/pva deploy/var/lib/pva/records
           
-          # Spezialitäten moven
+          # Erst die Spezial-Ordner wegschieben (mv)
           if [ -d etc/pva ]; then mv etc/pva deploy/etc/; fi
           if [ -d usr/local/sbin ]; then mv usr/local/sbin/* deploy/usr/local/sbin/ || true; fi
           if [ -d desktop ]; then mv desktop/*.desktop deploy/usr/share/applications/ || true; fi
           
-          # Rest nach /usr/share/pva
+          # Den Rest nach /usr/share/pva kopieren
           cp -r . deploy/usr/share/pva/
+          
+          # GitHub Reste entfernen
           rm -rf deploy/usr/share/pva/deploy deploy/usr/share/pva/.github deploy/usr/share/pva/.git
 
       - name: Create Final Tarball
@@ -91,5 +95,5 @@ jobs:
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: pva-daily-package
+          name: pva-ready-to-install
           path: pva_root_install.tgz
