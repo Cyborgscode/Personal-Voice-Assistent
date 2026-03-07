@@ -41,6 +41,7 @@ jobs:
           # 4. Compile: Findet jetzt javax.mail in den geladenen JARs
           find . -name "*.java" > java_files.txt
           tree .
+          echo "CLASSPATH: $SYS_CP"
           javac -d build_out -cp "$SYS_CP:." @java_files.txt
 
           # 5. Klassen zurueckkopieren
