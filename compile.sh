@@ -22,9 +22,10 @@ else
 fi
 
 if [ -e plugins/files/WatchdogPlugin.java ]; then
-
-	CP="/usr/lib/java/opencv.jar:$CP"
-
+        if [[ "$CP" != *opencv* ]]; then
+                # Nur anfügen, wenn es fehlt
+                CP="/usr/share/java/opencv.jar:$CP"
+        fi
 fi
 
 # We use our own HTTP Class, which got invented years before java implemented theire own, so we need to focus on our own class files, in case you wonder why this looks unnecessary. It isn't ;)
