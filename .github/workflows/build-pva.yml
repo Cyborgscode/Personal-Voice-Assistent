@@ -1,9 +1,7 @@
-name: Build and Package PVA (Java 21 Native)
+name: Build and Package PVA (Using Custom Libs)
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
     branches: [ main, master ]
 
 jobs:
@@ -23,9 +21,7 @@ jobs:
             libjna-java \
             libopencv-java \
             libxerial-sqlite-jdbc-java \
-            sqlite3 \
-            espeak \
-            mbrola
+            sqlite3
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -35,55 +31,38 @@ jobs:
 
       - name: Execute Local Compile
         run: |
+          # 1. Defekten PLACEHOLDER im Workspace entfernen
           rm -f lib/PLACEHOLDER-* || true
+          # remove Demo Plugin, which requires sqllite-jars
+          rm -f plugins/files/FirefoxHistoryPlugin.java
+          # 2. Den Ubuntu-Classpath zusammenbauen
+          UBUNTU_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/jakarta.activation.jar:/usr/share/java/jakarta.mail.jar:/usr/share/java/sqlite-jdbc.jar"
+          
+          # 3. Dein Script mit den Argumenten füttern:
+          # $1 = Pfad (.)
+          # $2 = -withcustomlibs
+          # $3 = Der zusammengestellte Classpath
           chmod +x compile.sh
-          # Kompiliere alles lokal im Workspace
-          ./compile.sh .
+          ./compile.sh . -withcustomlibs "$UBUNTU_CP" 2>&1
 
       - name: Prepare Root Distribution (Staging)
         run: |
-          # 1. Zielstruktur im 'deploy' Ordner aufbauen
-          mkdir -p deploy/etc
-          mkdir -p deploy/usr/local/sbin
-          mkdir -p deploy/usr/share/applications
-          mkdir -p deploy/usr/share/pva
-          mkdir -p deploy/var/lib/pva/records
-
-          # 2. SPEZIALITÄTEN ZUERST VERSCHIEBEN (mv)
-          # So landen sie NICHT im späteren cp -r nach /usr/share/pva
+          mkdir -p deploy/etc/pva deploy/usr/local/sbin deploy/usr/share/applications deploy/usr/share/pva deploy/var/lib/pva/records
           
-          # Configs: Schiebt 'etc/pva' nach 'deploy/etc/pva'
-          if [ -d etc/pva ]; then
-            mv etc/pva deploy/etc/
-          fi
-
-          # 'say'-Scripte nach /usr/local/sbin (aus deinem Pfad usr/local/sbin/)
-          if [ -d usr/local/sbin ]; then
-            mv usr/local/sbin/* deploy/usr/local/sbin/ || true
-          fi
-
-          # Desktop-Files nach /usr/share/applications
-          if [ -d desktop ]; then
-            mv desktop/*.desktop deploy/usr/share/applications/ || true
-          fi
-
-          # 3. DEN REST NACH /usr/share/pva KOPIEREN
-          # Da die speziellen Ordner oben weggemoved wurden, kopiert dies nur noch
-          # den Core, Plugins, lib, haarcascades und compile.sh
+          # Spezialitäten verschieben (Reihenfolge!)
+          if [ -d etc/pva ]; then mv etc/pva deploy/etc/; fi
+          if [ -d usr/local/sbin ]; then mv usr/local/sbin/* deploy/usr/local/sbin/ || true; fi
+          if [ -d desktop ]; then mv desktop/*.desktop deploy/usr/share/applications/ || true; fi
+          
+          # Den Rest kopieren
           cp -r . deploy/usr/share/pva/
-
-          # 4. AUFRÄUMEN (GitHub-Reste im Paket entfernen)
-          rm -rf deploy/usr/share/pva/deploy
-          rm -rf deploy/usr/share/pva/.github
-          rm -rf deploy/usr/share/pva/.git
+          rm -rf deploy/usr/share/pva/deploy deploy/usr/share/pva/.github deploy/usr/share/pva/.git
 
       - name: Create Final Tarball
         run: |
-          # Packen ab der Wurzel des deploy-Ordners (etc, usr, var)
-          cd deploy
-          tar -cvzf ../pva_root_install.tgz .
+          cd deploy && tar -cvzf ../pva_root_install.tgz .
 
-      - name: Upload Build Artifact
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: pva-ready-to-install
