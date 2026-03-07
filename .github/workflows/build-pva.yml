@@ -62,7 +62,7 @@ jobs:
           # 1. Bereinigen
           rm -f lib/PLACEHOLDER-* || true
           find . -name "*.class" -delete
-          rm -f plugins/files/FirefoxHistoryPlugin.java ollama || true
+          rm -f plugins/files/FirefoxHistoryPlugin.java || true
           rm -rf ollama || true 
           # 2. Classpath definieren (Ubuntu Standard)
           UBUNTU_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/jakarta.activation.jar:/usr/share/java/jakarta.mail.jar:/usr/share/java/sqlite-jdbc.jar"
