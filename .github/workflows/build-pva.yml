@@ -58,7 +58,7 @@ jobs:
           if [ -d desktop ]; then mv desktop/*.desktop deploy/usr/share/applications/ || true; fi
           
           # Den Rest nach /usr/share/pva kopieren (inkl. lib_legacy für den User)
-          cp -r . deploy/usr/share/pva/
+          find . -maxdepth 1 ! -name 'deploy' ! -name '.' -exec cp -r {} deploy/usr/share/pva/ \;
           rm -rf deploy/usr/share/pva/deploy deploy/usr/share/pva/.github deploy/usr/share/pva/.git
 
       - name: Create Final Tarball
