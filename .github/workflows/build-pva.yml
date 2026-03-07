@@ -12,19 +12,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install System Dependencies (Legacy Compat)
+      - name: Install Native Dependencies
         run: |
           sudo apt-get update
-          # Installation der 1er Pakete für javax.mail Kompatibilität
-          sudo apt-get install -y \
-            libjakarta-mail1-java \
-            libjakarta-activation1-java \
-            libjna-java \
-            libopencv-java \
-            libxerial-sqlite-jdbc-java \
-            sqlite3 \
-            espeak \
-            mbrola
+          # Nur die nativen Libs und Tools installieren
+          sudo apt-get install -y libjna-java libopencv-java libxerial-sqlite-jdbc-java sqlite3 espeak mbrola wget
+
+      - name: Download Legacy JavaMail (javax.mail)
+        run: |
+          # Wir laden die exakten JARs fuer den javax.mail Namensraum
+          mkdir -p lib_legacy
+          wget -q -O lib_legacy/javax.mail.jar https://maven.org
+          wget -q -O lib_legacy/activation.jar https://maven.org
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -40,33 +39,31 @@ jobs:
           rm -f plugins/files/FirefoxHistoryPlugin.java || true
           rm -rf ollama || true
 
-          # 2. Build-Zielordner gegen ZIP-Schreibfehler (ReadOnlyFileSystemException)
+          # 2. Build-Zielordner gegen ZIP-Schreibfehler
           mkdir -p build_out
 
-          # 3. Classpath: Wir nutzen gezielt die jakarta-mail1 Pfade von Ubuntu
-          MAIL_CP="/usr/share/java/jakarta-mail1/jakarta.mail.jar:/usr/share/java/jakarta-activation1/jakarta.activation.jar"
+          # 3. Classpath: System-Libs + unsere frisch geladenen Legacy-Mails
+          LEGACY_CP="lib_legacy/javax.mail.jar:lib_legacy/activation.jar"
           SYS_CP="/usr/share/java/opencv.jar:/usr/share/java/jna.jar:/usr/share/java/sqlite-jdbc.jar"
           
-          # 4. Compile: Sucht alle Java-Files und schreibt Klassen nach build_out
+          # 4. Compile: Findet jetzt javax.mail in den geladenen JARs
           find . -name "*.java" > java_files.txt
-          javac -d build_out -cp "$MAIL_CP:$SYS_CP:." @java_files.txt
+          javac -d build_out -cp "$LEGACY_CP:$SYS_CP:." @java_files.txt
 
-          # 5. Klassen zurueckkopieren fuer das Staging-Paket
+          # 5. Klassen zurueckkopieren
           cp -r build_out/* .
 
       - name: Prepare Root Distribution (Staging)
         run: |
           mkdir -p deploy/etc deploy/usr/local/sbin deploy/usr/share/applications deploy/usr/share/pva deploy/var/lib/pva/records
           
-          # Spezialitäten VERSCHIEBEN (Reihenfolge!)
+          # Spezialitäten VERSCHIEBEN
           if [ -d etc/pva ]; then mv etc/pva deploy/etc/; fi
           if [ -d usr/local/sbin ]; then mv usr/local/sbin/* deploy/usr/local/sbin/ || true; fi
           if [ -d desktop ]; then mv desktop/*.desktop deploy/usr/share/applications/ || true; fi
           
-          # Rest nach /usr/share/pva kopieren
+          # Den Rest nach /usr/share/pva kopieren (inkl. lib_legacy für den User)
           cp -r . deploy/usr/share/pva/
-          
-          # GitHub-Reste im Paket entfernen
           rm -rf deploy/usr/share/pva/deploy deploy/usr/share/pva/.github deploy/usr/share/pva/.git
 
       - name: Create Final Tarball
