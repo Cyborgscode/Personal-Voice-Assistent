@@ -41,7 +41,7 @@ public class PVA {
 	static public Vector<MailboxData> mailboxes  	= new Vector<MailboxData>();
 	static StringHash timers	  	= new StringHash();
 	static Vector<String> categories  	= new Vector<String>();
-	static TimerTask tt;
+//	static TimerTask tt;
 	static Vosk vosk;
 	static IMAPTask it;
 	static SearchTask st;
@@ -61,7 +61,7 @@ public class PVA {
 	static String metadata_enabled  = "";
 	
 	static void log(String x) { System.out.println(x); }
-	static String[] timedata;
+	// static String[] timedata;
 	
         static String makeDate(long time) {
 
@@ -77,6 +77,10 @@ public class PVA {
         }
 
 	private static String pa_outputid = "";
+
+	public static String[] getZa() {
+		return za;
+	}
 
 	private static boolean initPulseAudio() {
 	
@@ -1204,6 +1208,7 @@ public class PVA {
 				}
 			}
 
+/*
 			if ( dos.fileExists(  getHome()+"/.config/pva/timers.conf" ) ) {
 				timedata = dos.readFile( getHome()+"/.config/pva/timers.conf" ).split("\n");
 				for(String data: timedata) {
@@ -1215,6 +1220,7 @@ public class PVA {
 			} else {
 				timedata = "".split(":"); // create empty array
 			}
+*/
 
 			// check if we have metadata support is enabled
 			
@@ -1344,11 +1350,12 @@ public class PVA {
 			intentWorker = new IntentWorker(pva);
 		        intentWorker.start();
 
+/*
 			log("start TimerTask");
 			
 			tt = new TimerTask(pva);
 			tt.start();
-			
+*/			
 			log("start IMAPTask");
 			
 			it = new IMAPTask(pva);
@@ -1382,7 +1389,7 @@ public class PVA {
 			
 			log("PVA:main:shutdown");
 			
-			tt.interrupt();
+//			tt.interrupt();
 			it.interrupt();
 			vosk.interrupt();
 			
@@ -1427,7 +1434,7 @@ public class PVA {
 			
 			// Format to parse "{text:"spoken text"}"
 		
-			// log("handleInput: text="+ extText);
+			// log("handleInput: text="+ extText +" intent="+ intent +" extra="+ extra);
 		
 			if ( extText.contains(":") ) {
 				if ( extText.split(":").length > 1 ) {
@@ -1773,6 +1780,11 @@ public class PVA {
 				
 				if ( cf.command.equals("SHOWTIMER") ) {
 
+					pls.handlePluginAction(new Command("CORE", cf.command, currentIntent,currentExtra), text_raw );	
+					reaction = true;			
+
+/*
+
 					String mytext = "";
 	
 					for(String data: timedata) {
@@ -1791,161 +1803,37 @@ public class PVA {
 						log( mytext );
 						say( mytext );
 					}
+*/
 
+				}
+
+				if ( cf.command.equals("CANCELTIMER") ) {
+				
+					pls.handlePluginAction(new Command("CORE", "TIMER_CANCEL" , currentIntent,currentExtra), text_raw );	
+					reaction = true;			
+				}				
+				if ( cf.command.equals("CANCELTIMERRELATIVE") ) {	
+				
+					pls.handlePluginAction(new Command("CORE", "TIMER_CANCEL_RELATIVE", currentIntent,currentExtra), text_raw );	
+					reaction = true;			
 				}
 				
 				// MAKETIMER 
 				// Example: "<KEYWORD> erinnere mich um achtzehn uhr dreißig an linux am dienstag"
 				// Example: "<KEYWORD> reminde me at <TIME> to <SUBJECT>"
 				
-				if ( cf.command.equals("MAKETIMER") ) {				
+				if ( cf.command.equals("MAKETIMER") ) {	
 				
-					String[] wochentage   = texte.get( config.get("conf","lang_short"), "WEEKDAYS").split("\\|");
-					String[] words_future = texte.get( config.get("conf","lang_short"), "FUTUREKEYWORDS").split("\\|");
-	
-					boolean timer = false;
-					Calendar rightNow = Calendar.getInstance();
-	
-					Pattern pattern = Pattern.compile( "("+ texte.get( config.get("conf","lang_short"), "MAKETIMERAT") +")" );
-					String[] stepone = pattern.split( text_raw.replaceAll( keyword, "").trim() , 2 );
-					if ( stepone.length == 2) {
-					
-						pattern = Pattern.compile( "("+ texte.get( config.get("conf","lang_short"), "MAKETIMERFOR") +")" );
-						String[] steptwo = pattern.split( stepone[1], 2 );
-						if ( steptwo.length == 2) {
-							String time = steptwo[0].trim();
-							String subject = steptwo[1].trim();
+					pls.handlePluginAction(new Command("CORE", "MAKE_TIMER", currentIntent,currentExtra), text_raw );	
+					reaction = true;			
 
-							// analyse time
-							// we assume "today" , which is the absence of any match
-					
-							// log("time="+time +" subject="+ subject);
-					
-							int when = 0, hour = -1, minutes = 0, weekday = 0;
-
-					
-							for(int i=0;i< words_future.length;i++) 
-								if ( text_raw.contains( words_future[i] ) ) 
-									when = i;
-
-							for(int i=0;i< wochentage.length;i++) 
-								if ( text_raw.contains( wochentage[i] ) && !subject.contains( wochentage[i] ) ) 
-									weekday = i+1; // JAVAs crude sonntag = 1 rule..
-
-							
-							String[] times = time.split( texte.get( config.get("conf","lang_short"), "MAKETIMERTIMEWORD") );
-							if ( times.length == 1 ) {
-								// only a full hour is given
-								for(int i=0;i<za.length && i<24;i++) {
-									if ( times[0].trim().matches( za[i] ) ) 
-										hour = i;
-								}
-							} 
-							
-							if ( times.length == 2 ) {
-								// HOUR + MINUTES
-								for(int i=0;i<za.length && i<24;i++) {
-									if ( times[0].trim().matches( za[i] ) ) 
-										hour = i;
-								}
-								for(int i=0;i<za.length && i<60;i++) {
-									if ( times[1].trim().matches( za[i] ) ) 
-										minutes = i;
-								}
-
-							}
-					
-							log( hour + ":" + minutes );
-							
-							if ( hour > -1 ) timer = true;
-							
-//							log( rightNow.get(Calendar.DAY_OF_WEEK) +" sonntag="+ Calendar.SUNDAY);
-
-//							log ( rightNow.getTime().toString() );
-							
-							if ( rightNow.get(Calendar.DAY_OF_WEEK) >= weekday && weekday != 0 ) {
-								// add one week
-								rightNow.add(Calendar.DAY_OF_MONTH, 7 );
-								rightNow.set(Calendar.DAY_OF_WEEK, weekday );
-							}
-							
-							rightNow.set(Calendar.HOUR_OF_DAY, hour );
-							rightNow.set(Calendar.MINUTE, minutes );
-							rightNow.set(Calendar.SECOND, 0 );
-							rightNow.set(Calendar.MILLISECOND, 0 );
-
-//							log ( rightNow.getTime().toString() );
-							
-							if ( when > 0 ) 
-								for(int i=0;i<when;i++) {
-									rightNow.add(Calendar.DAY_OF_MONTH, 1 );
-								}
-							
-							log ( rightNow.getTime().toString() );
-							timers.put( ""+rightNow.getTimeInMillis(), subject );
-							tt.saveTimers();
-						}
-					}
-	
-					if ( timer ) {
-
-						say( texte.get( config.get("conf","lang_short"), "MAKETIMEROK").replaceAll( "<TERM1>", makeDate( rightNow.getTimeInMillis() ) ));
-					} else  say( texte.get( config.get("conf","lang_short"), "MAKETIMERERROR") );
-				
 				}
 				
 				if ( cf.command.equals("MAKETIMERRELATIVE") ) {				
 				
-					boolean timer = false;
-					Calendar rightNow = Calendar.getInstance();
+					pls.handlePluginAction(new Command("CORE", "MAKE_TIMERRELATIVE", currentIntent,currentExtra), text_raw );	
+					reaction = true;							
 
-					Pattern pattern = Pattern.compile( "("+ texte.get( config.get("conf","lang_short"), "MAKETIMERATRELATIVE") +")" );
-					String[] stepone = pattern.split( text_raw.replaceAll( keyword, "").trim() , 2 );
-					if ( stepone.length == 2) {
-						pattern = Pattern.compile( "("+ texte.get( config.get("conf","lang_short"), "MAKETIMERFOR") +")" );
-						String[] steptwo = pattern.split( stepone[1], 2 );
-						if ( steptwo.length == 2) {
-							String time = steptwo[0].trim();
-							String subject = steptwo[1].trim();
-
-							// analyse time
-							// we assume "today" , which is the absence of any match
-					
-							// log("time="+time +" subject="+ subject);
-					
-							int when = 0, multiply = 1;
-	
-							if ( text_raw.contains( texte.get( config.get("conf","lang_short"), "TIMEHOURS") ) ) {
-								multiply = 60;
-							} else 	if ( text_raw.contains( texte.get( config.get("conf","lang_short"), "TIMEDAYS") ) ) {
-								multiply = 60*24;
-							}
-						
-							// log( "multiply="+ multiply);
-
-							for(int i=0;i<za.length;i++)
-								if ( text_raw.matches( ".* "+za[i]+" .*" ) || text_raw.contains(" "+za[i]+" ") ) 
-									when = i+1;
-
-							if ( when > 0 ) {	
-								for ( int i=0; i < when*multiply; i++ )
-									rightNow.add(Calendar.MINUTE, 1 );
-								rightNow.set(Calendar.SECOND, 0 );
-								rightNow.set(Calendar.MILLISECOND, 0 );
-
-								log ( rightNow.getTime().toString() );
-								timers.put( ""+rightNow.getTimeInMillis(), subject );
-								tt.saveTimers();
-								timer = true;
-							}
-						}
-					}
-	
-					if ( timer ) {
-
-						say( texte.get( config.get("conf","lang_short"), "MAKETIMEROK").replaceAll( "<TERM1>", makeDate( rightNow.getTimeInMillis() ) ));
-					} else  say( texte.get( config.get("conf","lang_short"), "MAKETIMERERROR") );
-				
 				}
 				
 				// repeat last cmd.. 
@@ -3395,11 +3283,12 @@ public class PVA {
 				}
 
 				if ( !reaction ) {
-					
+
 //					log("no internal reaction yet, lets test plugins to handle it.");	
 					// clone cf for keeping the intentdata intact!
 
 					reaction = pls.handlePluginAction(new Command("CORE", cf.command, currentIntent,currentExtra), text);
+					
 				}
 	
 				if ( !reaction && ai != null && ai.get("enable").equals("true") && ai.get("mode").equals("gapfiller") && aiportreachable ) {
@@ -3414,7 +3303,6 @@ public class PVA {
 					}
 
 				} else if ( debug > 2 ) log("no ai support");
-
 
 				if ( !reaction && cgpt != null && cgpt.get("enable").equals("true") && cgpt.get("bin") != null && cgpt.get("mode").equals("gapfiller") ) {
 					if ( checkMediaPlayback() && text.trim().length()>0 ) {
@@ -3438,8 +3326,6 @@ public class PVA {
 
 				} else if ( debug > 2 ) log("no chatgpt");
 
-				
-								
 				if ( !reaction ) {
 					if ( text.replace(""+keyword+"","").trim().isEmpty() ) {
 						log("Ich glaube, Du hast nichts gesagt!");
@@ -3511,8 +3397,10 @@ public class PVA {
 	
 		Plugin mood = pls.getPlugin("MoodManager");
 		if ( mood != null ) {
+			/*
 			log("moodlevel="+ mood.getVar("level"));
 			log("moodsuffix="+ mood.getVar("suffix"));
+			*/			
 			mood.setVar("textkey",key);
 			return mood.getVar("text");
 		}
@@ -3523,9 +3411,9 @@ public class PVA {
 	static public boolean sendIntent(Command cmd, String data){
 		// SyncHandleCommand if it's important to know if the Intent worked
 		if ( cmd.negative.matches("^[A-Za-z0-9+/]+={0,2}$") && cmd.negative.length() % 4 == 0 ) {
-			log("handle Intent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+", BASE64CONTENT )");		
+			log("handle Intent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+", BASE64CONTENT ) "+ data);		
 		} else {
-			log("handle Intent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +")");
+			log("handle Intent \""+ cmd.command +"\" from "+ cmd.words +" with ("+cmd.filter+","+cmd.negative +") "+ data);
 		}
 		if ( pls != null ) return pls.handlePluginAction( cmd, data );
 		return false;
