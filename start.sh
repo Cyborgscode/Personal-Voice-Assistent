@@ -2,7 +2,7 @@
 
 cd /usr/share/pva
 
-CP=""
+CP="/usr/lib/java/jna.jar:/usr/share/java/jakarta-activation1/jakarta.activation.jar:/usr/share/java/jakarta-mail1/jakarta.mail.jar"
 for file in lib/*;do  CP="$CP:./$file"; done 
 for file in lib/*/*;do  CP="$CP:./$file"; done
 ADD=""
