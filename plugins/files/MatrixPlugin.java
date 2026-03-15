@@ -103,7 +103,7 @@ public class MatrixPlugin extends Plugin {
 		}
 
 		// 3. Messaging (Multi-Target & DM)
-		if (cmd.equals("MATRIX_SENDROOM")) {
+		if (cmd.equals("MATRIX_SENDROOM") || cmd.equals("MATRIX_SENDMSG")) {
 			if (value.contains("|")) {
 				String[] parts = value.split("\\|", 2);
 				sendMessage(parts[0], parts[1]);
@@ -112,15 +112,7 @@ public class MatrixPlugin extends Plugin {
 			}
 			return true;
 		}
-
-		if (cmd.equals("MATRIX_SENDMSG")) {
-			if (value.contains("|")) {
-				String[] parts = value.split("\\|", 2);
-				sendMessage(parts[0], parts[1]);
-				return true;
-			} else log(name+":MATRIX_SENDMSG: ups.. no delimiter in payload: "+ value);
-		}
-
+		
 		if (cmd.equals("MATRIX_RECEIVE_LLM_ANSWERE")) {
 			
 			if ( cf.negative.equals("DEFAULT") ) {
