@@ -86,10 +86,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Force Create Tag and Release
         run: |
-          # 1. Lokal den Tag setzen (falls er fehlt)
-          git tag -f latest
-          # 2. Den Tag zum Server pushen (erzwingen)
-          git push -f origin latest
+          # Den Tag lokal und auf dem Server löschen
+          git tag -d latest || true
+          git push origin :refs/tags/latest || true
+          # Neu setzen
+          git tag latest
+          git push origin latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
