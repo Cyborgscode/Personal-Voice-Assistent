@@ -32,7 +32,7 @@ if [ "$PORT" == "1" ]; then
 	echo -n "$NAME $EXIT" | openssl s_client -connect 127.0.0.1:39999 -nbio 1>/dev/null 2>/dev/null
 
 
-	CODE=$(grep -E "code:\"alpha\"" $HOME/.config/pva/conf.d/* | tail -n 1| sed -e "s/^.*://g" | awk -F "," '{print $2;}'| sed -e "s/\"//g" -r -e "s/\\|/ /g")
+	CODE=$(grep -E "code:\"alpha\"" /etc/pva/conf.d/* $HOME/.config/pva/conf.d/* | tail -n 1| sed -e "s/^.*://g" | awk -F "," '{print $2;}'| sed -e "s/\"//g" -r -e "s/\\|/ /g")
 
 
 	CMD=$(grep -E "command:.*\"SHUTDOWNAUTHORIZE\"" /etc/pva/conf.d/* $HOME/.config/pva/conf.d/*| tail -n 1| sed -e "s/^.*://g" | awk -F "," '{print $1;}'| sed -e "s/\"//g" -r -e "s/\\|/ /g")
