@@ -27,10 +27,15 @@ fi
 
 if [ ! -f $HOME/.config/pva/conf.d/02-paths.conf ]; then
 
-	echo "path:\"video\",\"$HOME/Videos\""    > $HOME/.config/pva/conf.d/02-paths.conf
-	echo "path:\"pics\",\"$HOME/Bilder\""    >> $HOME/.config/pva/conf.d/02-paths.conf
-	echo "path:\"music\",\"$HOME/Musik\""    >> $HOME/.config/pva/conf.d/02-paths.conf
-	echo "path:\"docs\",\"$HOME/Dokumente\"" >> $HOME/.config/pva/conf.d/02-paths.conf
+	source $HOME/.config/user-dirs.dirs
+	
+	echo "### you can use multiply directories like this: path1:path2:path3 aso." >  $HOME/.config/pva/conf.d/02-paths.conf
+	
+	echo "path:\"video\",\"$XDG_VIDEOS_DIR\""    >> $HOME/.config/pva/conf.d/02-paths.conf
+	echo "path:\"pics\",\"$XDG_PICTURES_DIR\""   >> $HOME/.config/pva/conf.d/02-paths.conf
+	echo "path:\"music\",\"$XDG_MUSIC_DIR\""     >> $HOME/.config/pva/conf.d/02-paths.conf
+	echo "path:\"docs\",\"$XDG_DOCUMENTS_DIR\""  >> $HOME/.config/pva/conf.d/02-paths.conf
+
 fi 
 
 if [ ! -e $HOME/.var/log ]; then
