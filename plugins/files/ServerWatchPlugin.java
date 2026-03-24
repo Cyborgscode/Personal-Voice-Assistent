@@ -102,14 +102,14 @@ public class ServerWatchPlugin extends Plugin {
 			String[] hosts = targets.split(",");
 			for (String host : hosts) {
 				host = host.trim();
-				if (host.isEmpty()) continue;
+				if (host.isEmpty() || host.toLowerCase().startsWith("hostname") ) continue;
 
 				boolean online = isReachable(host); // Die Methode von vorhin
     
 				    if (!online) {
 				        if (!lastAlarms.contains(host)) {
-			            sendAlarm(host, "PORT CLOSED/TIMEOUT");
-			            lastAlarms += host + "|";
+				            sendAlarm(host, "PORT CLOSED/TIMEOUT");
+				            lastAlarms += host + "|";
         				}
 				    } else if (lastAlarms.contains(host)) {
         				lastAlarms = lastAlarms.replace(host + "|", "");
@@ -194,4 +194,3 @@ public class ServerWatchPlugin extends Plugin {
 		}).start();
 	}
 }
-
