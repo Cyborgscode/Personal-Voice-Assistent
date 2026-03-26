@@ -84,6 +84,7 @@ public class Plugins {
                                                         if ( r.getPluginInfo().get("hasThread").equals("yes") ) {
 //								System.out.println("Plugins:loadClasses: running now "+ name);
                                                         	r.start();
+                                                        	r.setName(name);
                                                         }
                                                         
                                                 }
@@ -146,4 +147,3 @@ public class Plugins {
 	}
 	
 }
-
