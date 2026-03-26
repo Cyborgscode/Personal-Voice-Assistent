@@ -127,8 +127,8 @@ public class LoadTask extends Plugin {
 //				log("load="+f+" laststate="+lastState+" time="+time);
 				
 				if ( f > c && ( lastState < c || time > 60 ) ) {
-						// I'm meltung: -25 MOOD
-						pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-25");
+						// I'm meltung: -10 MOOD
+						pva.AsyncSendIntent(new Command("LOADTASK", "MOOD_IMPULS", "", ""), "-10");
 						// we use SPEAK - Intent here because we wanne have it now, not in 20 Seconds, when the queue cleared.
 						
 						if ( vars.get("silence").equals("no") ) pva.AsyncSendIntent(new Command("LOADTASK", "SPEAK", "", ""), getT("HEALTHRESPONSEHELPHELP") );

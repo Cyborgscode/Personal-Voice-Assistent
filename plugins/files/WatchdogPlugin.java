@@ -25,6 +25,7 @@ public class WatchdogPlugin extends Plugin {
 	private VideoCapture camera = null;
 	private int brightnessThreshold = 45;
 	private String prompt = "Analysiere Bild. Antworte NUR mit genau einem Keyword: 'RESULT_OWNER' (Besitzer erkannt), 'RESULT_EMPTY' (Niemand da) oder 'RESULT_ALARM' (Jede andere Person/Unbekannter). Keine Sätze, kein Punkt.";
+
 	boolean alarmRunning = false;
 	private String alarmsample = "/usr/share/evolution/sounds/default_alarm.wav";
 	private String mailboxID = "";
@@ -36,11 +37,21 @@ public class WatchdogPlugin extends Plugin {
 	private org.opencv.videoio.VideoWriter videoWriter = null;
 	private long lastAlarmDetected = 0;
 	private long retainDays = 21;
+	
+	private boolean ecall_enabled = false;
+	private String ecall_number = "";
+	private String ecall_script = "";
+		
+	private boolean ecall_describe = false;
+	private String describe_prompt = "Analysiere Bild. beschreibe was du siehst. antworte sachlich mit maximal drei Sätzen. ";
+	private String ecall_info = "Ich bin die Haus K I %KEYWORD. In meine Wohnung ist eingebrochen worden. Stellen Sie mir fragen.";
+	private String ecall_loca = "Ich weiß nicht wo ich genau bin. Verfolgen Sie den Anruf zurück.";
 		
 	public void init(PVA pva) {
 		this.pva = pva;
-		if ( !pva.config.get("watchdog","aiprompt").isEmpty() ) this.prompt = pva.config.get("watchdog","aiprompt");
-		if ( !pva.config.get("watchdog","alarmsample").isEmpty() ) this.alarmsample = pva.config.get("watchdog","alarmsample");
+		if ( !pva.config.get("watchdog","aiprompt").isEmpty() ) prompt = pva.config.get("watchdog","aiprompt");
+		if ( !pva.config.get("watchdog","describeprompt").isEmpty() ) describe_prompt = pva.config.get("watchdog","describeprompt");
+		if ( !pva.config.get("watchdog","alarmsample").isEmpty() ) alarmsample = pva.config.get("watchdog","alarmsample");
 		if (  pva.config.get("watchdog","start").toLowerCase().equals("true") ) this.active = openCamera();
 		if ( !pva.config.get("watchdog","mailbox").isEmpty() ) this.mailboxID = pva.config.get("watchdog","mailbox");
 		if ( !pva.config.get("watchdog","sendalarmto").isEmpty() ) this.sendalarmto = pva.config.get("watchdog","sendalarmto");
@@ -49,6 +60,15 @@ public class WatchdogPlugin extends Plugin {
 		if ( !pva.config.get("watchdog","videopath").isEmpty() ) {
 			this.videopath = pva.config.get("watchdog","videopath");
 		} else  this.videopath = pva.getHome()+"/Videos"; // default to Freedesktop
+
+		// EmergencyCallOptions : defaults to "off"/"false"
+
+		if (  pva.config.get("watchdog","emergencycall").toLowerCase().equals("true") ) ecall_enabled = true;
+		if ( !pva.config.get("watchdog","emergencyscript").isEmpty() ) this.ecall_script = pva.config.get("watchdog","emergencyscript");
+		if ( !pva.config.get("watchdog","emergencynumber").isEmpty() ) this.ecall_number = pva.config.get("watchdog","emergencynumber");
+		if ( !getT("WATCHDOG_ECALLINFO").isEmpty() ) this.ecall_info = getT("WATCHDOG_ECALLINFO").replace("%KEYWORD", pva.config.get("conf","keyword"));
+		if ( !getT("WATCHDOG_ECALLLOCA").isEmpty() ) this.ecall_loca = getT("WATCHDOG_ECALLLOCA").replace("%KEYWORD", pva.config.get("conf","keyword"));
+
 	}
 
 	public StringHash getPluginInfo() {
@@ -69,7 +89,7 @@ public class WatchdogPlugin extends Plugin {
 	}
 	
 	public String[] getActionCodes() {
-		return new String[]{"WATCHDOG_START", "WATCHDOG_STOP", "WATCHDOG_AI_RESPONSE"};
+		return new String[]{"WATCHDOG_START", "WATCHDOG_STOP", "WATCHDOG_AI_RESPONSE", "WATCHDOG_AI_REPORT","WATCHDOG_DESCRIBESCENE","WATCHDOG_REPEATINFO","WATCHDOG_REPORTLOCATION"};
 	}
 
 	public boolean execute(Command cf, String value) {
@@ -92,6 +112,25 @@ public class WatchdogPlugin extends Plugin {
 
 		if (cf.command.equals("WATCHDOG_AI_RESPONSE")) {
 			handleAIResponse(value, cf);
+			return true;
+		}
+		if (cf.command.equals("WATCHDOG_AI_REPORT")) {
+			pva.AsyncSendIntent(new Command("WATCHDOGPLUGIN", "ASYNCSPEAK", "NONE", ""), value );
+			return true;
+		}
+	
+		if (cf.command.equals("WATCHDOG_DESCRIBESCENE")) {
+			ecall_describe = true;
+			return true;
+		}
+		
+		if ( cf.command.equals("WATCHDOG_REPEATINFO")) {
+			say( ecall_info );
+			return true;
+		}
+		
+		if ( cf.command.equals("WATCHDOG_REPORTLOCATION")) {
+			say( ecall_loca );
 			return true;
 		}
 		return false;
@@ -150,6 +189,8 @@ public class WatchdogPlugin extends Plugin {
 		}
 	}
 
+	private long lastBark = 0;
+
 	@Override
 	public void run() {
 		Mat frame = null;
@@ -162,14 +203,21 @@ public class WatchdogPlugin extends Plugin {
 				
 		while (!isInterrupted()) {
 			// 1. BEZIEHUNGS-RETTER: Sound nur alle 60 Sek, nicht alle 50ms!
-			if (alarmRunning) {
-				dos.readPipe("play \"" + alarmsample + "\"");
-			}
+			if (alarmRunning && !dos.fileExists( pva.getHome() + "/.local/tmp/donotbark") ) {
+			
+				if ( ( System.currentTimeMillis() - lastBark ) > 10000) { 
+			
+					pva.AsyncSendIntent(new Command("WATCHDOGPLUGIN", "PLAYSOUNDASYNC", "", ""), alarmsample );
+					lastBark = System.currentTimeMillis();
+				}
+			} else lastBark = System.currentTimeMillis();
 
 			if (active && camera != null && camera.isOpened()) {
 				if (camera.read(frame) && !frame.empty()) {
 					// 2. Video-Recording (Echtzeit)
 					if (alarmRunning) {
+					
+						// Video-Aufnahme initialisieren
 						if (videoWriter == null) {
 							startVideoRecording(frame);
 						}
@@ -177,20 +225,6 @@ public class WatchdogPlugin extends Plugin {
 							videoWriter.write(frame);
 						}
 					}
-
-/*
-					FaceGeometry geo = new FaceGeometry(eyesArray, noseArray, mouthArray, crop);
-
-					if (geo.valid) {
-						log("Geometrie-Check: Ratio = " + geo.ratio + " | Winkel = " + geo.angle);
-		
-						// Hier dein Schwellenwert-Vergleich (z.B. Besitzer-Ratio ist 1.45)
-						if (Math.abs(geo.ratio - 1.45) < 0.05) {
-							log("Vektor-Match! Besitzer erkannt (Lokal).");
-							// Optional: Trotzdem Gemma 3 fragen für "Lebender-Mensch-Check"
-						}
-					}
-*/
 
 					// 3. KI-Analyse getaktet auslagern
 					long currentTime = System.currentTimeMillis();
@@ -216,7 +250,13 @@ public class WatchdogPlugin extends Plugin {
 									String base64 = Base64.getEncoder().encodeToString(buf.toArray());
 									
 									// JSON-Safe Senden (escaped Anführungszeichen)
-									pva.AsyncSendIntent(new Command("WATCHDOGPLUGIN", "AI_VISION_ANALYZE", "WATCHDOG_AI_RESPONSE", base64), prompt.replace("\"", "\\\""));
+									if ( ! ecall_describe ) {
+										log("image size="+ base64.length());
+										pva.AsyncSendIntent(new Command("WATCHDOGPLUGIN", "AI_VISION_ANALYZE", "WATCHDOG_AI_RESPONSE", new String( base64 ) ), prompt.replace("\"", "\\\""));
+									} else {
+										ecall_describe = false;
+										pva.AsyncSendIntent(new Command("WATCHDOGPLUGIN", "AI_VISION_ANALYZE", "WATCHDOG_AI_REPORT", new String( base64 ) ), describe_prompt.replace("\"", "\\\""));
+									}
 
 									resizedFrame.release();
 									buf.release();
@@ -242,12 +282,34 @@ public class WatchdogPlugin extends Plugin {
 	private void handleAIResponse(String aiResult, Command cf) {
 		String res = aiResult.toUpperCase();
 		
+		log("handleAIResonse:"+ res);
+		
 		if (!alarmRunning && res.contains("RESULT_ALARM")) {
 			// ... (Sounds & Stimmung wie bisher) ...
 
 			say(getT("WATCHDOG_ALARM_REPORT").replace("<REASON>", aiResult), cf.filter, "1");
 
-			// Video-Aufnahme initialisieren
+			// Call Emergency Contact i.e. local police
+
+			if ( ecall_enabled ) {
+
+				log("Watchdog: ECALL "+ ecall_number);
+				try {
+					new Thread(() -> {
+					
+						log("Watchdog: ECALL result= "+ dos.readPipe( ecall_script.replaceAll("<emergencynumber>", ecall_number) +" &") );
+					
+					}).start(); // .start() spaltet den Thread ab
+				} catch (Exception e) {
+					log("Watchdog: ECALL failed for unkown reason.");
+				}
+
+			
+			} else {
+				log("Watchdog: ECALL is disabled");
+			}
+			
+			
 			alarmRunning = true;
 			lastAlarmDetected = System.currentTimeMillis();
 
@@ -278,9 +340,10 @@ public class WatchdogPlugin extends Plugin {
 		
 		// STOP-Logik mit Nachlauf: Nur stoppen, wenn seit 10 Sek. kein Alarm mehr kam
 		if (alarmRunning && res.contains("RESULT_EMPTY")) {
-			if (System.currentTimeMillis() - lastAlarmDetected > 60000) { 
+			if ( ( System.currentTimeMillis() - lastAlarmDetected ) > 60000) { 
 				alarmRunning = false;
 				stopVideoRecording();
+				lastAlarmDetected = System.currentTimeMillis();
 				log("Watchdog: Alarm beendet, Video gespeichert.");
 			} else {
 				log("Watchdog: Warte auf Nachlaufzeit (Buffer)...");

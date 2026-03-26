@@ -233,20 +233,24 @@ public class AIStreamer extends Plugin {
 				}
 			}
 			
-			aimsgs.addMessage(new AIMessage("assistant", pva.config.get("ai","model"), Tools.filterAIThinking( json.toString() ).trim() ));
+			if ( !( job.extra.matches("^[A-Za-z0-9+/]+={0,2}$") && job.extra.length() % 4 == 0 ) ) {
+				// surpress message history for picture analytics
+				aimsgs.addMessage(new AIMessage("assistant", pva.config.get("ai","model"), Tools.filterAIThinking( json.toString() ).trim() ));
+			}
 			
 //			log("message="+ aimsgs.toJSON());
 	
 		} catch (Exception e) {
 			log(getT("AIS_STREAM_ERR") + e.getMessage());
-		} finally {
-			if (sentenceBuf.length() > 0) {
-				String teilstring = sentenceBuf.toString();
-				if ( sayit && !teilstring.startsWith("#") ) say( teilstring,job.returnIntent,job.extra);
-				entireBuf.append( teilstring.trim() );
-			}
-			vars.put("status", "idle");
+		} 
+
+		if (sentenceBuf.length() > 0) {
+			String teilstring = sentenceBuf.toString();
+			if ( sayit && !teilstring.startsWith("#") ) say( teilstring,job.returnIntent,job.extra);
+			entireBuf.append( teilstring.trim() );
 		}
+		vars.put("status", "idle");
+		
 		String ret = entireBuf.toString().trim();
 		if ( ret.startsWith("#") ) {
 		
@@ -272,7 +276,7 @@ public class AIStreamer extends Plugin {
 			}
 			return "";
 		}
-		return entireBuf.toString().trim();
+		return ret;
 	}
 
 	private String extractResponse(String body) {

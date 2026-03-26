@@ -13,7 +13,7 @@ public class MoodManager extends Plugin {
     private String name = "MoodManager";
     private StringHash lastMoodAnswere = new StringHash();
     
-    private String getFilter = ":mood:status:level:text:suffix";
+    private String getFilter = ":mood:status:level:text:suffix:";
     private String setFilter = ":impuls:textkey:";
     private TwoKeyHash validValues = new TwoKeyHash();
 
@@ -96,6 +96,7 @@ public class MoodManager extends Plugin {
         	else if (moodLevel >= -50) suffix = "MOOD_ANNOYED";
         	else if (moodLevel >= -75) suffix = "MOOD_SARCASTIC";
         	else                       suffix = "MOOD_LMAA";
+        	this.setVar("suffix",suffix);
 		return suffix;
 	}
 
@@ -186,7 +187,6 @@ public class MoodManager extends Plugin {
 	                	if (moodLevel < -100) moodLevel = -100;
 //	                	if (oldMood == 0 && moodLevel != 0) notify();
                			log("mood-impulse: newLevel = "+ moodLevel);
-	                	
 		                return true;
 			} catch (Exception e) { return false; }
 	        }
