@@ -33,7 +33,9 @@ class IMAPTask extends Thread {
                 Thread.currentThread().interrupt();
 	}
 
+	
 	public void run() {
+		Thread.currentThread().setName("IMAPTask");
 		try {
 
 //			log("IMAPTASK started");

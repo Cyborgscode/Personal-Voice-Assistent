@@ -22,6 +22,8 @@ class SearchTask extends Thread {
 	void log(String x) { System.out.println(x); }
 	
 	public void run() {
+	
+		Thread.currentThread().setName("SearchTask");
 		try {
 			String result = pva.suche( pva.config.get("path","music"), "*",pva.config.get("conf","musicfilepattern") );
 			// if we got aborted, we don't overwrite the old cache

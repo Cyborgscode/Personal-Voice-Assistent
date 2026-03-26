@@ -21,6 +21,7 @@ class MetacacheTask extends Thread {
 	void log(String x) { System.out.println(x); }
 	
 	public void run() {
+		Thread.currentThread().setName("MetacacheTask");
 		try {
 					String suchergebnis = "";
 

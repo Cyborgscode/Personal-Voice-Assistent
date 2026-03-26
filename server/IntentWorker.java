@@ -21,6 +21,7 @@ public class IntentWorker extends Thread {
 	}
 
 	public void run() {
+		Thread.currentThread().setName("IntentWorker");
 		while (!isInterrupted()) {
 			try {
 				// Blockiert, bis ein Intent reinkommt
