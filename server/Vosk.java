@@ -89,6 +89,7 @@ class Vosk extends Thread {
 	}
 	
 	public void run() {
+		Thread.currentThread().setName("Vosk-Input-Thread");
 		try {
 
 			if ( !pva.config.get("vosk","model").equals("") ) {
@@ -116,13 +117,17 @@ class Vosk extends Thread {
 			TargetDataLine microphone = AudioSystem.getTargetDataLine(format);
 
 			int bytesRead;
-			int CHUNK_SIZE = microphone.getBufferSize() / 5;
+			// int CHUNK_SIZE = microphone.getBufferSize() / 5;
+			int CHUNK_SIZE = 4000;
+			
+			CHUNK_SIZE &= ~1;
 			byte[] data = new byte[CHUNK_SIZE];
 			microphone.open(format,CHUNK_SIZE);
 			microphone.start();
 
 			model = new Model(modelPath);
 			recognizer = new Recognizer(model, 16000);
+			recognizer.setMaxAlternatives(0);
 
 			while ( true ) {
 				if (isInterrupted() || ignore) {
@@ -257,11 +262,15 @@ class Vosk extends Thread {
 
 						silenceStart = -1; // Es ist laut genug, Timer zurücksetzen
 					
-						if ( !switching &&  recognizer.acceptWaveForm(data, bytesRead) ) {
-							String text = recognizer.getResult().replace("'", "");
-							//Execute the command
-							if ( !text.trim().contains("\"text\" : \"\"" ) ) 
-								pva.handleInput( text );
+						if ( !switching ) {
+							if ( recognizer.acceptWaveForm(data, bytesRead) ) {
+								String text = recognizer.getResult().replace("'", "");
+								//Execute the command
+								if ( !text.trim().contains("\"text\" : \"\"" ) ) 
+									pva.handleInput( text );
+							} else {
+								recognizer.getPartialResult();
+							}
 	
 						} // nothing to do, if not rdy
 					} else {
@@ -279,7 +288,7 @@ class Vosk extends Thread {
 				}
 		
 				// give the mic time to gather more data
-				sleep(100L);
+				// sleep(100L);
 			}
 			
 		} catch (Exception localException) {
