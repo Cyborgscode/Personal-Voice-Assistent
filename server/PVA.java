@@ -1174,15 +1174,19 @@ public class PVA {
 								if ( level2.length == 8 ) {
 								
 									// log("mailbox.username="+ level2[1].trim() +" mailbox.secure = "+ level2[4].trim() );
-								
-									mailboxes.add( 
-										new MailboxData( mbxid++, level2[0].trim(),
-											     level2[1].trim(),
-											     level2[2].trim(),
-											     level2[3].trim(),
-											     Boolean.parseBoolean(level2[4].trim()),Integer.parseInt(level2[5].trim()),
-											     Boolean.parseBoolean(level2[6].trim()),Integer.parseInt(level2[7].trim()) )
-									);
+								    String commonname = level2[3].trim();
+								    String configPass = level2[2].trim();
+								    String keyringPass = io.Keyring.getPassword(commonname);
+								    String password = (keyringPass != null) ? keyringPass : configPass;
+
+								    mailboxes.add( 
+									     new MailboxData( mbxid++, level2[0].trim(),
+										     level2[1].trim(),
+										     password,
+										     commonname,
+										     Boolean.parseBoolean(level2[4].trim()),Integer.parseInt(level2[5].trim()),
+										     Boolean.parseBoolean(level2[6].trim()),Integer.parseInt(level2[7].trim()) )
+							        );
 								} else {
 									log("ERROR:syntaxerror:config:"+line);
 								}
