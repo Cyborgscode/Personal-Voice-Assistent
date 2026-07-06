@@ -814,3 +814,57 @@ Example:
 If you have more than one display connected to your pc and your not precise in what you want to be analysied, you may end up with a description of the menu card from a restaurant in cleveland ;)
 
 Have fun with it :)
+
+### Security Approach
+
+## Storing passwords in the Linux keyring (mailboxes)
+
+Since the keyring integration, IMAP passwords can be stored in the system keyring
+(GNOME Keyring / KDE Wallet) rather than in plain text in the
+configuration file.
+
+### Prerequisites
+
+- `libsecret` installed (package `libsecret-tools` / `libsecret-1-0`)
+- `secret-tool` in the PATH
+- A running keyring service (gnome-keyring, kwallet, etc.)
+
+### Storing a password in the keyring
+
+Before starting PVA for the first time, enter the password for each mailbox:
+
+```bash
+secret-tool store --label=“PVA” pva-mailbox ‘MyMail’
+```
+
+Here, `‘MyMail’` is the common name (level 2[3]) from the mailbox configuration.
+You will be prompted to enter the password interactively.
+
+### Checking the password
+
+```bash
+secret-tool lookup pva-mailbox ‘MyMail’
+```
+
+### Delete password
+
+```bash
+secret-tool clear pva-mailbox ‘MyMail’
+```
+
+### Adjust the config
+
+Once the keyring entry exists, the password in the config
+can either be left blank or retained. PVA automatically uses
+the keyring entry, if available. The config value serves
+as a fallback.
+
+### How it works
+
+1. PVA reads the mailbox configuration
+2. `io.Keyring.getPassword(commonname)` searches the keyring
+3. If an entry is found → password from the keyring
+4. Otherwise → password from the configuration file
+
+
+Translated with DeepL.com (free version)
