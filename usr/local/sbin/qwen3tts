@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TTS Server can be found here https://github.com/Cyborgscode/QWEN3TTS
+
 	HASH=$(echo "QWEN3$2$1"| sha256sum | sed -e "s/ .*$//g")
 
 	FILENAME="$HOME/.cache/pva/audio/$HASH.mp3"
