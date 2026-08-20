@@ -1,0 +1,25 @@
+#!/bin/bash
+
+	HASH=$(echo "QWEN3$2$1"| sha256sum | sed -e "s/ .*$//g")
+
+	FILENAME="$HOME/.cache/pva/audio/$HASH.mp3"
+
+	if [ ! -e $FILENAME ]; then
+#		echo "download from QWEN3 Server -> \"$1\" -> $FILENAME"
+
+		if [ "" == "$2" ]; then
+
+			WAVENAME=$(echo "$1" | nc localhost 9999)
+		else 
+			WAVENAME=$(echo "[speaker=$2] $1" | nc localhost 9999)
+		fi
+
+		lame -V 5 -b 64 -B 320 "$WAVENAME" "$FILENAME" 2>/dev/null
+	fi 
+
+	TEMPO=1
+	play $FILENAME tempo $TEMPO 2>/dev/null
+
+	if [ "" == "$VOICE" ]; then 
+		rm -f "$FILENAME"
+	fi 
